@@ -1,0 +1,9 @@
+-------------------------------------------------------------------------------
+TOMTOM DEPENDENCYCHECKER TOOL
+-------------------------------------------------------------------------------
+
+DependencyChecker is a tool for analyzing and understanding large C++ code 
+bases, originally developed by Maikel van der Hurk, Peter Bindels and many 
+others at TomTom.
+
+Copyright (C) 2014-2015 TomTom International BV (http://www.tomtom.com)
