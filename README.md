@@ -58,7 +58,7 @@ its usage is presented in the next paragraph.
 As a first thing on a code base is to find out whether it can read the code correctly. From the root of the project, 
 run the command:
 
-    cpp-dependencies stats .
+    cpp-dependencies --stats .
 
 to determine the complexity of the code base and the amount of nodes that are entangled in cycles with other 
 components. In well set-up projects, the cycle count will be equal to zero and the amount of components will be in 
@@ -70,14 +70,14 @@ To investigate a specific component, you can use
     
 for all information the tool has on the component, or:    
 
-    cpp-dependencies inout <component> .
+    cpp-dependencies --inout <component> .
     
 to find out who links to and from your component.
 
 In case you have a dependency that you were not expecting, or find out that when rebuilding component A that a
 supposedly-unrelated component B is built, you can use:
 
-    cpp-dependencies shortest A B .
+    cpp-dependencies --shortest A B .
 
 to determine why there is a link from component A to component B. It will find one of the shortest paths it can find 
 from A to B if there is one.
@@ -141,7 +141,7 @@ Specifically:
 This results in it running on a 1.5GB source code base in about 2.1 seconds -- fast enough for interactive checks and
 rerunning after any small modification. 
 
-The tool was set up to compile on a Ubuntu 12.04 system with the platform default compiler. This means that it will use C++11
+The tool was set up to compile on a Ubuntu 12.04 system with the platform default compiler. This means that the sources will use C++11
 but will not use anything not available in GCC 4.6. It has been tested and used on Linux (Ubuntu 12.04 - 16.04) and MacOS X 
 (different versions).
 
