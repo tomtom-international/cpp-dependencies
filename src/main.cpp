@@ -102,6 +102,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             if (argc != 4) {
                 printf("Usage: %s --shortest <targetname-from> <targetname-to>\n", argv[0]);
             } else {
+                FindCircularDependencies();
                 FindSpecificLink(components[std::string("./") + targetFrom(argv[2])],
                                  components[std::string("./") + targetFrom(argv[3])]);
             }
