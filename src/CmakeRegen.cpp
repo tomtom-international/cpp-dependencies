@@ -178,9 +178,8 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         if (dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
-            } else {
-                boost::filesystem::remove(comp->root / "CMakeLists.txt.generated");
             }
+						boost::filesystem::remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 boost::filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
