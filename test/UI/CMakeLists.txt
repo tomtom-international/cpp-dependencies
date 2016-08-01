@@ -19,3 +19,8 @@ target_link_libraries(${PROJECT_NAME}
     Framework
 )
 
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    .
+)
+
