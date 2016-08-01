@@ -202,9 +202,6 @@ void PrintInfoOnTarget(Component *c) {
 }
 
 void FindSpecificLink(Component *from, Component *to) {
-    if (from == NULL || to == NULL) {
-        return;
-    }
     std::unordered_map<Component *, Component *> parents;
     std::unordered_set<Component *> alreadyHad;
     std::deque<Component *> tocheck;
@@ -264,5 +261,7 @@ void FindSpecificLink(Component *from, Component *to) {
             }
         }
     }
+
+		printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
 }
 

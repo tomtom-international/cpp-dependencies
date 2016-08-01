@@ -106,8 +106,15 @@ std::map<std::string, void (*)(int, char **)> functions = {
                 printf("Usage: %s --shortest <targetname-from> <targetname-to>\n", argv[0]);
             } else {
                 FindCircularDependencies();
-                FindSpecificLink(components[std::string("./") + targetFrom(argv[2])],
-                                 components[std::string("./") + targetFrom(argv[3])]);
+								Component* from = components[std::string("./") + targetFrom(argv[2])],
+												 * to = components[std::string("./") + targetFrom(argv[3])];
+								if (!from) {
+										printf("No such component %s\n", argv[2]);
+								} else if (!to) {
+										printf("No such component %s\n", argv[3]);
+								} else {
+										FindSpecificLink(from, to);
+								}
             }
         }},
         {"--info",         [](int argc, char **argv) {
