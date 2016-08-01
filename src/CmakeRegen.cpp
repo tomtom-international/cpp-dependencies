@@ -20,7 +20,7 @@
 #include <boost/filesystem/fstream.hpp>
 
 static const char COPYRIGHT_STATEMENT[] = "#\n"
-        "# Copyright (C) " __DATE__ " TomTom International BV. All rights reserved.\n"
+        "# Copyright (C) " __DATE__ " YourCompany. All rights reserved.\n"
         "#\n";
 
 static bool FilesAreDifferent(const boost::filesystem::path &a, const boost::filesystem::path &b) {

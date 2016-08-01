@@ -30,10 +30,13 @@
 std::unordered_map<std::string, Component *> components;
 std::unordered_map<std::string, File> files;
 
+// Variable to contain the root of the source tree.
+static boost::filesystem::path root;
+
 static bool CheckVersionFile() {
     const std::string currentVersion = CURRENT_VERSION;
     std::string version;
-    boost::filesystem::ifstream in(VERSION_FILE);
+    boost::filesystem::ifstream in(root / VERSION_FILE);
     getline(in, version);
     return (version == currentVersion);
 }
@@ -127,6 +130,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--regen",        [](int argc, char **argv) {
+				    boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -142,6 +146,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--dryregen",     [](int argc, char **argv) {
+				    boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -187,7 +192,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
 };
 
 int main(int argc, char **argv) {
-    boost::filesystem::path root = boost::filesystem::current_path();
+    root = boost::filesystem::current_path();
     std::unordered_set<std::string> ignorefiles = {
             "unistd.h",
             "console.h",
@@ -225,7 +230,6 @@ int main(int argc, char **argv) {
     }
 
     LoadFileList(ignorefiles, root);
-    CheckVersionFile();
     {
         std::map<std::string, std::set<std::string>> collisions;
         std::unordered_map<std::string, std::string> includeLookup;
