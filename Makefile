@@ -17,7 +17,7 @@ LDFLAGS=-lboost_filesystem -lboost_system
 
 STANDARD=c++11
 
-SOURCES=main.cpp Component.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
+SOURCES=main.cpp Component.cpp Configuration.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
 
 all: cpp-dependencies
 

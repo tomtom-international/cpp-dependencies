@@ -20,6 +20,7 @@
 #include "Output.h"
 #include "Analysis.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -35,10 +36,7 @@ static boost::filesystem::path root;
 
 static bool CheckVersionFile() {
     const std::string currentVersion = CURRENT_VERSION;
-    std::string version;
-    boost::filesystem::ifstream in(root / VERSION_FILE);
-    getline(in, version);
-    return (version == currentVersion);
+    return currentVersion == Configuration::Get().versionUsed;
 }
 
 std::string targetFrom(const std::string &arg) {
@@ -174,13 +172,13 @@ std::map<std::string, void (*)(int, char **)> functions = {
                     !c.files.empty() && 
                     c.pubLinks.empty() && c.privLinks.empty();
             });
-            PrintAllComponents("Libraries with more than 30 outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > 30; });
-            PrintAllComponents("Libraries with less than 200 lines of code:", [](const Component& c) { return !c.files.empty() && c.loc() < 200; });
-            PrintAllComponents("Libraries with more than 20000 lines of code:", [](const Component& c) { return c.loc() > 20000; });
+            PrintAllComponents("Libraries with too many outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > Configuration::Get().componentLinkLimit; });
+            PrintAllComponents("Libraries with too few lines of code:", [](const Component& c) { return !c.files.empty() && c.loc() < Configuration::Get().componentLocLowerLimit; });
+            PrintAllComponents("Libraries with too many lines of code:", [](const Component& c) { return c.loc() > Configuration::Get().componentLocUpperLimit; });
             FindCircularDependencies();
             PrintAllComponents("Libraries that are part of a cycle:", [](const Component& c) { return !c.circulars.empty(); });
             PrintAllFiles("Files that are never used:", [](const File& f) { return !IsCompileableFile(f.path.extension().string()) && !f.hasInclude; });
-            PrintAllFiles("Files with more than 2000 lines of code:", [](const File& f) { return f.loc > 2000; });
+            PrintAllFiles("Files with too many lines of code:", [](const File& f) { return f.loc > Configuration::Get().fileLocUpperLimit; });
         }},
         {"--help",         [](int, char **argv) {
             printf("C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n");
@@ -220,7 +218,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             printf("  --ambiguous                   : Find all include statements that could refer to more than one header\n");
             printf("\n");
             printf("  Automatic CMakeLists.txt generation:\n");
-            printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"" CMAKEFILE_TAG "\"\n");
+            printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"%s\"\n", Configuration::Get().regenTag.c_str());
             printf("  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n");
             printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n");
         }},
@@ -261,7 +259,7 @@ int main(int argc, char **argv) {
     if (command == "--regen" && !CheckVersionFile()) {
         fprintf(stderr,
                 "Version of dependency checker not the same as the one used to generate the existing cmakelists. Refusing to regen\n"
-                        "Please manually update " VERSION_FILE  " to version \"" CURRENT_VERSION "\" if you really want to do this.\n");
+                        "Please manually update " CONFIG_FILE " to version \"" CURRENT_VERSION "\" if you really want to do this.\n");
         command = "--dryregen";
     }
 

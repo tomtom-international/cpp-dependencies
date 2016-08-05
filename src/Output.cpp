@@ -17,18 +17,24 @@
 #include "Component.h"
 #include "Output.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-const char *getLinkColor(Component *a, Component *b) {
+#define CURSES_CYCLIC_DEPENDENCY "[33m"
+#define CURSES_PUBLIC_DEPENDENCY "[34m"
+#define CURSES_PRIVATE_DEPENDENCY "[36m"
+#define CURSES_RESET_COLOR "[39;49m"
+
+static const std::string& getLinkColor(Component *a, Component *b) {
     // One of the links in this chain must be broken because it ties together a bundle of apparently unrelated components
     if (a->circulars.find(b) != a->circulars.end()) {
-        return COLOR_CYCLIC_DEPENDENCY;
+        return Configuration::Get().cycleColor;
     }
     if (a->pubDeps.find(b) != a->pubDeps.end()) {
-        return COLOR_PUBLIC_DEPENDENCY;
+        return Configuration::Get().publicDepColor;
     }
-    return COLOR_PRIVATE_DEPENDENCY;
+    return Configuration::Get().privateDepColor;
 }
 
 static const char* getShapeForSize(Component* c) {
@@ -272,9 +278,9 @@ void FindSpecificLink(Component *from, Component *to) {
                     Component *c2 = links.back();
                     links.pop_back();
                     std::string color = getLinkColor(p, c2);
-                    if (color == COLOR_CYCLIC_DEPENDENCY) {
+                    if (color == Configuration::Get().cycleColor) {
                         printf(CURSES_CYCLIC_DEPENDENCY);
-                    } else if (color == COLOR_PUBLIC_DEPENDENCY) {
+                    } else if (color == Configuration::Get().publicDepColor) {
                         printf(CURSES_PUBLIC_DEPENDENCY);
                     } else {
                         printf(CURSES_PRIVATE_DEPENDENCY);

@@ -14,12 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef __DEP_CHECKER__CONSTANTS_H
-#define __DEP_CHECKER__CONSTANTS_H
+#ifndef __DEP_CHECKER__CONFIGURATION_H
+#define __DEP_CHECKER__CONFIGURATION_H
 
-#define CONFIG_FILE "config-cpp-dependencies.txt"
+#include <string>
+#include <vector>
 
-#define CURRENT_VERSION "2"
+struct Configuration {
+  Configuration();
+  static const Configuration& Get();
+  std::string regenTag;
+  std::string versionUsed;
+  std::string cycleColor;
+  std::string publicDepColor;
+  std::string privateDepColor;
+  size_t componentLinkLimit;
+  size_t componentLocLowerLimit;
+  size_t componentLocUpperLimit;
+  size_t fileLocUpperLimit;
+};
 
 #endif
+
 

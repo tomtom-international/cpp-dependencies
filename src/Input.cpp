@@ -17,6 +17,7 @@
 #include "Input.h"
 #include "Component.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -57,7 +58,7 @@ static void ReadCmakelist(const boost::filesystem::path &path) {
     Component &comp = AddComponentDefinition(path.parent_path());
     do {
         getline(in, line);
-        if (strstr(line.c_str(), CMAKEFILE_TAG)) {
+        if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
             comp.recreate = true;
         }
         if (strstr(line.c_str(), "project(") == line.c_str()) {
