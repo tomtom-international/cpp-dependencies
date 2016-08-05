@@ -185,6 +185,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
         {"--help",         [](int, char **argv) {
             printf("C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n");
             printf("Copyright (C) 2016, TomTom International BV\n");
+            printf("Version " CURRENT_VERSION "\n");
             printf("\n");
             printf("  Usage:\n");
             printf("    %s [--dir <source-directory>] <command>\n", argv[0]);
