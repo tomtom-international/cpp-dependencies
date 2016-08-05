@@ -23,6 +23,7 @@
 struct Configuration {
   Configuration();
   static const Configuration& Get();
+  std::string companyName;
   std::string regenTag;
   std::string versionUsed;
   std::string cycleColor;
