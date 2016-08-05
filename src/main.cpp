@@ -106,15 +106,15 @@ std::map<std::string, void (*)(int, char **)> functions = {
                 printf("Usage: %s --shortest <targetname-from> <targetname-to>\n", argv[0]);
             } else {
                 FindCircularDependencies();
-								Component* from = components[std::string("./") + targetFrom(argv[2])],
-												 * to = components[std::string("./") + targetFrom(argv[3])];
-								if (!from) {
-										printf("No such component %s\n", argv[2]);
-								} else if (!to) {
-										printf("No such component %s\n", argv[3]);
-								} else {
-										FindSpecificLink(from, to);
-								}
+                Component* from = components[std::string("./") + targetFrom(argv[2])],
+                         * to = components[std::string("./") + targetFrom(argv[3])];
+                if (!from) {
+                    printf("No such component %s\n", argv[2]);
+                } else if (!to) {
+                    printf("No such component %s\n", argv[3]);
+                } else {
+                    FindSpecificLink(from, to);
+                }
             }
         }},
         {"--info",         [](int argc, char **argv) {
@@ -137,7 +137,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--regen",        [](int argc, char **argv) {
-				    boost::filesystem::current_path(root);
+            boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -153,7 +153,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--dryregen",     [](int argc, char **argv) {
-				    boost::filesystem::current_path(root);
+            boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -167,6 +167,20 @@ std::map<std::string, void (*)(int, char **)> functions = {
                     RegenerateCmakeFilesForComponent(c.second, true);
                 }
             }
+        }},
+        {"--outliers",       [](int, char**) {
+            PrintAllComponents("Libraries with no links in:", [](const Component& c){
+                return c.type == "library" && 
+                    !c.files.empty() && 
+                    c.pubLinks.empty() && c.privLinks.empty();
+            });
+            PrintAllComponents("Libraries with more than 30 outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > 30; });
+            PrintAllComponents("Libraries with less than 200 lines of code:", [](const Component& c) { return !c.files.empty() && c.loc() < 200; });
+            PrintAllComponents("Libraries with more than 20000 lines of code:", [](const Component& c) { return c.loc() > 20000; });
+            FindCircularDependencies();
+            PrintAllComponents("Libraries that are part of a cycle:", [](const Component& c) { return !c.circulars.empty(); });
+            PrintAllFiles("Files that are never used:", [](const File& f) { return !IsCompileableFile(f.path.extension().string()) && !f.hasInclude; });
+            PrintAllFiles("Files with more than 2000 lines of code:", [](const File& f) { return f.loc > 2000; });
         }},
         {"--help",         [](int, char **argv) {
             printf("C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n");
@@ -258,6 +272,12 @@ int main(int argc, char **argv) {
                 printf("\n");
             }
             exit(0);
+        }
+
+        for (auto &i : ambiguous) {
+            for (auto &c : collisions[i.first]) {
+                files[c].hasInclude = true; // There is at least one include that might end up here.
+            }
         }
     }
     PropagateExternalIncludes();

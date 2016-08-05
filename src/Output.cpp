@@ -31,13 +31,28 @@ const char *getLinkColor(Component *a, Component *b) {
     return COLOR_PRIVATE_DEPENDENCY;
 }
 
+static const char* getShapeForSize(Component* c) {
+    size_t loc = c->loc();
+    if (loc < 1000) {
+        return "oval";
+    } else if (loc < 5000) {
+        return "doublecircle";
+    } else if (loc < 20000) {
+        return "octagon";
+    } else if (loc < 50000) {
+        return "doubleoctagon";
+    } else {
+        return "tripleoctagon";
+    }
+}
+
 void OutputFlatDependencies(const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
     out << "digraph dependencies {" << "\n";
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
             c.second->files.size()) {
-            out << "  " << c.second->QuotedName() << "\n";
+            out << "  " << c.second->QuotedName() << " [shape=" << getShapeForSize(c.second) << "];\n";
         }
 
         std::set<Component *> depcomps;
@@ -175,6 +190,7 @@ void PrintInfoOnTarget(Component *c) {
     printf("Root: %s\n", c->root.c_str());
     printf("Name: %s\n", c->name.c_str());
     printf("Type: %s\n", c->type.c_str());
+    printf("Lines of Code: %zu\n", c->loc());
     printf("Recreate: %s\n", c->recreate ? "true" : "false");
     printf("Has CMakeAddon.txt: %s\n", c->hasAddonCmake ? "true" : "false");
 
@@ -199,6 +215,40 @@ void PrintInfoOnTarget(Component *c) {
     printf("\n");
     PrintLinksForTarget(c);
     printf("\n");
+}
+
+void PrintAllComponents(const char* description, bool (*predicate)(const Component&)) {
+  std::vector<std::string> selected;
+  for (auto& c : components) {
+    if (predicate(*c.second)) {
+      selected.push_back(c.second->NiceName('.'));
+    }
+  }
+  if (selected.empty()) return;
+
+  printf("%s\n", description);
+  std::sort(selected.begin(), selected.end());
+  for (auto& c : selected) {
+    printf("  %s\n", c.c_str());
+  }
+  printf("\n");
+}
+
+void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
+  std::vector<std::string> selected;
+  for (auto& f : files) {
+    if (predicate(f.second)) {
+      selected.push_back(f.second.path.c_str());
+    }
+  }
+  if (selected.empty()) return;
+
+  printf("%s\n", description);
+  std::sort(selected.begin(), selected.end());
+  for (auto& c : selected) {
+    printf("  %s\n", c.c_str());
+  }
+  printf("\n");
 }
 
 void FindSpecificLink(Component *from, Component *to) {
@@ -262,6 +312,6 @@ void FindSpecificLink(Component *from, Component *to) {
         }
     }
 
-		printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
+    printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
 }
 

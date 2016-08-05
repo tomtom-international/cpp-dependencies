@@ -29,6 +29,9 @@ void OutputCircularDependencies(const boost::filesystem::path &outfile);
 
 void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c);
 
+void PrintAllComponents(const char* description, bool (*)(const Component&));
+void PrintAllFiles(const char* description, bool (*)(const File&));
+
 void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<Component *> alreadyHad,
                            std::vector<Component *> order);
 

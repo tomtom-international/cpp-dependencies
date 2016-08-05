@@ -22,7 +22,9 @@
 #include <regex>
 #include <unordered_set>
 
+bool IsCompileableFile(const std::string& ext);
 void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir);
 
 #endif
+
 

@@ -112,11 +112,11 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
 
                         if (fp.second.component != dep->component) {
                             fp.second.component->privDeps.insert(dep->component);
+                            dep->component->privLinks.insert(fp.second.component);
                             dep->hasExternalInclude = true;
                         }
                     }
                     dep->hasInclude = true;
-                    dep->component->privLinks.insert(fp.second.component);
                 }
             }
         }
