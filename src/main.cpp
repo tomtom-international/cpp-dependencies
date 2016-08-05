@@ -202,6 +202,15 @@ std::map<std::string, void (*)(int, char **)> functions = {
             printf("  --stats                       : Info about code base size, complexity and cyclic dependency count\n");
             printf("  --cycles <targetname>         : Find all possible paths from this target back to itself\n");
             printf("  --shortest                    : Determine shortest path between components and its reason\n");
+            printf("  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n");
+            printf("                                       - libraries that are not used\n");
+            printf("                                       - components that use a lot of other components\n");
+            printf("                                       - components with dependencies towards executables\n");
+            printf("                                       - components with less than 200 LoC\n");
+            printf("                                       - components with more than 20 kLoC\n");
+            printf("                                       - components that are part of a cycle\n");
+            printf("                                       - files that are more than 2000 LoC\n");
+            printf("                                       - files that are not compiled and never included\n");
             printf("\n");
             printf("  Target information:\n");
             printf("  --info                        : Show all information on a given specific target\n");
