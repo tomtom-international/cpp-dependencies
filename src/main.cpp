@@ -222,7 +222,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             printf("  Automatic CMakeLists.txt generation:\n");
             printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"" CMAKEFILE_TAG "\"\n");
             printf("  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n");
-            printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\m");
+            printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n");
         }},
         // --ignore : Handled during input parsing as it is a pre-filter for CheckCycles instead.
 };

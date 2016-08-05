@@ -210,7 +210,7 @@ void PrintInfoOnTarget(Component *c) {
     }
     printf("\nFiles (%zu):", c->files.size());
     for (auto &d : c->files) {
-        printf(" %s", d->path.c_str());
+        printf(" %s", d->path.string().c_str());
     }
     printf("\n");
     PrintLinksForTarget(c);
@@ -238,7 +238,7 @@ void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
   std::vector<std::string> selected;
   for (auto& f : files) {
     if (predicate(f.second)) {
-      selected.push_back(f.second.path.c_str());
+      selected.push_back(f.second.path.string().c_str());
     }
   }
   if (selected.empty()) return;

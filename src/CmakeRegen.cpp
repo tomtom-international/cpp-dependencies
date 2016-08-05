@@ -46,7 +46,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         std::set<std::string> publicDeps, privateDeps, publicIncl, privateIncl;
         std::list<std::string> files;
         for (auto &fp : comp->files) {
-            files.push_back(fp->path.c_str() + compname.size() + 3);
+            files.push_back(fp->path.string().c_str() + compname.size() + 3);
             boost::filesystem::path p = fp->path;
             if (fp->hasInclude) {
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
