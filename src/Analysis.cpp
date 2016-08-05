@@ -76,9 +76,11 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                                std::map<std::string, std::vector<std::string>> &ambiguous) {
     for (auto &fp : files) {
         for (auto &i : fp.second.rawIncludes) {
-            std::string &fullPath = includeLookup[i];
+            std::string lowercaseInclude;
+            std::transform(i.begin(), i.end(), std::back_inserter(lowercaseInclude), ::tolower);
+            std::string &fullPath = includeLookup[lowercaseInclude];
             if (fullPath == "INVALID") {
-                ambiguous[i.c_str()].push_back(fp.first);
+                ambiguous[lowercaseInclude].push_back(fp.first);
             } else if (fullPath.find("GENERATED:") == 0) {
                 if (fp.second.component) {
                     fp.second.component->buildAfters.insert(fullPath.substr(10));
