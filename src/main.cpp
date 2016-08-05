@@ -218,6 +218,11 @@ std::map<std::string, void (*)(int, char **)> functions = {
             printf("  --usedby                      : Find all references to a specific header file\n");
             printf("  --inout                       : Find all incoming and outgoing links for a target\n");
             printf("  --ambiguous                   : Find all include statements that could refer to more than one header\n");
+            printf("\n");
+            printf("  Automatic CMakeLists.txt generation:\n");
+            printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"" CMAKEFILE_TAG "\"\n");
+            printf("  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n");
+            printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\m");
         }},
         // --ignore : Handled during input parsing as it is a pre-filter for CheckCycles instead.
 };
