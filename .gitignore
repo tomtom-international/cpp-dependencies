@@ -27,3 +27,8 @@
 *.exe
 *.out
 *.app
+
+# Local build outputs
+cpp-dependencies
+
+
