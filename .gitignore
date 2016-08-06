@@ -27,3 +27,9 @@
 *.exe
 *.out
 *.app
+/cpp-dependencies/Debug/cpp-dependencies.pdb
+*.log
+*.pdb
+*.idb
+/cpp-dependencies/cpp-dependencies.VC.db
+/cpp-dependencies/cpp-dependencies.VC.VC.opendb
