@@ -31,10 +31,12 @@
 struct Component;
 
 struct File {
-    File() {
-        component = NULL;
-        hasExternalInclude = false;
-        hasInclude = false;
+    File() 
+    : component(NULL)
+    , loc(0)
+    , hasExternalInclude(false)
+    , hasInclude(false)
+    {
     }
 
     boost::filesystem::path path;
@@ -42,6 +44,7 @@ struct File {
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
     Component *component;
+    size_t loc;
     bool hasExternalInclude;
     bool hasInclude;
 };
@@ -66,6 +69,11 @@ struct Component {
     std::unordered_set<Component *> circulars;
     std::set<std::string> buildAfters;
     std::unordered_set<File *> files;
+    size_t loc() const {
+        size_t l = 0;
+        for (auto f : files) { l += f->loc; }
+        return l;
+    }
     bool recreate;
     bool hasAddonCmake;
     std::string type;

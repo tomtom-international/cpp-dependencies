@@ -76,9 +76,11 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                                std::map<std::string, std::vector<std::string>> &ambiguous) {
     for (auto &fp : files) {
         for (auto &i : fp.second.rawIncludes) {
-            std::string &fullPath = includeLookup[i];
+            std::string lowercaseInclude;
+            std::transform(i.begin(), i.end(), std::back_inserter(lowercaseInclude), ::tolower);
+            std::string &fullPath = includeLookup[lowercaseInclude];
             if (fullPath == "INVALID") {
-                ambiguous[i.c_str()].push_back(fp.first);
+                ambiguous[lowercaseInclude].push_back(fp.first);
             } else if (fullPath.find("GENERATED:") == 0) {
                 if (fp.second.component) {
                     fp.second.component->buildAfters.insert(fullPath.substr(10));
@@ -93,30 +95,28 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                     File *dep = &it->second;
                     fp.second.dependencies.insert(dep);
 
-                    if (fp.second.component && dep->component) {
-                        std::string inclpath = fullPath.substr(0, fullPath.size() - i.size() - 1);
-                        if (fp.second.path.parent_path().string() == dep->path.parent_path().string()) {
-                            // Omit include paths for files in your own folder. This under-declares for pointy-bracket includes in your own
-                            // folder, but at least it prevents overdeclaring.
-                            inclpath = "";
-                        } else if (inclpath.size() == dep->component->root.string().size()) {
-                            inclpath = ".";
-                        } else if (inclpath.size() > dep->component->root.string().size() + 1) {
-                            inclpath = inclpath.substr(dep->component->root.string().size() + 1);
-                        } else {
-                            inclpath = "";
-                        }
-                        if (!inclpath.empty()) {
-                            dep->includePaths.insert(inclpath);
-                        }
+                    std::string inclpath = fullPath.substr(0, fullPath.size() - i.size() - 1);
+                    if (fp.second.path.parent_path().string() == dep->path.parent_path().string()) {
+                        // Omit include paths for files in your own folder. This under-declares for pointy-bracket includes in your own
+                        // folder, but at least it prevents overdeclaring.
+                        inclpath = "";
+                    } else if (inclpath.size() == dep->component->root.string().size()) {
+                        inclpath = ".";
+                    } else if (inclpath.size() > dep->component->root.string().size() + 1) {
+                        inclpath = inclpath.substr(dep->component->root.string().size() + 1);
+                    } else {
+                        inclpath = "";
+                    }
+                    if (!inclpath.empty()) {
+                        dep->includePaths.insert(inclpath);
+                    }
 
-                        if (fp.second.component != dep->component) {
-                            fp.second.component->privDeps.insert(dep->component);
-                            dep->hasExternalInclude = true;
-                        }
+                    if (fp.second.component != dep->component) {
+                        fp.second.component->privDeps.insert(dep->component);
+                        dep->component->privLinks.insert(fp.second.component);
+                        dep->hasExternalInclude = true;
                     }
                     dep->hasInclude = true;
-                    dep->component->privLinks.insert(fp.second.component);
                 }
             }
         }

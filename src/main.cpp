@@ -20,6 +20,7 @@
 #include "Output.h"
 #include "Analysis.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -35,10 +36,7 @@ static boost::filesystem::path root;
 
 static bool CheckVersionFile() {
     const std::string currentVersion = CURRENT_VERSION;
-    std::string version;
-    boost::filesystem::ifstream in(root / VERSION_FILE);
-    getline(in, version);
-    return (version == currentVersion);
+    return currentVersion == Configuration::Get().versionUsed;
 }
 
 std::string targetFrom(const std::string &arg) {
@@ -106,15 +104,15 @@ std::map<std::string, void (*)(int, char **)> functions = {
                 printf("Usage: %s --shortest <targetname-from> <targetname-to>\n", argv[0]);
             } else {
                 FindCircularDependencies();
-								Component* from = components[std::string("./") + targetFrom(argv[2])],
-												 * to = components[std::string("./") + targetFrom(argv[3])];
-								if (!from) {
-										printf("No such component %s\n", argv[2]);
-								} else if (!to) {
-										printf("No such component %s\n", argv[3]);
-								} else {
-										FindSpecificLink(from, to);
-								}
+                Component* from = components[std::string("./") + targetFrom(argv[2])],
+                         * to = components[std::string("./") + targetFrom(argv[3])];
+                if (!from) {
+                    printf("No such component %s\n", argv[2]);
+                } else if (!to) {
+                    printf("No such component %s\n", argv[3]);
+                } else {
+                    FindSpecificLink(from, to);
+                }
             }
         }},
         {"--info",         [](int argc, char **argv) {
@@ -137,7 +135,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--regen",        [](int argc, char **argv) {
-				    boost::filesystem::current_path(root);
+            boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -153,7 +151,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--dryregen",     [](int argc, char **argv) {
-				    boost::filesystem::current_path(root);
+            boost::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -168,9 +166,24 @@ std::map<std::string, void (*)(int, char **)> functions = {
                 }
             }
         }},
+        {"--outliers",       [](int, char**) {
+            PrintAllComponents("Libraries with no links in:", [](const Component& c){
+                return c.type == "library" && 
+                    !c.files.empty() && 
+                    c.pubLinks.empty() && c.privLinks.empty();
+            });
+            PrintAllComponents("Libraries with too many outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > Configuration::Get().componentLinkLimit; });
+            PrintAllComponents("Libraries with too few lines of code:", [](const Component& c) { return !c.files.empty() && c.loc() < Configuration::Get().componentLocLowerLimit; });
+            PrintAllComponents("Libraries with too many lines of code:", [](const Component& c) { return c.loc() > Configuration::Get().componentLocUpperLimit; });
+            FindCircularDependencies();
+            PrintAllComponents("Libraries that are part of a cycle:", [](const Component& c) { return !c.circulars.empty(); });
+            PrintAllFiles("Files that are never used:", [](const File& f) { return !IsCompileableFile(f.path.extension().string()) && !f.hasInclude; });
+            PrintAllFiles("Files with too many lines of code:", [](const File& f) { return f.loc > Configuration::Get().fileLocUpperLimit; });
+        }},
         {"--help",         [](int, char **argv) {
             printf("C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n");
             printf("Copyright (C) 2016, TomTom International BV\n");
+            printf("Version " CURRENT_VERSION "\n");
             printf("\n");
             printf("  Usage:\n");
             printf("    %s [--dir <source-directory>] <command>\n", argv[0]);
@@ -188,12 +201,26 @@ std::map<std::string, void (*)(int, char **)> functions = {
             printf("  --stats                       : Info about code base size, complexity and cyclic dependency count\n");
             printf("  --cycles <targetname>         : Find all possible paths from this target back to itself\n");
             printf("  --shortest                    : Determine shortest path between components and its reason\n");
+            printf("  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n");
+            printf("                                       - libraries that are not used\n");
+            printf("                                       - components that use a lot of other components\n");
+            printf("                                       - components with dependencies towards executables\n");
+            printf("                                       - components with less than 200 LoC\n");
+            printf("                                       - components with more than 20 kLoC\n");
+            printf("                                       - components that are part of a cycle\n");
+            printf("                                       - files that are more than 2000 LoC\n");
+            printf("                                       - files that are not compiled and never included\n");
             printf("\n");
             printf("  Target information:\n");
             printf("  --info                        : Show all information on a given specific target\n");
             printf("  --usedby                      : Find all references to a specific header file\n");
             printf("  --inout                       : Find all incoming and outgoing links for a target\n");
             printf("  --ambiguous                   : Find all include statements that could refer to more than one header\n");
+            printf("\n");
+            printf("  Automatic CMakeLists.txt generation:\n");
+            printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"%s\"\n", Configuration::Get().regenTag.c_str());
+            printf("  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n");
+            printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n");
         }},
         // --ignore : Handled during input parsing as it is a pre-filter for CheckCycles instead.
 };
@@ -232,7 +259,7 @@ int main(int argc, char **argv) {
     if (command == "--regen" && !CheckVersionFile()) {
         fprintf(stderr,
                 "Version of dependency checker not the same as the one used to generate the existing cmakelists. Refusing to regen\n"
-                        "Please manually update " VERSION_FILE  " to version \"" CURRENT_VERSION "\" if you really want to do this.\n");
+                        "Please manually update " CONFIG_FILE " to version \"" CURRENT_VERSION "\" if you really want to do this.\n");
         command = "--dryregen";
     }
 
@@ -258,6 +285,12 @@ int main(int argc, char **argv) {
                 printf("\n");
             }
             exit(0);
+        }
+
+        for (auto &i : ambiguous) {
+            for (auto &c : collisions[i.first]) {
+                files[c].hasInclude = true; // There is at least one include that might end up here.
+            }
         }
     }
     PropagateExternalIncludes();

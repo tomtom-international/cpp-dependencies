@@ -17,18 +17,39 @@
 #include "Component.h"
 #include "Output.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-const char *getLinkColor(Component *a, Component *b) {
+#define CURSES_CYCLIC_DEPENDENCY "[33m"
+#define CURSES_PUBLIC_DEPENDENCY "[34m"
+#define CURSES_PRIVATE_DEPENDENCY "[36m"
+#define CURSES_RESET_COLOR "[39;49m"
+
+static const std::string& getLinkColor(Component *a, Component *b) {
     // One of the links in this chain must be broken because it ties together a bundle of apparently unrelated components
     if (a->circulars.find(b) != a->circulars.end()) {
-        return COLOR_CYCLIC_DEPENDENCY;
+        return Configuration::Get().cycleColor;
     }
     if (a->pubDeps.find(b) != a->pubDeps.end()) {
-        return COLOR_PUBLIC_DEPENDENCY;
+        return Configuration::Get().publicDepColor;
     }
-    return COLOR_PRIVATE_DEPENDENCY;
+    return Configuration::Get().privateDepColor;
+}
+
+static const char* getShapeForSize(Component* c) {
+    size_t loc = c->loc();
+    if (loc < 1000) {
+        return "oval";
+    } else if (loc < 5000) {
+        return "doublecircle";
+    } else if (loc < 20000) {
+        return "octagon";
+    } else if (loc < 50000) {
+        return "doubleoctagon";
+    } else {
+        return "tripleoctagon";
+    }
 }
 
 void OutputFlatDependencies(const boost::filesystem::path &outfile) {
@@ -37,7 +58,7 @@ void OutputFlatDependencies(const boost::filesystem::path &outfile) {
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
             c.second->files.size()) {
-            out << "  " << c.second->QuotedName() << "\n";
+            out << "  " << c.second->QuotedName() << " [shape=" << getShapeForSize(c.second) << "];\n";
         }
 
         std::set<Component *> depcomps;
@@ -175,6 +196,7 @@ void PrintInfoOnTarget(Component *c) {
     printf("Root: %s\n", c->root.c_str());
     printf("Name: %s\n", c->name.c_str());
     printf("Type: %s\n", c->type.c_str());
+    printf("Lines of Code: %zu\n", c->loc());
     printf("Recreate: %s\n", c->recreate ? "true" : "false");
     printf("Has CMakeAddon.txt: %s\n", c->hasAddonCmake ? "true" : "false");
 
@@ -194,11 +216,45 @@ void PrintInfoOnTarget(Component *c) {
     }
     printf("\nFiles (%zu):", c->files.size());
     for (auto &d : c->files) {
-        printf(" %s", d->path.c_str());
+        printf(" %s", d->path.string().c_str());
     }
     printf("\n");
     PrintLinksForTarget(c);
     printf("\n");
+}
+
+void PrintAllComponents(const char* description, bool (*predicate)(const Component&)) {
+  std::vector<std::string> selected;
+  for (auto& c : components) {
+    if (predicate(*c.second)) {
+      selected.push_back(c.second->NiceName('.'));
+    }
+  }
+  if (selected.empty()) return;
+
+  printf("%s\n", description);
+  std::sort(selected.begin(), selected.end());
+  for (auto& c : selected) {
+    printf("  %s\n", c.c_str());
+  }
+  printf("\n");
+}
+
+void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
+  std::vector<std::string> selected;
+  for (auto& f : files) {
+    if (predicate(f.second)) {
+      selected.push_back(f.second.path.string().c_str());
+    }
+  }
+  if (selected.empty()) return;
+
+  printf("%s\n", description);
+  std::sort(selected.begin(), selected.end());
+  for (auto& c : selected) {
+    printf("  %s\n", c.c_str());
+  }
+  printf("\n");
 }
 
 void FindSpecificLink(Component *from, Component *to) {
@@ -222,9 +278,9 @@ void FindSpecificLink(Component *from, Component *to) {
                     Component *c2 = links.back();
                     links.pop_back();
                     std::string color = getLinkColor(p, c2);
-                    if (color == COLOR_CYCLIC_DEPENDENCY) {
+                    if (color == Configuration::Get().cycleColor) {
                         printf(CURSES_CYCLIC_DEPENDENCY);
-                    } else if (color == COLOR_PUBLIC_DEPENDENCY) {
+                    } else if (color == Configuration::Get().publicDepColor) {
                         printf(CURSES_PUBLIC_DEPENDENCY);
                     } else {
                         printf(CURSES_PRIVATE_DEPENDENCY);
@@ -262,6 +318,6 @@ void FindSpecificLink(Component *from, Component *to) {
         }
     }
 
-		printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
+    printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
 }
 

@@ -168,6 +168,10 @@ We can regenerate the CMakeLists.txt files as well to remove the dependency from
     Difference detected at "./Engine"
     > cpp-dependencies --dir test --regen
 
+# Customizing the outputs
+
+As cpp-dependencies has a lot of analysis it can do on the source tree, there are also some configurable parts to it. The configuration can be found in the file config-cpp-dependencies.txt that should be in your project root. It allows you to customize the colors used in generation, the thresholds for outlier detection and some minor parameters. Please read the documentation in the example config-cpp-dependencies.txt that is in the source distribution for the tool to see all the options.
+
 # Editing the tool
 
 The tool itself is split up into a few separate files to make it easier to find and extend its functionality. The following files are found:

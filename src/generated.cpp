@@ -19,14 +19,15 @@
 void CreateIncludeLookupTable(std::unordered_map<std::string, std::string> &includeLookup,
                               std::map<std::string, std::set<std::string>> &collisions) {
     for (auto &p : files) {
-        const char *path = p.first.c_str();
-        const char *pa = path;
+        std::string lowercasePath;
+        std::transform(p.first.begin(), p.first.end(), std::back_inserter(lowercasePath), ::tolower);
+        const char *pa = lowercasePath.c_str();
         while ((pa = strstr(pa + 1, "/"))) {
             std::string &ref = includeLookup[pa + 1];
             if (ref.size() == 0) {
-                ref = path;
+                ref = p.first;
             } else {
-                collisions[pa + 1].insert(path);
+                collisions[pa + 1].insert(p.first);
                 if (ref != "INVALID") {
                     collisions[pa + 1].insert(ref);
                 }

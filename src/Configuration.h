@@ -14,16 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef __DEP_CHECKER__INPUT_H
-#define __DEP_CHECKER__INPUT_H
+#ifndef __DEP_CHECKER__CONFIGURATION_H
+#define __DEP_CHECKER__CONFIGURATION_H
 
 #include <string>
-#include <boost/filesystem/path.hpp>
-#include <regex>
-#include <unordered_set>
+#include <vector>
 
-bool IsCompileableFile(const std::string& ext);
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir);
+struct Configuration {
+  Configuration();
+  static const Configuration& Get();
+  std::string companyName;
+  std::string regenTag;
+  std::string versionUsed;
+  std::string cycleColor;
+  std::string publicDepColor;
+  std::string privateDepColor;
+  size_t componentLinkLimit;
+  size_t componentLocLowerLimit;
+  size_t componentLocUpperLimit;
+  size_t fileLocUpperLimit;
+};
 
 #endif
 

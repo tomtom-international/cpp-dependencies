@@ -17,6 +17,7 @@
 #include "Input.h"
 #include "Component.h"
 #include "Constants.h"
+#include "Configuration.h"
 #include <algorithm>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -57,7 +58,7 @@ static void ReadCmakelist(const boost::filesystem::path &path) {
     Component &comp = AddComponentDefinition(path.parent_path());
     do {
         getline(in, line);
-        if (strstr(line.c_str(), CMAKEFILE_TAG)) {
+        if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
             comp.recreate = true;
         }
         if (strstr(line.c_str(), "project(") == line.c_str()) {
@@ -80,6 +81,7 @@ static void ReadCode(const boost::filesystem::path &path) {
     boost::filesystem::ifstream in(path);
     std::string line;
     do {
+        f.loc++;
         getline(in, line);
         if (strstr(line.c_str(), "#include")) {
             std::string val = GetPathFromIncludeLine(line);
@@ -90,14 +92,20 @@ static void ReadCode(const boost::filesystem::path &path) {
     } while (in.good());
 }
 
+bool IsCompileableFile(const std::string& ext) {
+  std::string lower;
+  std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
+  return lower == ".c" ||
+         lower == ".cc" ||
+         lower == ".cpp";
+}
+
 static bool IsCode(const std::string &ext) {
     std::string lower;
     std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
     return lower == ".h" ||
            lower == ".hpp" ||
-           lower == ".c" ||
-           lower == ".cc" ||
-           lower == ".cpp";
+           IsCompileableFile(ext);
 }
 
 void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir) {

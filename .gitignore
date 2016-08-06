@@ -31,6 +31,9 @@
 *.log
 *.pdb
 *.idb
-W
 *.db
 *.suo
+
+# Local build outputs
+cpp-dependencies
+
