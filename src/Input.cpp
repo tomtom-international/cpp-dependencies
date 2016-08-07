@@ -134,7 +134,7 @@ void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boos
         } else if (boost::filesystem::is_regular_file(it->status())) {
             if (it->path().string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().c_str())) {
+            } else if (IsCode(it->path().extension().string().c_str())) {
                 ReadCode(it->path());
             }
         }

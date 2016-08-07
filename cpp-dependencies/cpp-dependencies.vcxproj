@@ -147,6 +147,7 @@
     <ClCompile Include="..\src\Analysis.cpp" />
     <ClCompile Include="..\src\CmakeRegen.cpp" />
     <ClCompile Include="..\src\Component.cpp" />
+    <ClCompile Include="..\src\Configuration.cpp" />
     <ClCompile Include="..\src\generated.cpp" />
     <ClCompile Include="..\src\Input.cpp" />
     <ClCompile Include="..\src\main.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="..\src\Analysis.h" />
     <ClInclude Include="..\src\CmakeRegen.h" />
     <ClInclude Include="..\src\Component.h" />
+    <ClInclude Include="..\src\Configuration.h" />
     <ClInclude Include="..\src\Constants.h" />
     <ClInclude Include="..\src\Input.h" />
     <ClInclude Include="..\src\Output.h" />

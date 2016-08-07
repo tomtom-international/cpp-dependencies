@@ -193,7 +193,7 @@ void PrintInfoOnTarget(Component *c) {
         printf("Component does not exist (doublecheck spelling)\n");
         return;
     }
-    printf("Root: %s\n", c->root.c_str());
+    printf("Root: %s\n", c->root.string().c_str());
     printf("Name: %s\n", c->name.c_str());
     printf("Type: %s\n", c->type.c_str());
     printf("Lines of Code: %zu\n", c->loc());
