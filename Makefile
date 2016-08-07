@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-COMPILER=g++
+COMPILER?=g++
 LDFLAGS=-lboost_filesystem -lboost_system
 
 STANDARD=c++11
