@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CXX=g++
+COMPILER?=g++
 LDFLAGS=-lboost_filesystem -lboost_system
 
 STANDARD=c++11
@@ -23,10 +23,10 @@ all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3
 
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES))
-	$(CXX) -o $@ $^ $(LDFLAGS) -O3 
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
 
 clean:
 	rm -rf obj cpp-dependencies
