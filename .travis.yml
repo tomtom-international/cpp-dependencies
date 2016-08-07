@@ -6,6 +6,8 @@ os:
   - osx
 script:
   - make && make test
+sudo: required
+dist: trusty
 
 matrix:
   include:
