@@ -108,40 +108,40 @@ very large graphs, in particular if many cycles are present, can take hours to r
 
 # Example use of `cpp-dependencies`
 
-In the source tree there's a folder `test` which contains an empty skeleton project, which does have some dependency information to be extracted from it. To start analyzing it, we first run the tool to extract statistics:
+In the source tree there's a folder `example` which contains an empty skeleton project, which does have some dependency information to be extracted from it. To start analyzing it, we first run the tool to extract statistics:
 
-    > cpp-dependencies --dir test --stats
+    > cpp-dependencies --dir example --stats
     6 components with 5 public dependencies, 1 private dependencies
     Detected 2 nodes in cycles
 
 This informs us that there is something not quite right with the dependencies. It sees 6 components: the root folder, four libraries and an executable. The simplest way to find out what's wrong is to draw out the graph in a visual way:
 
-    > cpp-dependencies --dir test --graph dependencies.dot
+    > cpp-dependencies --dir example --graph dependencies.dot
     > dot -Tpng dependencies.dot >dependencies.png
 
 Then open this PNG file in any tool that can view it, such as a web browser. This shows us the following image:
 
-![Dependency graph showing a cycle between Engine and UI](test/dependencies.png)
+![Dependency graph showing a cycle between Engine and UI](example/dependencies.png)
 
 The light blue links are an implementation-only link, the dark blue ones expose some part of this dependency on their interface. The orange ones are the most interesting ones; they are places where a component can reach itself through some other component. Let's find out why this is there:
 
-    > cpp-dependencies --dir test --shortest Engine UI
+    > cpp-dependencies --dir example --shortest Engine UI
     Engine -> UI
       ./Engine/Engine.h includes ./UI/Display.h
-    > cpp-dependencies --dir test --shortest UI Engine
+    > cpp-dependencies --dir example --shortest UI Engine
     UI -> Engine
       ./UI/Display.cpp includes ./Engine/Engine.h
       ./UI/Display.h includes ./Engine/Engine.h
 
 At this point, it's up to the developer or architect to find out which of these two dependencies is the wrong way around and to find a way around that. In the example, the Engine component should not be talking directly to the UI component. Removing this dependency results in the following statistics:
 
-    > cpp-dependencies --dir test --stats
+    > cpp-dependencies --dir example --stats
     6 components with 4 public dependencies, 2 private dependencies
     Detected 0 nodes in cycles
 
 The cycle has been removed, and there is one less dependency. We can find out what the shortest path is to the DataAccess component from the executable:
 
-    > cpp-dependencies --dir test --shortest main DataAccess
+    > cpp-dependencies --dir example --shortest main DataAccess
     main -> UI
       ./main/main.cpp includes ./UI/Display.h
     UI -> Engine
@@ -152,21 +152,21 @@ The cycle has been removed, and there is one less dependency. We can find out wh
 
 This tells us that there's no path shorter than three steps, and it informs us for each step of the way why it detects this link. In more complicated cycles, this can be a way to isolate the thinnest part of the cycle. In situations where there's an invalid dependency from one component to another - for example, from a unit test of one component to a very far away different component, this can help you identify where on the path from A to B a wrong link is present. It can also be used to explicitly verify that a link is not present, such as the one we just removed:
 
-    > cpp-dependencies --dir test --shortest Engine UI
+    > cpp-dependencies --dir example --shortest Engine UI
     No path could be found from Engine to UI
 
 The graph now also shows proper dependency ordering:
 
-    > cpp-dependencies --dir test --graph newdependencies.dot
+    > cpp-dependencies --dir example --graph newdependencies.dot
     > dot -Tpng newdependencies.dot >newdependencies.png
 
-![Dependency graph showing no more cycles](test/newdependencies.png)
+![Dependency graph showing no more cycles](example/newdependencies.png)
 
 We can regenerate the CMakeLists.txt files as well to remove the dependency from the build inputs, so that our build system will also know that the link is no longer present:
 
-    > cpp-dependencies --dir test --dryregen
+    > cpp-dependencies --dir example --dryregen
     Difference detected at "./Engine"
-    > cpp-dependencies --dir test --regen
+    > cpp-dependencies --dir example --regen
 
 # Customizing the outputs
 
