@@ -23,6 +23,7 @@
 #include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <iostream>
 
 /**
  * These variables contain the global lists of components and files.
@@ -87,10 +88,9 @@ std::map<std::string, void (*)(int, char **)> functions = {
                 totalPublicLinks += c.second->pubDeps.size();
                 totalPrivateLinks += c.second->privDeps.size();
             }
-            fprintf(stderr, "%zu components with %zu public dependencies, %zu private dependencies\n",
-                    components.size(), totalPublicLinks, totalPrivateLinks);
+            std::cerr << components.size() << " components with " << totalPublicLinks << " public dependencies, " << totalPrivateLinks << " private dependencies\n";
             FindCircularDependencies();
-            fprintf(stderr, "Detected %zu nodes in cycles\n", NodesWithCycles());
+            std::cerr << "Detected " << NodesWithCycles() << " nodes in cycles\n";
         }},
         {"--inout",        [](int argc, char **argv) {
             if (argc != 3) {
@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
         std::map<std::string, std::vector<std::string>> ambiguous;
         MapIncludesToDependencies(includeLookup, ambiguous);
         if (command == "--ambiguous") {
-            printf("Found %zu ambiguous includes\n\n", ambiguous.size());
+            std::cerr << "Found " << ambiguous.size() << " ambiguous includes\n\n";
             for (auto &i : ambiguous) {
                 printf("Include for %s\nFound in:\n", i.first.c_str());
                 for (auto &s : i.second) {
