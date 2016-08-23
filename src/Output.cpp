@@ -52,7 +52,7 @@ static const char* getShapeForSize(Component* c) {
     }
 }
 
-void OutputFlatDependencies(const boost::filesystem::path &outfile) {
+void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
     out << "digraph dependencies {" << "\n";
     for (const auto &c : components) {
@@ -84,7 +84,7 @@ void OutputFlatDependencies(const boost::filesystem::path &outfile) {
     out << "}" << "\n";
 }
 
-void OutputCircularDependencies(const boost::filesystem::path &outfile) {
+void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
     out << "digraph dependencies {" << "\n";
     for (const auto &c : components) {
@@ -223,7 +223,7 @@ void PrintInfoOnTarget(Component *c) {
     printf("\n");
 }
 
-void PrintAllComponents(const char* description, bool (*predicate)(const Component&)) {
+void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, bool (*predicate)(const Component&)) {
   std::vector<std::string> selected;
   for (auto& c : components) {
     if (predicate(*c.second)) {
@@ -240,7 +240,7 @@ void PrintAllComponents(const char* description, bool (*predicate)(const Compone
   printf("\n");
 }
 
-void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
+void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&)) {
   std::vector<std::string> selected;
   for (auto& f : files) {
     if (predicate(f.second)) {
@@ -257,7 +257,7 @@ void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
   printf("\n");
 }
 
-void FindSpecificLink(Component *from, Component *to) {
+void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to) {
     std::unordered_map<Component *, Component *> parents;
     std::unordered_set<Component *> alreadyHad;
     std::deque<Component *> tocheck;

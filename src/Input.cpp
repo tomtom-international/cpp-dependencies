@@ -52,10 +52,10 @@ static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::un
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
-static void ReadCmakelist(const boost::filesystem::path &path) {
+static void ReadCmakelist(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path) {
     boost::filesystem::ifstream in(path);
     std::string line;
-    Component &comp = AddComponentDefinition(path.parent_path());
+    Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
         getline(in, line);
         if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
@@ -74,7 +74,7 @@ static void ReadCmakelist(const boost::filesystem::path &path) {
     } while (in.good());
 }
 
-static void ReadCode(const boost::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
     File &f = files[path.string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
@@ -108,10 +108,10 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir) {
+void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir) {
     boost::filesystem::path outputpath = boost::filesystem::current_path();
     boost::filesystem::current_path(sourceDir.c_str());
-    AddComponentDefinition(".");
+    AddComponentDefinition(components, ".");
     for (boost::filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
@@ -130,12 +130,12 @@ void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boos
             continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
-            ReadCmakelist(it->path());
+            ReadCmakelist(components, it->path());
         } else if (boost::filesystem::is_regular_file(it->status())) {
             if (it->path().string().find("CMakeAddon.txt") != std::string::npos) {
-                AddComponentDefinition(parent).hasAddonCmake = true;
+                AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().c_str())) {
-                ReadCode(it->path());
+                ReadCode(files, it->path());
             }
         }
     }

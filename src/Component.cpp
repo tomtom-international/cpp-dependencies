@@ -49,7 +49,7 @@ std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &
     return ret;
 }
 
-Component &AddComponentDefinition(const boost::filesystem::path &path) {
+Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path) {
     Component *&comp = components[path.string()];
     if (!comp) {
         comp = new Component(path);
@@ -57,7 +57,7 @@ Component &AddComponentDefinition(const boost::filesystem::path &path) {
     return *comp;
 }
 
-size_t NodesWithCycles() {
+size_t NodesWithCycles(std::unordered_map<std::string, Component *> &components) {
     size_t count = 0;
     for (auto &c : components) {
         if (!c.second->circulars.empty()) {
@@ -67,7 +67,7 @@ size_t NodesWithCycles() {
     return count;
 }
 
-void ExtractPublicDependencies() {
+void ExtractPublicDependencies(std::unordered_map<std::string, Component *> &components) {
     for (auto &c : components) {
         Component *comp = c.second;
         for (auto &fp : comp->files) {

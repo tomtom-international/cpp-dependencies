@@ -29,6 +29,8 @@
 *.app
 
 # Local build outputs
+obj
 cpp-dependencies
+cpp-dependencies-unittests
 
 

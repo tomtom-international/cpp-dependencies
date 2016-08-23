@@ -81,17 +81,15 @@ struct Component {
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);
 
-Component &AddComponentDefinition(const boost::filesystem::path &path);
+Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path);
 
-size_t NodesWithCycles();
+size_t NodesWithCycles(std::unordered_map<std::string, Component *> &components);
 
-void ExtractPublicDependencies();
+void ExtractPublicDependencies(std::unordered_map<std::string, Component *> &components);
 
-void CreateIncludeLookupTable(std::unordered_map<std::string, std::string> &includeLookup,
+void CreateIncludeLookupTable(std::unordered_map<std::string, File>& files,
+                              std::unordered_map<std::string, std::string> &includeLookup,
                               std::map<std::string, std::set<std::string>> &collisions);
-
-extern std::unordered_map<std::string, Component *> components;
-extern std::unordered_map<std::string, File> files;
 
 #endif
 

@@ -16,7 +16,8 @@
 
 #include "Component.h"
 
-void CreateIncludeLookupTable(std::unordered_map<std::string, std::string> &includeLookup,
+void CreateIncludeLookupTable(std::unordered_map<std::string, File>& files,
+                              std::unordered_map<std::string, std::string> &includeLookup,
                               std::map<std::string, std::set<std::string>> &collisions) {
     for (auto &p : files) {
         std::string lowercasePath;
