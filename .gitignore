@@ -37,3 +37,4 @@
 # Local build outputs
 cpp-dependencies
 
+MSVC/x64/Debug/

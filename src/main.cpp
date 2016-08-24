@@ -21,8 +21,7 @@
 #include "Analysis.h"
 #include "Constants.h"
 #include "Configuration.h"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include <experimental/filesystem>
 #include <iostream>
 
 /**
@@ -33,7 +32,7 @@ std::unordered_map<std::string, Component *> components;
 std::unordered_map<std::string, File> files;
 
 // Variable to contain the root of the source tree.
-static boost::filesystem::path root;
+static std::experimental::filesystem::path root;
 
 static bool CheckVersionFile() {
     const std::string currentVersion = CURRENT_VERSION;
@@ -135,7 +134,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--regen",        [](int argc, char **argv) {
-            boost::filesystem::current_path(root);
+            std::experimental::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -151,7 +150,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
             }
         }},
         {"--dryregen",     [](int argc, char **argv) {
-            boost::filesystem::current_path(root);
+            std::experimental::filesystem::current_path(root);
             if (argc >= 3) {
                 for (int n = 2; n < argc; n++) {
                     if (components.find(targetFrom(argv[n])) != components.end()) {
@@ -226,7 +225,7 @@ std::map<std::string, void (*)(int, char **)> functions = {
 };
 
 int main(int argc, char **argv) {
-    root = boost::filesystem::current_path();
+    root = std::experimental::filesystem::current_path();
     std::unordered_set<std::string> ignorefiles = {
             "unistd.h",
             "console.h",

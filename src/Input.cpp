@@ -19,8 +19,8 @@
 #include "Constants.h"
 #include "Configuration.h"
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include <experimental/filesystem>
+#include <fstream>
 
 static std::string GetPathFromIncludeLine(const std::string &str) {
     size_t posAfterInclStmt = str.find("#include");
@@ -46,14 +46,14 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
     return str.substr(open + 1, close - open - 1);
 }
 
-static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const std::experimental::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
     std::string file = path.filename().string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
-static void ReadCmakelist(const boost::filesystem::path &path) {
-    boost::filesystem::ifstream in(path);
+static void ReadCmakelist(const std::experimental::filesystem::path &path) {
+    std::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(path.parent_path());
     do {
@@ -74,11 +74,11 @@ static void ReadCmakelist(const boost::filesystem::path &path) {
     } while (in.good());
 }
 
-static void ReadCode(const boost::filesystem::path &path) {
+static void ReadCode(const std::experimental::filesystem::path &path) {
     File &f = files[path.string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
-    boost::filesystem::ifstream in(path);
+    std::ifstream in(path);
     std::string line;
     do {
         f.loc++;
@@ -108,16 +108,16 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir) {
-    boost::filesystem::path outputpath = boost::filesystem::current_path();
-    boost::filesystem::current_path(sourceDir.c_str());
+void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const std::experimental::filesystem::path& sourceDir) {
+    std::experimental::filesystem::path outputpath = std::experimental::filesystem::current_path();
+    std::experimental::filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(".");
-    for (boost::filesystem::recursive_directory_iterator it("."), end;
+    for (std::experimental::filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
 
         // skip hidden files and dirs
-        if (boost::filesystem::is_directory(parent) &&
+        if (is_directory(parent) &&
             parent.filename().string().size() > 2 &&
             parent.filename().string()[0] == '.') {
             it.pop();
@@ -131,7 +131,7 @@ void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boos
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(it->path());
-        } else if (boost::filesystem::is_regular_file(it->status())) {
+        } else if (is_regular_file(it->status())) {
             if (it->path().string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().string().c_str())) {
@@ -139,6 +139,6 @@ void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boos
             }
         }
     }
-    boost::filesystem::current_path(outputpath);
+    current_path(outputpath);
 }
 

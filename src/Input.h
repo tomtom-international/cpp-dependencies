@@ -18,12 +18,12 @@
 #define __DEP_CHECKER__INPUT_H
 
 #include <string>
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 #include <regex>
 #include <unordered_set>
 
 bool IsCompileableFile(const std::string& ext);
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir);
+void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const std::experimental::filesystem::path& sourceDir);
 
 #endif
 

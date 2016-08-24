@@ -17,17 +17,17 @@
 #ifndef __DEP_CHECKER__OUTPUT_H
 #define __DEP_CHECKER__OUTPUT_H
 
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 #include <unordered_set>
 #include <vector>
 
 struct Component;
 
-void OutputFlatDependencies(const boost::filesystem::path &outfile);
+void OutputFlatDependencies(const std::experimental::filesystem::path &outfile);
 
-void OutputCircularDependencies(const boost::filesystem::path &outfile);
+void OutputCircularDependencies(const std::experimental::filesystem::path &outfile);
 
-void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c);
+void PrintGraphOnTarget(const std::experimental::filesystem::path &outfile, Component *c);
 
 void PrintAllComponents(const char* description, bool (*)(const Component&));
 void PrintAllFiles(const char* description, bool (*)(const File&));

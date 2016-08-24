@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <unordered_map>
 #include <unordered_set>
-#include <boost/filesystem/path.hpp>
+#include <experimental/filesystem>
 #include <regex>
 #include <map>
 #include <set>
@@ -31,7 +31,7 @@
 struct Component;
 
 struct File {
-    File() 
+    File()
     : component(NULL)
     , loc(0)
     , hasExternalInclude(false)
@@ -39,7 +39,7 @@ struct File {
     {
     }
 
-    boost::filesystem::path path;
+    std::experimental::filesystem::path path;
     std::vector<std::string> rawIncludes;
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
@@ -56,9 +56,9 @@ struct Component {
 
     std::string CmakeName() const;
 
-    explicit Component(const boost::filesystem::path &path);
+    explicit Component(const std::experimental::filesystem::path &path);
 
-    boost::filesystem::path root;
+	std::experimental::filesystem::path root;
     std::string name;
     // deps are the dependencies of your component
     std::unordered_set<Component *> pubDeps;
@@ -81,7 +81,7 @@ struct Component {
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);
 
-Component &AddComponentDefinition(const boost::filesystem::path &path);
+Component &AddComponentDefinition(const std::experimental::filesystem::path &path);
 
 size_t NodesWithCycles();
 

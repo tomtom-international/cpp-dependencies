@@ -18,9 +18,10 @@
 #include "Output.h"
 #include "Constants.h"
 #include "Configuration.h"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include <experimental/filesystem>
 #include <iostream>
+#include <fstream>
+#include <stack>
 
 #define CURSES_CYCLIC_DEPENDENCY "[33m"
 #define CURSES_PUBLIC_DEPENDENCY "[34m"
@@ -53,8 +54,8 @@ static const char* getShapeForSize(Component* c) {
     }
 }
 
-void OutputFlatDependencies(const boost::filesystem::path &outfile) {
-    boost::filesystem::ofstream out(outfile);
+void OutputFlatDependencies(const std::experimental::filesystem::path &outfile) {
+    std::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
@@ -85,8 +86,8 @@ void OutputFlatDependencies(const boost::filesystem::path &outfile) {
     out << "}" << '\n';
 }
 
-void OutputCircularDependencies(const boost::filesystem::path &outfile) {
-    boost::filesystem::ofstream out(outfile);
+void OutputCircularDependencies(const std::experimental::filesystem::path &outfile) {
+    std::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->circulars.empty()) {
@@ -103,12 +104,12 @@ void OutputCircularDependencies(const boost::filesystem::path &outfile) {
     out << "}" << '\n';
 }
 
-void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
+void PrintGraphOnTarget(const std::experimental::filesystem::path &outfile, Component *c) {
     if (!c) {
         printf("Component does not exist (doublecheck spelling)\n");
         return;
     }
-    boost::filesystem::ofstream out(outfile);
+    std::ofstream out(outfile);
 
     std::stack<Component *> todo;
     std::set<Component *> comps;
