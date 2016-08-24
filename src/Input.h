@@ -23,8 +23,8 @@
 #include <unordered_set>
 #include <unordered_map>
 
-class File;
-class Component;
+struct File;
+struct Component;
 
 bool IsCompileableFile(const std::string& ext);
 void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir);

@@ -27,10 +27,19 @@
 *.exe
 *.out
 *.app
+*.pdb
+*.log
+*.pdb
+*.idb
+*.db
+*.suo
+
+# MSVC specific temporary files
+*.sdf
+*.opensdf
 
 # Local build outputs
 obj
 cpp-dependencies
 cpp-dependencies-unittests
-
 

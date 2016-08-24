@@ -23,6 +23,7 @@
 #include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <iostream>
 
 static bool CheckVersionFile() {
     const std::string currentVersion = CURRENT_VERSION;
@@ -40,7 +41,7 @@ std::string targetFrom(const std::string &arg) {
 
 class Operations {
 public:
-    Operations(int argc, char** argv)
+    Operations(int argc, const char** argv)
     : projectLoaded(false)
     , programName(argv[0])
     , args(argv+1, argv+argc)
@@ -56,7 +57,6 @@ public:
                 "endian.h",
                 "rle.h",
         };
-
     }
     void RunCommands() {
         if (args.empty()) {
@@ -130,7 +130,7 @@ private:
     }
     void Dir(std::vector<std::string> args) {
         if (args.empty()) {
-            printf("No directory specified after --dir\n");
+            std::cout << "No directory specified after --dir\n";
         } else {
             projectRoot = args[0];
         }
@@ -138,20 +138,20 @@ private:
     }
     void Ignore(std::vector<std::string> args) {
         if (args.empty())
-            printf("No files specified to ignore?\n");
+            std::cout << "No files specified to ignore?\n";
         for (auto& s : args) ignorefiles.insert(s);
         UnloadProject();
     }
     void Drop(std::vector<std::string> args) {
         if (args.empty())
-            printf("No files specified to ignore?\n");
+            std::cout << "No files specified to ignore?\n";
         for (auto& s : args) deleteComponents.insert(s);
         UnloadProject();
     }
     void Graph(std::vector<std::string> args) {
         LoadProject();
         if (args.empty()) {
-            printf("No output file specified for graph\n");
+            std::cout << "No output file specified for graph\n";
         } else {
             OutputFlatDependencies(components, args[0]);
         }
@@ -159,7 +159,7 @@ private:
     void GraphCycles(std::vector<std::string> args) {
         LoadProject();
         if (args.empty()) {
-            printf("No output file specified for cycle graph\n");
+            std::cout << "No output file specified for cycle graph\n";
         } else {
             OutputCircularDependencies(components, args[0]);
         }
@@ -167,7 +167,7 @@ private:
     void GraphTarget(std::vector<std::string> args) {
         LoadProject();
         if (args.size() != 2) {
-            printf("--graph-target requires a single component and a single output file name.\n");
+            std::cout << "--graph-target requires a single component and a single output file name.\n";
         } else {
             PrintGraphOnTarget(args[1], components[targetFrom(args[0])]);
         }
@@ -175,7 +175,7 @@ private:
     void Cycles(std::vector<std::string> args) {
         LoadProject();
         if (args.empty())
-            printf("No targets specified for finding in- and out-going links.\n");
+            std::cout << "No targets specified for finding in- and out-going links.\n";
         PrintCyclesForTarget(components[targetFrom(args[0])]);
     }
     void Stats(std::vector<std::string>) {
@@ -185,14 +185,15 @@ private:
             totalPublicLinks += c.second->pubDeps.size();
             totalPrivateLinks += c.second->privDeps.size();
         }
-        fprintf(stderr, "%zu components with %zu public dependencies, %zu private dependencies\n",
-                components.size(), totalPublicLinks, totalPrivateLinks);
-        fprintf(stderr, "Detected %zu nodes in cycles\n", NodesWithCycles(components));
+        std::cout << components.size() << " components with "
+            << totalPublicLinks << " public dependencies, "
+            << totalPrivateLinks << " private dependencies\n";
+        std::cout << "Detected " << NodesWithCycles(components) << " nodes in cycles\n";
     }
     void InOut(std::vector<std::string> args) {
         LoadProject();
         if (args.empty())
-            printf("No targets specified for finding in- and out-going links.\n");
+            std::cout << "No targets specified for finding in- and out-going links.\n";
         for (auto& s : args) {
             PrintLinksForTarget(components[targetFrom(s)]);
         }
@@ -200,15 +201,15 @@ private:
     void Shortest(std::vector<std::string> args) {
         LoadProject();
         if (args.size() != 2) {
-            printf("Need two arguments to find the shortest path from one to the other\n");
+            std::cout << "Need two arguments to find the shortest path from one to the other\n";
             return;
         }
         Component* from = components[targetFrom(args[0])],
                  * to = components[targetFrom(args[1])];
         if (!from) {
-            printf("No such component %s\n", args[0].c_str());
+            std::cout << "No such component " << args[0] << "\n";
         } else if (!to) {
-            printf("No such component %s\n", args[1].c_str());
+            std::cout << "No such component " << args[1] << "\n";
         } else {
             FindSpecificLink(files, from, to);
         }
@@ -216,7 +217,7 @@ private:
     void Info(std::vector<std::string> args) {
         LoadProject();
         if (args.empty())
-            printf("No targets specified to print info on...\n");
+            std::cout << "No targets specified to print info on...\n";
         for (auto& s : args) {
             PrintInfoOnTarget(components[targetFrom(s)]);
         }
@@ -224,13 +225,13 @@ private:
     void UsedBy(std::vector<std::string> args) {
         LoadProject();
         if (args.empty())
-            printf("No files specified to find usage of...\n");
+            std::cout << "No files specified to find usage of...\n";
         for (auto& s : args) {
-            printf("File %s is used by:\n", s.c_str());
+            std::cout << "File " << s << " is used by:\n";
             auto f = &files["./" + s];
             for (auto &p : files) {
                 if (p.second.dependencies.find(f) != p.second.dependencies.end()) {
-                    printf("  %s\n", p.second.path.string().c_str());
+                    std::cout << "  " << p.second.path.string() << "\n";
                 }
             }
         }
@@ -255,9 +256,8 @@ private:
     void Regen(std::vector<std::string> args) {
         bool versionIsCorrect = CheckVersionFile();
         if (!versionIsCorrect)
-            fprintf(stderr,
-                    "Version of dependency checker not the same as the one used to generate the existing cmakelists. Refusing to regen\n"
-                            "Please update " CONFIG_FILE " to version \"" CURRENT_VERSION "\" if you really want to do this.\n");
+            std::cout << "Version of dependency checker not the same as the one used to generate the existing cmakelists. Refusing to regen\n"
+                            "Please update " CONFIG_FILE " to version \"" CURRENT_VERSION "\" if you really want to do this.\n";
 
         DoActualRegen(args, !versionIsCorrect);
     }
@@ -281,60 +281,60 @@ private:
     }
     void Ambiguous(std::vector<std::string>) {
         LoadProject();
-        printf("Found %zu ambiguous includes\n\n", ambiguous.size());
+        std::cout << "Found " << ambiguous.size() << " ambiguous includes\n\n";
         for (auto &i : ambiguous) {
-            printf("Include for %s\nFound in:\n", i.first.c_str());
+            std::cout << "Include for " << i.first << "\nFound in : \n";
             for (auto &s : i.second) {
-                printf("  included from %s\n", s.c_str());
+                std::cout << "  included from " << s << "\n";
             }
-            printf("Options for file:\n");
+            std::cout << "Options for file:\n";
             for (auto &c : collisions[i.first]) {
-                printf("  %s\n", c.c_str());
+                std::cout << "  " << c << "\n";
             }
-            printf("\n");
+            std::cout << "\n";
         }
     }
     void Help(std::vector<std::string>) {
-        printf("C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n");
-        printf("Copyright (C) 2016, TomTom International BV\n");
-        printf("Version " CURRENT_VERSION "\n");
-        printf("\n");
-        printf("  Usage:\n");
-        printf("    %s [--dir <source-directory>] <command>\n", programName.c_str());
-        printf("    Source directory is assumed to be the current one if unspecified\n");
-        printf("\n");
-        printf("  Commands:\n");
-        printf("  --help                        : Produce this help text\n");
-        printf("\n");
-        printf("  Extracting graphs:\n");
-        printf("  --graph <output>              : Graph of all components with dependencies\n");
-        printf("  --graph-cycles <output>       : Graph of components with cyclic dependencies on other components\n");
-        printf("  --graph-for <output> <target> : Graph for all dependencies of a specific target\n");
-        printf("\n");
-        printf("  Getting information:\n");
-        printf("  --stats                       : Info about code base size, complexity and cyclic dependency count\n");
-        printf("  --cycles <targetname>         : Find all possible paths from this target back to itself\n");
-        printf("  --shortest                    : Determine shortest path between components and its reason\n");
-        printf("  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n");
-        printf("                                       - libraries that are not used\n");
-        printf("                                       - components that use a lot of other components\n");
-        printf("                                       - components with dependencies towards executables\n");
-        printf("                                       - components with less than 200 LoC\n");
-        printf("                                       - components with more than 20 kLoC\n");
-        printf("                                       - components that are part of a cycle\n");
-        printf("                                       - files that are more than 2000 LoC\n");
-        printf("                                       - files that are not compiled and never included\n");
-        printf("\n");
-        printf("  Target information:\n");
-        printf("  --info                        : Show all information on a given specific target\n");
-        printf("  --usedby                      : Find all references to a specific header file\n");
-        printf("  --inout                       : Find all incoming and outgoing links for a target\n");
-        printf("  --ambiguous                   : Find all include statements that could refer to more than one header\n");
-        printf("\n");
-        printf("  Automatic CMakeLists.txt generation:\n");
-        printf("     Note: These commands only have any effect on CMakeLists.txt marked with \"%s\"\n", Configuration::Get().regenTag.c_str());
-        printf("  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n");
-        printf("  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n");
+        std::cout << "C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n";
+        std::cout << "Copyright (C) 2016, TomTom International BV\n";
+        std::cout << "Version " CURRENT_VERSION "\n";
+        std::cout << "\n";
+        std::cout << "  Usage:\n";
+        std::cout << "    " << programName << " [--dir <source - directory>] <command>\n";
+        std::cout << "    Source directory is assumed to be the current one if unspecified\n";
+        std::cout << "\n";
+        std::cout << "  Commands:\n";
+        std::cout << "  --help                        : Produce this help text\n";
+        std::cout << "\n";
+        std::cout << "  Extracting graphs:\n";
+        std::cout << "  --graph <output>              : Graph of all components with dependencies\n";
+        std::cout << "  --graph-cycles <output>       : Graph of components with cyclic dependencies on other components\n";
+        std::cout << "  --graph-for <output> <target> : Graph for all dependencies of a specific target\n";
+        std::cout << "\n";
+        std::cout << "  Getting information:\n";
+        std::cout << "  --stats                       : Info about code base size, complexity and cyclic dependency count\n";
+        std::cout << "  --cycles <targetname>         : Find all possible paths from this target back to itself\n";
+        std::cout << "  --shortest                    : Determine shortest path between components and its reason\n";
+        std::cout << "  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n";
+        std::cout << "                                       - libraries that are not used\n";
+        std::cout << "                                       - components that use a lot of other components\n";
+        std::cout << "                                       - components with dependencies towards executables\n";
+        std::cout << "                                       - components with less than 200 LoC\n";
+        std::cout << "                                       - components with more than 20 kLoC\n";
+        std::cout << "                                       - components that are part of a cycle\n";
+        std::cout << "                                       - files that are more than 2000 LoC\n";
+        std::cout << "                                       - files that are not compiled and never included\n";
+        std::cout << "\n";
+        std::cout << "  Target information:\n";
+        std::cout << "  --info                        : Show all information on a given specific target\n";
+        std::cout << "  --usedby                      : Find all references to a specific header file\n";
+        std::cout << "  --inout                       : Find all incoming and outgoing links for a target\n";
+        std::cout << "  --ambiguous                   : Find all include statements that could refer to more than one header\n";
+        std::cout << "\n";
+        std::cout << "  Automatic CMakeLists.txt generation:\n";
+        std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << Configuration::Get().regenTag << "\"\n";
+        std::cout << "  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n";
+        std::cout << "  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
     bool projectLoaded;
     std::string programName;
@@ -350,7 +350,7 @@ private:
     boost::filesystem::path outputRoot, projectRoot;
 };
 
-int main(int argc, char **argv) {
+int main(int argc, const char **argv) {
     Operations op(argc, argv);
     op.RunCommands();
     return 0;

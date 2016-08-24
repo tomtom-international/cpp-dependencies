@@ -20,6 +20,7 @@
 #include "Configuration.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <iostream>
 
 #define CURSES_CYCLIC_DEPENDENCY "[33m"
 #define CURSES_PUBLIC_DEPENDENCY "[34m"
@@ -54,7 +55,7 @@ static const char* getShapeForSize(Component* c) {
 
 void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
-    out << "digraph dependencies {" << "\n";
+    out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
             c.second->files.size()) {
@@ -67,7 +68,7 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c.second->QuotedName() << " -> " << d->QuotedName() << " [color="
-                        << getLinkColor(c.second, d) << "];" << "\n";
+                        << getLinkColor(c.second, d) << "];" << '\n';
                 }
             }
         }
@@ -76,35 +77,35 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c.second->QuotedName() << " -> " << d->QuotedName() << " [color="
-                        << getLinkColor(c.second, d) << "];" << "\n";
+                        << getLinkColor(c.second, d) << "];" << '\n';
                 }
             }
         }
     }
-    out << "}" << "\n";
+    out << "}" << '\n';
 }
 
 void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
-    out << "digraph dependencies {" << "\n";
+    out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->circulars.empty()) {
             continue;
         }
 
-        out << "  " << c.second->QuotedName() << "\n";
+        out << "  " << c.second->QuotedName() << '\n';
 
         for (const auto &t : c.second->circulars) {
             out << "  " << c.second->QuotedName() << " -> " << t->QuotedName() << " [color="
-                << getLinkColor(c.second, t) << "];" << "\n";
+                << getLinkColor(c.second, t) << "];" << '\n';
         }
     }
-    out << "}" << "\n";
+    out << "}" << '\n';
 }
 
 void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
     if (!c) {
-        printf("Component does not exist (doublecheck spelling)\n");
+        std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
     boost::filesystem::ofstream out(outfile);
@@ -113,12 +114,12 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
     std::set<Component *> comps;
     todo.push(c);
     comps.insert(c);
-    out << "digraph dependencies {" << "\n";
+    out << "digraph dependencies {" << '\n';
     while (!todo.empty()) {
         Component *c2 = todo.top();
         todo.pop();
 
-        out << "  " << c2->QuotedName() << "];" << "\n";
+        out << "  " << c2->QuotedName() << "];" << '\n';
 
         std::set<Component *> depcomps;
         for (auto &d : c2->privDeps) {
@@ -126,7 +127,7 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(c2, d)
-                        << "];" << "\n";
+                        << "];" << '\n';
                 }
                 if (comps.insert(d).second) {
                     todo.push(d);
@@ -138,7 +139,7 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(c2, d)
-                        << "];" << "\n";
+                        << "];" << '\n';
                 }
                 if (comps.insert(d).second) {
                     todo.push(d);
@@ -146,7 +147,7 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
             }
         }
     }
-    out << "}" << "\n";
+    out << "}" << '\n';
 }
 
 void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<Component *> alreadyHad,
@@ -158,9 +159,9 @@ void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<C
     for (auto &d : c->circulars) {
         if (d == origin) {
             for (auto &comp : order) {
-                printf("%s -> ", comp->NiceName('.').c_str());
+                std::cout << comp->NiceName('.') << " -> ";
             }
-            printf("%s\n", origin->NiceName('.').c_str());
+            std::cout << origin->NiceName('.') << "\n";
         } else {
             FindAndPrintCycleFrom(origin, d, alreadyHad, order);
         }
@@ -175,52 +176,52 @@ void PrintCyclesForTarget(Component *c) {
 
 void PrintLinksForTarget(Component *c) {
     std::vector<std::string> sortedPubLinks(SortedNiceNames(c->pubLinks));
-    printf("Public linked (%zu):", sortedPubLinks.size());
+    std::cout << "Public linked (" << sortedPubLinks.size() << "):";
     for (auto &d : sortedPubLinks) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
 
     std::vector<std::string> sortedPrivLinks(SortedNiceNames(c->privLinks));
-    printf("\nPrivate linked (%zu):", sortedPrivLinks.size());
+    std::cout << "Private linked (" << sortedPrivLinks.size() << "):";
     for (auto &d : sortedPrivLinks) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
-    printf("\n");
+    std::cout << '\n';
 }
 
 void PrintInfoOnTarget(Component *c) {
     if (!c) {
-        printf("Component does not exist (doublecheck spelling)\n");
+        std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
-    printf("Root: %s\n", c->root.c_str());
-    printf("Name: %s\n", c->name.c_str());
-    printf("Type: %s\n", c->type.c_str());
-    printf("Lines of Code: %zu\n", c->loc());
-    printf("Recreate: %s\n", c->recreate ? "true" : "false");
-    printf("Has CMakeAddon.txt: %s\n", c->hasAddonCmake ? "true" : "false");
+    std::cout << "Root: " << c->root.string() << '\n';
+    std::cout << "Name: " << c->name.c_str() << '\n';
+    std::cout << "Type: " << c->type.c_str() << '\n';
+    std::cout << "Lines of Code: " << c->loc() << '\n';
+    std::cout << "Recreate: " << (c->recreate ? "true" : "false") << '\n';
+    std::cout << "Has CMakeAddon.txt: " << (c->hasAddonCmake ? "true" : "false") << '\n';
 
     std::vector<std::string> sortedPubDeps(SortedNiceNames(c->pubDeps));
-    printf("Public dependencies (%zu): ", sortedPubDeps.size());
+    std::cout << "Public dependencies (" << sortedPubDeps.size() << "): ";
     for (auto &d : sortedPubDeps) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
     std::vector<std::string> sortedPrivDeps(SortedNiceNames(c->privDeps));
-    printf("\nPrivate dependencies (%zu):", sortedPrivDeps.size());
+    std::cout << "\nPrivate dependencies (" << sortedPrivDeps.size() << "): ";
     for (auto &d : sortedPrivDeps) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
-    printf("\nBuild-afters:");
+    std::cout << "\nBuild-afters:";
     for (auto &d : c->buildAfters) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
-    printf("\nFiles (%zu):", c->files.size());
+    std::cout << "\nFiles (" << c->files.size() << "):";
     for (auto &d : c->files) {
-        printf(" %s", d->path.string().c_str());
+        std::cout << ' ' << d->path.string();
     }
-    printf("\n");
+    std::cout << '\n';
     PrintLinksForTarget(c);
-    printf("\n");
+    std::cout << '\n';
 }
 
 void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, bool (*predicate)(const Component&)) {
@@ -232,12 +233,12 @@ void PrintAllComponents(std::unordered_map<std::string, Component *> &components
   }
   if (selected.empty()) return;
 
-  printf("%s\n", description);
+  std::cout << description << '\n';
   std::sort(selected.begin(), selected.end());
   for (auto& c : selected) {
-    printf("  %s\n", c.c_str());
+    std::cout << "  " << c << '\n';
   }
-  printf("\n");
+  std::cout << '\n';
 }
 
 void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&)) {
@@ -249,12 +250,12 @@ void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* des
   }
   if (selected.empty()) return;
 
-  printf("%s\n", description);
+  std::cout << description << '\n';
   std::sort(selected.begin(), selected.end());
   for (auto& c : selected) {
-    printf("  %s\n", c.c_str());
+    std::cout << "  " << c << '\n';
   }
-  printf("\n");
+  std::cout << '\n';
 }
 
 void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to) {
@@ -279,20 +280,19 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
                     links.pop_back();
                     std::string color = getLinkColor(p, c2);
                     if (color == Configuration::Get().cycleColor) {
-                        printf(CURSES_CYCLIC_DEPENDENCY);
+                        std::cout << CURSES_CYCLIC_DEPENDENCY;
                     } else if (color == Configuration::Get().publicDepColor) {
-                        printf(CURSES_PUBLIC_DEPENDENCY);
+                        std::cout << CURSES_PUBLIC_DEPENDENCY;
                     } else {
-                        printf(CURSES_PRIVATE_DEPENDENCY);
+                        std::cout << CURSES_PRIVATE_DEPENDENCY;
                     }
-                    printf("%s -> %s\n", p->NiceName('.').c_str(), c2->NiceName('.').c_str());
-                    printf(CURSES_RESET_COLOR);
+                    std::cout << p->NiceName('.') << " -> " << c2->NiceName('.') << '\n';
+                    std::cout << CURSES_RESET_COLOR;
                     for (auto &f : files) {
                         if (f.second.component == p) {
                             for (auto &f2 : f.second.dependencies) {
                                 if (f2->component == c2) {
-                                    printf("  %s includes %s\n", f.second.path.string().c_str(),
-                                           f2->path.string().c_str());
+                                    std::cout << "  " << f.second.path.string() << " includes " << f2->path.string() << '\n';
                                 }
                             }
                         }
@@ -318,6 +318,6 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
         }
     }
 
-    printf("No path could be found from %s to %s\n", from->NiceName('.').c_str(), to->NiceName('.').c_str());
+    std::cout << "No path could be found from " << from->NiceName('.') << " to " << to->NiceName('.') << '\n';
 }
 

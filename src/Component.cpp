@@ -21,7 +21,7 @@ std::string Component::NiceName(char sub) const {
         return std::string("ROOT");
     }
 
-    std::string name = root.string().c_str() + 2;
+    std::string name = root.generic_string().c_str() + 2;
     std::replace(name.begin(), name.end(), '/', sub);
     return name;
 }
@@ -50,7 +50,7 @@ std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &
 }
 
 Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path) {
-    Component *&comp = components[path.string()];
+    Component *&comp = components[path.generic_string()];
     if (!comp) {
         comp = new Component(path);
     }

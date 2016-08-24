@@ -48,7 +48,7 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
 
 static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
-    std::string file = path.filename().string();
+    std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
@@ -75,7 +75,7 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
 }
 
 static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
-    File &f = files[path.string()];
+    File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
     boost::filesystem::ifstream in(path);
@@ -118,8 +118,8 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
 
         // skip hidden files and dirs
         if (boost::filesystem::is_directory(parent) &&
-            parent.filename().string().size() > 2 &&
-            parent.filename().string()[0] == '.') {
+            parent.filename().generic_string().size() > 2 &&
+            parent.filename().generic_string()[0] == '.') {
             it.pop();
             if (it == end) {
                 break;
@@ -132,9 +132,10 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
         } else if (boost::filesystem::is_regular_file(it->status())) {
-            if (it->path().string().find("CMakeAddon.txt") != std::string::npos) {
+            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().c_str())) {
+            }
+            else if (IsCode(it->path().extension().generic_string().c_str())) {
                 ReadCode(files, it->path());
             }
         }
