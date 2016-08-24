@@ -93,7 +93,7 @@ void OutputCircularDependencies(std::unordered_map<std::string, Component *> &co
             continue;
         }
 
-        out << "  " << c.second->QuotedName() << '\n';
+		out << "  " << c.second->QuotedName() << " [shape=" << getShapeForSize(c.second) << "];\n";
 
         for (const auto &t : c.second->circulars) {
             out << "  " << c.second->QuotedName() << " -> " << t->QuotedName() << " [color="
@@ -119,7 +119,7 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
         Component *c2 = todo.top();
         todo.pop();
 
-        out << "  " << c2->QuotedName() << "];" << '\n';
+		out << "  " << c2->QuotedName() << " [shape=" << getShapeForSize(c2) << "];\n";
 
         std::set<Component *> depcomps;
         for (auto &d : c2->privDeps) {

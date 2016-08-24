@@ -108,15 +108,16 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir) {
+void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir, bool inferredComponents) {
     boost::filesystem::path outputpath = boost::filesystem::current_path();
     boost::filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
     for (boost::filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
+		if (inferredComponents) AddComponentDefinition(components, parent);
 
-        // skip hidden files and dirs
+		// skip hidden files and dirs
         if (boost::filesystem::is_directory(parent) &&
             parent.filename().generic_string().size() > 2 &&
             parent.filename().generic_string()[0] == '.') {
@@ -134,8 +135,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
         } else if (boost::filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
-            }
-            else if (IsCode(it->path().extension().generic_string().c_str())) {
+            } else if (IsCode(it->path().extension().generic_string().c_str())) {
                 ReadCode(files, it->path());
             }
         }
