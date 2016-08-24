@@ -43,7 +43,7 @@ class Operations {
 public:
     Operations(int argc, const char** argv)
     : projectLoaded(false)
-	, inferredComponents(false)
+    , inferredComponents(false)
     , programName(argv[0])
     , args(argv+1, argv+argc)
     {
@@ -92,7 +92,7 @@ private:
         commands["--regeu"] = &Operations::Regen;
         commands["--dryregen"] = &Operations::DryRegen;
         commands["--dir"] = &Operations::Dir;
-		commands["--infer"] = &Operations::Infer;
+        commands["--infer"] = &Operations::Infer;
     }
     void RunCommand(std::vector<std::string>::iterator &arg, std::vector<std::string>::iterator &end) {
         std::string lowerCommand;
@@ -105,7 +105,7 @@ private:
     }
     void LoadProject() {
         if (projectLoaded) return;
-		LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents);
+        LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
@@ -144,9 +144,9 @@ private:
         for (auto& s : args) ignorefiles.insert(s);
         UnloadProject();
     }
-	void Infer(std::vector<std::string> args) {
-		inferredComponents = true;
-	}
+    void Infer(std::vector<std::string> ) {
+        inferredComponents = true;
+    }
     void Drop(std::vector<std::string> args) {
         if (args.empty())
             std::cout << "No files specified to ignore?\n";
@@ -342,7 +342,7 @@ private:
         std::cout << "  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
     bool projectLoaded;
-	bool inferredComponents;
+    bool inferredComponents;
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> args;
