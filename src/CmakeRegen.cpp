@@ -19,6 +19,8 @@
 #include "Configuration.h"
 #include <experimental/filesystem>
 #include <fstream>
+#include <set>
+#include <list>
 
 
 static bool FilesAreDifferent(const std::experimental::filesystem::path &a, const std::experimental::filesystem::path &b) {

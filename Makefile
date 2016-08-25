@@ -13,7 +13,7 @@
 # limitations under the License.
 
 COMPILER?=g++
-LDFLAGS=-lboost_filesystem -lboost_system
+LDFLAGS=-lstdc++fs
 
 STANDARD=c++11
 
