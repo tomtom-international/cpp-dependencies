@@ -5,7 +5,8 @@ compiler:
 os:
   - osx
 script:
-  - make && make test
+  - make
+
 sudo: required
 dist: trusty
 
@@ -21,6 +22,7 @@ matrix:
             - g++-4.9
             - libboost-system-dev
             - libboost-filesystem-dev
+            - libgtest-dev
       env: COMPILER=g++-4.9
     - compiler: gcc
       os: linux
@@ -32,6 +34,7 @@ matrix:
             - g++-5
             - libboost-system-dev
             - libboost-filesystem-dev
+            - libgtest-dev
       env: COMPILER=g++-5
     - compiler: clang
       os: linux
@@ -44,6 +47,7 @@ matrix:
             - clang-3.6
             - libboost-system-dev
             - libboost-filesystem-dev
+            - libgtest-dev
       env: COMPILER=clang++-3.6
     - compiler: clang
       os: linux
@@ -56,4 +60,5 @@ matrix:
             - clang-3.7
             - libboost-system-dev
             - libboost-filesystem-dev
+            - libgtest-dev
       env: COMPILER=clang++-3.7

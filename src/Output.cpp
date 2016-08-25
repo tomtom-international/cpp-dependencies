@@ -53,7 +53,7 @@ static const char* getShapeForSize(Component* c) {
     }
 }
 
-void OutputFlatDependencies(const boost::filesystem::path &outfile) {
+void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
@@ -85,7 +85,7 @@ void OutputFlatDependencies(const boost::filesystem::path &outfile) {
     out << "}" << '\n';
 }
 
-void OutputCircularDependencies(const boost::filesystem::path &outfile) {
+void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile) {
     boost::filesystem::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
@@ -93,7 +93,7 @@ void OutputCircularDependencies(const boost::filesystem::path &outfile) {
             continue;
         }
 
-        out << "  " << c.second->QuotedName() << '\n';
+        out << "  " << c.second->QuotedName() << " [shape=" << getShapeForSize(c.second) << "];\n";
 
         for (const auto &t : c.second->circulars) {
             out << "  " << c.second->QuotedName() << " -> " << t->QuotedName() << " [color="
@@ -105,7 +105,7 @@ void OutputCircularDependencies(const boost::filesystem::path &outfile) {
 
 void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
     if (!c) {
-        printf("Component does not exist (doublecheck spelling)\n");
+        std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
     boost::filesystem::ofstream out(outfile);
@@ -119,7 +119,7 @@ void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c) {
         Component *c2 = todo.top();
         todo.pop();
 
-        out << "  " << c2->QuotedName() << "];" << '\n';
+        out << "  " << c2->QuotedName() << " [shape=" << getShapeForSize(c2) << "];\n";
 
         std::set<Component *> depcomps;
         for (auto &d : c2->privDeps) {
@@ -159,9 +159,9 @@ void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<C
     for (auto &d : c->circulars) {
         if (d == origin) {
             for (auto &comp : order) {
-                printf("%s -> ", comp->NiceName('.').c_str());
+                std::cout << comp->NiceName('.') << " -> ";
             }
-            printf("%s\n", origin->NiceName('.').c_str());
+            std::cout << origin->NiceName('.') << "\n";
         } else {
             FindAndPrintCycleFrom(origin, d, alreadyHad, order);
         }
@@ -191,7 +191,7 @@ void PrintLinksForTarget(Component *c) {
 
 void PrintInfoOnTarget(Component *c) {
     if (!c) {
-        printf("Component does not exist (doublecheck spelling)\n");
+        std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
     std::cout << "Root: " << c->root.string() << '\n';
@@ -204,7 +204,7 @@ void PrintInfoOnTarget(Component *c) {
     std::vector<std::string> sortedPubDeps(SortedNiceNames(c->pubDeps));
     std::cout << "Public dependencies (" << sortedPubDeps.size() << "): ";
     for (auto &d : sortedPubDeps) {
-        printf(" %s", d.c_str());
+        std::cout << ' ' << d;
     }
     std::vector<std::string> sortedPrivDeps(SortedNiceNames(c->privDeps));
     std::cout << "\nPrivate dependencies (" << sortedPrivDeps.size() << "): ";
@@ -224,7 +224,7 @@ void PrintInfoOnTarget(Component *c) {
     std::cout << '\n';
 }
 
-void PrintAllComponents(const char* description, bool (*predicate)(const Component&)) {
+void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, bool (*predicate)(const Component&)) {
   std::vector<std::string> selected;
   for (auto& c : components) {
     if (predicate(*c.second)) {
@@ -241,7 +241,7 @@ void PrintAllComponents(const char* description, bool (*predicate)(const Compone
   std::cout << '\n';
 }
 
-void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
+void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&)) {
   std::vector<std::string> selected;
   for (auto& f : files) {
     if (predicate(f.second)) {
@@ -258,7 +258,7 @@ void PrintAllFiles(const char* description, bool (*predicate)(const File&)) {
   std::cout << '\n';
 }
 
-void FindSpecificLink(Component *from, Component *to) {
+void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to) {
     std::unordered_map<Component *, Component *> parents;
     std::unordered_set<Component *> alreadyHad;
     std::deque<Component *> tocheck;

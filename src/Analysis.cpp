@@ -40,7 +40,7 @@ static bool DoesDependencyTransitiveClosureContainSelf(Component *source, Compon
     return false;
 }
 
-void FindCircularDependencies() {
+void FindCircularDependencies(std::unordered_map<std::string, Component *> &components) {
     for (auto &c : components) {
         for (auto &c2 : c.second->pubDeps) {
             if (DoesDependencyTransitiveClosureContainSelf(c.second, c2)) {
@@ -55,7 +55,20 @@ void FindCircularDependencies() {
     }
 }
 
-void MapFilesToComponents() {
+void KillComponent(std::unordered_map<std::string, Component *> &components, const std::string& str) {
+  Component* target = components[str];
+  if (target) {
+    for (auto& c : components) {
+      c.second->pubDeps.erase(target);
+      c.second->privDeps.erase(target);
+      c.second->circulars.clear();
+    }
+    delete target;
+  }
+  components.erase(str);
+}
+
+void MapFilesToComponents(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files) {
     for (auto &fp : files) {
         std::string nameCopy = fp.first;
         size_t slashPos = nameCopy.find_last_of('/');
@@ -73,7 +86,9 @@ void MapFilesToComponents() {
 }
 
 void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &includeLookup,
-                               std::map<std::string, std::vector<std::string>> &ambiguous) {
+                               std::map<std::string, std::vector<std::string>> &ambiguous,
+                               std::unordered_map<std::string, Component *> &components, 
+                               std::unordered_map<std::string, File>& files) {
     for (auto &fp : files) {
         for (auto &i : fp.second.rawIncludes) {
             std::string lowercaseInclude;
@@ -96,14 +111,14 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                     fp.second.dependencies.insert(dep);
 
                     std::string inclpath = fullPath.substr(0, fullPath.size() - i.size() - 1);
-                    if (fp.second.path.parent_path().string() == dep->path.parent_path().string()) {
+                    if (fp.second.path.parent_path().generic_string() == dep->path.parent_path().generic_string()) {
                         // Omit include paths for files in your own folder. This under-declares for pointy-bracket includes in your own
                         // folder, but at least it prevents overdeclaring.
                         inclpath = "";
-                    } else if (inclpath.size() == dep->component->root.string().size()) {
+                    } else if (inclpath.size() == dep->component->root.generic_string().size()) {
                         inclpath = ".";
-                    } else if (inclpath.size() > dep->component->root.string().size() + 1) {
-                        inclpath = inclpath.substr(dep->component->root.string().size() + 1);
+                    } else if (inclpath.size() > dep->component->root.generic_string().size() + 1) {
+                        inclpath = inclpath.substr(dep->component->root.generic_string().size() + 1);
                     } else {
                         inclpath = "";
                     }
@@ -123,7 +138,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
     }
 }
 
-void PropagateExternalIncludes() {
+void PropagateExternalIncludes(std::unordered_map<std::string, File>& files) {
     bool foundChange;
     do {
         foundChange = false;
