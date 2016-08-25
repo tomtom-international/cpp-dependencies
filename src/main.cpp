@@ -146,6 +146,7 @@ private:
     }
     void Infer(std::vector<std::string> ) {
         inferredComponents = true;
+        UnloadProject();
     }
     void Drop(std::vector<std::string> args) {
         if (args.empty())
