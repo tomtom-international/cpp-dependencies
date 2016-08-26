@@ -16,6 +16,7 @@ elseif(${MSVC})
     set(${PROJECT_NAME}_COMPILE_OPTIONS /W4)
 endif()
 
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
              COMPONENTS filesystem
              REQUIRED)
