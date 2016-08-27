@@ -35,28 +35,33 @@ limitations under the License.
 
 # Build and run
 
-The tool depends on Boost.Filesystem being available and usable. Installing this
-should be done with your platform's package management system, such as Apt, 
-Pacman or Brew.
+The tool depends on Boost.Filesystem being available and usable.
+Installing this should be done with your platform's package management system,
+such as Apt, Pacman or Brew.
 
-To build the tool, execute:
+The build configuration is created with _CMake_.
+To create the build configuration for your build system (GNU make, MSBuild/Visual Studio)
+create a build directory outside this source directory and run
+
+    cmake <PATH_TO_THIS_SOURCE_DIR>
+    
+In case Boost was installed in a non-default path (i.e. manually compiled with `--prefix`)
+add `-DBOOST_ROOT=<BOOST_PREFIX_PATH>` to the invocation of _CMake_. 
+
+To build the tool, either execute
 
     make
 
+for GNU make or open the Visual Studio solution file generated in the build directory.
+
 This create the executable file `cpp-dependencies`.
 
-To clean up the files created by the build, execute:
-
-    make clean
-    
-To check if the tool was compiled correctly, execute:
-  
     ./cpp-dependencies
-    
+
 This provides help information about the tool. More information about
 its usage is presented in the next paragraph.
-    
-    
+
+
 # Using `cpp-dependencies` to analyze a component
 
 As a first thing on a code base is to find out whether it can read the code correctly. From the root of the project, 
