@@ -16,6 +16,16 @@ dist: trusty
 
 matrix:
   include:
+    - os: osx
+      compiler: clang
+      before_script:
+        - brew update
+        - brew outdated cmake || brew upgrade cmake
+    - os: osx
+      compiler: gcc
+      before_script:
+        - brew update
+        - brew outdated cmake || brew upgrade cmake
     - compiler: gcc
       os: linux
       addons:

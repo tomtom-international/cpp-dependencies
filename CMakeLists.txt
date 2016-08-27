@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 project(cpp_dependencies
         LANGUAGES CXX)
@@ -18,7 +18,7 @@ elseif(${MSVC})
 endif()
 
 find_package(Boost
-             COMPONENTS filesystem
+             COMPONENTS filesystem system
              REQUIRED)
 
 add_subdirectory(src)
