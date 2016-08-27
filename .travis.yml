@@ -1,13 +1,9 @@
 language: cpp
-compiler:
-  - clang
-  - gcc
-os:
-  - osx
+
 script:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC} ..
   - make
   - make test
 
@@ -16,16 +12,18 @@ dist: trusty
 
 matrix:
   include:
-    - os: osx
-      compiler: clang
+    - compiler: clang
+      os: osx
       before_script:
         - brew update
         - brew outdated cmake || brew upgrade cmake
-    - os: osx
-      compiler: gcc
+      env: CXX=clang++ CC=clang
+    - compiler: gcc
+      os: osx
       before_script:
         - brew update
         - brew outdated cmake || brew upgrade cmake
+      env: CXX=g++ CC=gcc
     - compiler: gcc
       os: linux
       addons:
@@ -38,7 +36,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=g++-4.9
+      env: CXX=g++-4.9 CC=gcc-4.9
     - compiler: gcc
       os: linux
       addons:
@@ -51,7 +49,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=g++-5
+      env: CXX=g++-5 CC=gcc-5
     - compiler: clang
       os: linux
       addons:
@@ -65,7 +63,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=clang++-3.6
+      env: CXX=clang++-3.6 CC=clang-3.6
     - compiler: clang
       os: linux
       addons:
@@ -79,4 +77,4 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=clang++-3.7
+      env: CXX=clang++-3.7 CC=clang-3.7
