@@ -5,7 +5,11 @@ compiler:
 os:
   - osx
 script:
+  - mkdir build
+  - cd build
+  - cmake ..
   - make
+  - make test
 
 sudo: required
 dist: trusty
@@ -20,6 +24,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
@@ -32,6 +37,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
@@ -45,6 +51,7 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
@@ -58,6 +65,7 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
