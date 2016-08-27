@@ -12,9 +12,10 @@ target_compile_options(unittests
 set_property(TARGET unittests
              APPEND PROPERTY LINK_FLAGS --coverage)
 target_include_directories(unittests
-                           PUBLIC "${CMAKE_SOURCE_DIR}/src")
+                           PUBLIC "${CMAKE_SOURCE_DIR}/src"
+                                  "${Boost_INCLUDE_DIRS}")
 target_link_libraries(unittests
-                      PUBLIC Boost::filesystem
+                      PUBLIC ${Boost_LIBRARIES}
                              gtest_main)
 add_test(NAME unittests
          COMMAND unittests)

@@ -25,9 +25,10 @@ add_executable(cpp-dependencies
 target_compile_options(cpp-dependencies
                        PUBLIC ${${PROJECT_NAME}_COMPILE_OPTIONS})
 target_link_libraries(cpp-dependencies
-                      PUBLIC Boost::filesystem)
+                      PUBLIC ${Boost_LIBRARIES})
 target_include_directories(cpp-dependencies
-                           PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+                           PUBLIC "${CMAKE_CURRENT_LIST_DIR}"
+                                  "${Boost_INCLUDE_DIRS}")
 
 install(TARGETS cpp-dependencies
         RUNTIME DESTINATION bin)
