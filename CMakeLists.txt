@@ -14,9 +14,10 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES GNU)
     set(${PROJECT_NAME}_TEST_COMPILE_OPTIONS --coverage)
 elseif(${MSVC})
     set(${PROJECT_NAME}_COMPILE_OPTIONS /W4)
+    # boost get's compiled as static libs on Windows
+    set(Boost_USE_STATIC_LIBS ON)
 endif()
 
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
              COMPONENTS filesystem
              REQUIRED)
