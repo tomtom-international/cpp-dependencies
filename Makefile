@@ -23,9 +23,15 @@ TESTS=AnalysisCircularDependencies.cpp
 
 all: cpp-dependencies
 
+debug: cpp-dependencies-g
+
 obj/%.o: src/%.cpp
 	@mkdir -p obj
 	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD
+
+obj-g/%.o: src/%.cpp
+	@mkdir -p obj-g
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -g
 
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
@@ -38,6 +44,10 @@ test/obj/%.coverage.o: test/%.cpp
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
 
+cpp-dependencies-g: $(patsubst %.cpp,obj-g/%.o,$(SOURCES)) obj-g/main.o
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -g
+
+
 cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
 	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 -lgtest -lgtest_main -pthread --coverage
 
@@ -45,7 +55,7 @@ unittest: cpp-dependencies-unittests
 	./cpp-dependencies-unittests >unittest
 
 clean:
-	rm -rf obj cpp-dependencies
+	rm -rf obj obj-g cpp_dependencies cpp-dependencies-g
 
 install:
 	cp cpp-dependencies /usr/bin
