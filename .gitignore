@@ -43,3 +43,6 @@ obj
 cpp-dependencies
 cpp-dependencies-unittests
 
+/src/GPATH
+/src/GRTAGS
+/src/GTAGS

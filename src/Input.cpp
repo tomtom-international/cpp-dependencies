@@ -74,7 +74,8 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &inp_path) {
+    boost::filesystem::path path = boost::filesystem::canonical (inp_path);
     File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
