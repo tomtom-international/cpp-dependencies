@@ -11,7 +11,7 @@
 
 #include "StdFilesystem.h"
 
-#endif // _msc version 
+#endif // _msc version
 
 #endif // _MSC_VER
 
@@ -21,7 +21,7 @@
     (__GNUC__ == 5 && \
         (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
 
-#include "BoostFilesystem.h"
+#include "StdFilesystem.h"
 
 #else
 
