@@ -7,15 +7,21 @@
 
 #include <experimental/filesystem>
 
-using boost::filesystem::ifstream;
-using boost::filesystem::ofstream;
+namespace adapted_namespace
+{
+typedef boost::filesystem::ifstream ifstream;
+typedef boost::filesystem::ofstream ifstream;
+}
 
 #else
 
 #include <fstream>
 
-using std::ifstream;
-using std::ofstream;
+namespace adapted_namespace
+{
+typedef std::ifstream ifstream;
+typedef std::ofstream ofstream ;
+}
 
 #endif
 
@@ -24,21 +30,26 @@ using std::ofstream;
 #ifdef __GNUC__
 
 #if __GNUC__ > 5 || \
-    (__GNUC__ == 5 &&
-        (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
+    (__GNUC__ == 5 && \
+    (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
 
 #include <fstream>
 
-using std::ifstream;
-using std::ofstream;
-
+namespace adapted_namespace
+{
+typedef std::ifstream ifstream;
+typedef std::ofstream ofstream;
+}
 
 #else
 
 #include <experimental/filesystem>
 
-using boost::filesystem::ifstream;
-using boost::filesystem::ofstream;
+namespace adapted_namespace
+{
+typedef boost::filesystem::ifstream ifstream;
+typedef boost::filesystem::ofstream ifstream;
+}
 
 #endif
 

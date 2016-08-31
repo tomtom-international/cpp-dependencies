@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#include "Component.h"
-#include "Input.h"
-#include "CmakeRegen.h"
-#include "Output.h"
 #include "Analysis.h"
-#include "Constants.h"
+#include "CmakeRegen.h"
+#include "Component.h"
 #include "Configuration.h"
+#include "Constants.h"
+#include "FilesystemInclude.h"
+#include "Input.h"
+#include "Output.h"
 #include <iostream>
 
 static bool CheckVersionFile() {
@@ -46,7 +47,7 @@ public:
     , args(argv+1, argv+argc)
     {
         RegisterCommands();
-        projectRoot = outputRoot = std::experimental::filesystem::current_path();
+        projectRoot = outputRoot = current_path();
         ignorefiles = std::unordered_set<std::string>{
                 "unistd.h",
                 "console.h",
@@ -242,7 +243,7 @@ private:
     }
     void DoActualRegen(std::vector<std::string> args, bool dryRun) {
         LoadProject();
-        std::experimental::filesystem::current_path(projectRoot);
+        current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
                 RegenerateCmakeFilesForComponent(c.second, dryRun);
@@ -352,7 +353,7 @@ private:
     std::unordered_map<std::string, std::string> includeLookup;
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
-    path outputRoot, projectRoot;
+    adapted_namespace::path outputRoot, projectRoot;
 };
 
 int main(int argc, const char **argv) {

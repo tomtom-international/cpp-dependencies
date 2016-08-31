@@ -52,8 +52,8 @@ static const char* getShapeForSize(Component* c) {
     }
 }
 
-void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const path &outfile) {
-    ofstream out(outfile);
+void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const adapted_namespace::path &outfile) {
+    adapted_namespace::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
@@ -85,8 +85,8 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
 }
 
 void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
-                                const path &outfile) {
-    ofstream out(outfile);
+                                const adapted_namespace::path &outfile) {
+    adapted_namespace::ofstream out(outfile);
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->circulars.empty()) {
@@ -103,12 +103,12 @@ void OutputCircularDependencies(std::unordered_map<std::string, Component *> &co
     out << "}" << '\n';
 }
 
-void PrintGraphOnTarget(const path &outfile, Component *c) {
+void PrintGraphOnTarget(const adapted_namespace::path &outfile, Component *c) {
     if (!c) {
         std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
-    ofstream out(outfile);
+    adapted_namespace::ofstream out(outfile);
 
     std::stack<Component *> todo;
     std::set<Component *> comps;

@@ -24,10 +24,10 @@
 struct Component;
 
 void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components,
-                            const path &outfile);
+                            const adapted_namespace::path &outfile);
 void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
-                                const path &outfile);
-void PrintGraphOnTarget(const path &outfile, Component *c);
+                                const adapted_namespace::path &outfile);
+void PrintGraphOnTarget(const adapted_namespace::path &outfile, Component *c);
 void PrintAllComponents(std::unordered_map<std::string, Component *> &components,
                         const char* description,
                         bool (*)(const Component&));

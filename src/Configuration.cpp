@@ -32,7 +32,7 @@ Configuration::Configuration()
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
 {
-  ifstream in(CONFIG_FILE);
+  adapted_namespace::ifstream in(CONFIG_FILE);
   std::string line;
   while (in.good()) {
     std::getline(in, line);
@@ -56,7 +56,7 @@ Configuration::Configuration()
     else if (name == "componentLocLowerLimit") { componentLocLowerLimit = atol(value.c_str()); }
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
-    else {  
+    else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
   }
