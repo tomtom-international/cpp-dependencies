@@ -17,17 +17,17 @@
 #ifndef __DEP_CHECKER__OUTPUT_H
 #define __DEP_CHECKER__OUTPUT_H
 
-#include <experimental/filesystem>
+#include "FilesystemInclude.h"
 #include <unordered_set>
 #include <vector>
 
 struct Component;
 
 void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components,
-                            const std::experimental::filesystem::path &outfile);
+                            const path &outfile);
 void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
-                                const std::experimental::filesystem::path &outfile);
-void PrintGraphOnTarget(const std::experimental::filesystem::path &outfile, Component *c);
+                                const path &outfile);
+void PrintGraphOnTarget(const path &outfile, Component *c);
 void PrintAllComponents(std::unordered_map<std::string, Component *> &components,
                         const char* description,
                         bool (*)(const Component&));

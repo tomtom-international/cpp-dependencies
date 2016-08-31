@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-#include "Input.h"
 #include "Component.h"
-#include "Constants.h"
 #include "Configuration.h"
+#include "FstreamInclude.h"
+#include "Input.h"
 #include <algorithm>
-#include <experimental/filesystem>
-#include <fstream>
 
 static std::string GetPathFromIncludeLine(const std::string &str) {
     size_t posAfterInclStmt = str.find("#include");
@@ -46,15 +44,15 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
     return str.substr(open + 1, close - open - 1);
 }
 
-static bool IsItemBlacklisted(const std::experimental::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
     std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
-                          const std::experimental::filesystem::path &path) {
-    std::ifstream in(path);
+                          const path &path) {
+    ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
@@ -75,11 +73,11 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-static void ReadCode(std::unordered_map<std::string, File>& files, const std::experimental::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const path &path) {
     File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
-    std::ifstream in(path);
+    ifstream in(path);
     std::string line;
     do {
         f.loc++;
@@ -112,9 +110,9 @@ static bool IsCode(const std::string &ext) {
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
-                  const std::experimental::filesystem::path& sourceDir,
+                  const path& sourceDir,
                   bool inferredComponents) {
-    std::experimental::filesystem::path outputpath = std::experimental::filesystem::current_path();
+    path outputpath = std::experimental::filesystem::current_path();
     std::experimental::filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
     for (std::experimental::filesystem::recursive_directory_iterator it("."), end;

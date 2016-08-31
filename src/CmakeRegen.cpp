@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "Component.h"
 #include "CmakeRegen.h"
+#include "Component.h"
 #include "Configuration.h"
-#include <experimental/filesystem>
-#include <fstream>
-#include <set>
+#include "FstreamInclude.h"
+#include "FilesystemInclude.h"
 #include <list>
+#include <set>
 
 
-static bool FilesAreDifferent(const std::experimental::filesystem::path &a, const std::experimental::filesystem::path &b) {
+static bool FilesAreDifferent(const path &a, const path &b) {
     if (file_size(a) != file_size(b)) {
         return true;
     }
-    std::ifstream as(a), bs(b);
+    ifstream as(a), bs(b);
     std::string l1, l2;
     while (as.good() && bs.good()) {
         getline(as, l1);
@@ -47,7 +47,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         std::list<std::string> files;
         for (auto &fp : comp->files) {
             files.push_back(fp->path.string().c_str() + compname.size() + 3);
-            std::experimental::filesystem::path p = fp->path;
+            path p = fp->path;
             if (fp->hasInclude) {
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
                                                                            fp->includePaths.end());
@@ -75,7 +75,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
 
         {
-            std::ofstream o(comp->root / "CMakeLists.txt.generated");
+            ofstream o(comp->root / "CMakeLists.txt.generated");
 
             o << "#\n";
             o << "# Copyright (C) " << Configuration::Get().companyName << ". All rights reserved.\n";

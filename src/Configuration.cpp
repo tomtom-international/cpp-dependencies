@@ -16,9 +16,9 @@
 
 #include "Configuration.h"
 #include "Constants.h"
-#include <stdlib.h>
-#include <fstream>
+#include "FstreamInclude.h"
 #include <iostream>
+#include <stdlib.h>
 
 Configuration::Configuration()
 : companyName("YourCompany")
@@ -32,7 +32,7 @@ Configuration::Configuration()
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
 {
-  std::ifstream in(CONFIG_FILE);
+  ifstream in(CONFIG_FILE);
   std::string line;
   while (in.good()) {
     std::getline(in, line);

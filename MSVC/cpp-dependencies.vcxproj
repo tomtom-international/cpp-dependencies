@@ -154,11 +154,13 @@
     <ClCompile Include="..\src\Output.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\FilesystemInclude.h" />
     <ClInclude Include="..\src\Analysis.h" />
     <ClInclude Include="..\src\CmakeRegen.h" />
     <ClInclude Include="..\src\Component.h" />
     <ClInclude Include="..\src\Configuration.h" />
     <ClInclude Include="..\src\Constants.h" />
+    <ClInclude Include="..\src\FstreamInclude.h" />
     <ClInclude Include="..\src\Input.h" />
     <ClInclude Include="..\src\Output.h" />
   </ItemGroup>

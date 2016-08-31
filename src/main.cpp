@@ -21,7 +21,6 @@
 #include "Analysis.h"
 #include "Constants.h"
 #include "Configuration.h"
-#include <experimental/filesystem>
 #include <iostream>
 
 static bool CheckVersionFile() {
@@ -353,7 +352,7 @@ private:
     std::unordered_map<std::string, std::string> includeLookup;
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
-    std::experimental::filesystem::path outputRoot, projectRoot;
+    path outputRoot, projectRoot;
 };
 
 int main(int argc, const char **argv) {

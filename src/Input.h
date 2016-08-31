@@ -17,11 +17,11 @@
 #ifndef __DEP_CHECKER__INPUT_H
 #define __DEP_CHECKER__INPUT_H
 
-#include <string>
-#include <experimental/filesystem>
+#include "FilesystemInclude.h"
 #include <regex>
-#include <unordered_set>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 struct File;
 struct Component;
@@ -31,7 +31,7 @@ bool IsCompileableFile(const std::string& ext);
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
-                  const std::experimental::filesystem::path& sourceDir,
+                  const path& sourceDir,
                   bool inferredComponents);
 
 #endif
