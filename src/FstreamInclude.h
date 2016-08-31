@@ -6,11 +6,24 @@
                                 (__GNUC__ == 5 && \
                                     (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0) ) ) ) )
 
-#include "StdFstream.h"
+#include <fstream>
+
+namespace adapted_namespace
+{
+typedef std::ifstream ifstream;
+typedef std::ofstream ofstream;
+}
 
 #else
 
-#include "BoostFstream.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
+namespace adapted_namespace
+{
+typedef boost::filesystem::ifstream ifstream;
+typedef boost::filesystem::ofstream ofstream;
+}
 
 #endif
 
