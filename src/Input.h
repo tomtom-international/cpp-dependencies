@@ -21,9 +21,18 @@
 #include <experimental/filesystem>
 #include <regex>
 #include <unordered_set>
+#include <unordered_map>
+
+struct File;
+struct Component;
 
 bool IsCompileableFile(const std::string& ext);
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const std::experimental::filesystem::path& sourceDir);
+
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const std::experimental::filesystem::path& sourceDir,
+                  bool inferredComponents);
 
 #endif
 

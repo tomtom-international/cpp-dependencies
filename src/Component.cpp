@@ -21,7 +21,7 @@ std::string Component::NiceName(char sub) const {
         return std::string("ROOT");
     }
 
-    std::string name = root.string().c_str() + 2;
+    std::string name = root.generic_string().c_str() + 2;
     std::replace(name.begin(), name.end(), '/', sub);
     return name;
 }
@@ -49,15 +49,16 @@ std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &
     return ret;
 }
 
-Component &AddComponentDefinition(const std::experimental::filesystem::path &path) {
-    Component *&comp = components[path.string()];
+Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components,
+                                  const std::experimental::filesystem::path &path) {
+    Component *&comp = components[path.generic_string()];
     if (!comp) {
         comp = new Component(path);
     }
     return *comp;
 }
 
-size_t NodesWithCycles() {
+size_t NodesWithCycles(std::unordered_map<std::string, Component *> &components) {
     size_t count = 0;
     for (auto &c : components) {
         if (!c.second->circulars.empty()) {
@@ -67,7 +68,7 @@ size_t NodesWithCycles() {
     return count;
 }
 
-void ExtractPublicDependencies() {
+void ExtractPublicDependencies(std::unordered_map<std::string, Component *> &components) {
     for (auto &c : components) {
         Component *comp = c.second;
         for (auto &fp : comp->files) {

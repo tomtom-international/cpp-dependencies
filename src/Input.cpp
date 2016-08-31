@@ -48,14 +48,15 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
 
 static bool IsItemBlacklisted(const std::experimental::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
-    std::string file = path.filename().string();
+    std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
-static void ReadCmakelist(const std::experimental::filesystem::path &path) {
+static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
+                          const std::experimental::filesystem::path &path) {
     std::ifstream in(path);
     std::string line;
-    Component &comp = AddComponentDefinition(path.parent_path());
+    Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
         getline(in, line);
         if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
@@ -74,8 +75,8 @@ static void ReadCmakelist(const std::experimental::filesystem::path &path) {
     } while (in.good());
 }
 
-static void ReadCode(const std::experimental::filesystem::path &path) {
-    File &f = files[path.string()];
+static void ReadCode(std::unordered_map<std::string, File>& files, const std::experimental::filesystem::path &path) {
+    File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
     std::ifstream in(path);
@@ -108,13 +109,18 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const std::experimental::filesystem::path& sourceDir) {
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const std::experimental::filesystem::path& sourceDir,
+                  bool inferredComponents) {
     std::experimental::filesystem::path outputpath = std::experimental::filesystem::current_path();
     std::experimental::filesystem::current_path(sourceDir.c_str());
-    AddComponentDefinition(".");
+    AddComponentDefinition(components, ".");
     for (std::experimental::filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
+        if (inferredComponents) AddComponentDefinition(components, parent);
 
         // skip hidden files and dirs
         if (is_directory(parent) &&
@@ -130,12 +136,12 @@ void LoadFileList(const std::unordered_set<std::string> &ignorefiles, const std:
             continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
-            ReadCmakelist(it->path());
+            ReadCmakelist(components, it->path());
         } else if (is_regular_file(it->status())) {
-            if (it->path().string().find("CMakeAddon.txt") != std::string::npos) {
-                AddComponentDefinition(parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().string().c_str())) {
-                ReadCode(it->path());
+            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
+                AddComponentDefinition(components, parent).hasAddonCmake = true;
+            } else if (IsCode(it->path().extension().generic_string().c_str())) {
+                ReadCode(files, it->path());
             }
         }
     }

@@ -19,14 +19,18 @@
 
 #include "Component.h"
 
-void FindCircularDependencies();
+void FindCircularDependencies(std::unordered_map<std::string, Component *>& components);
 
-void MapFilesToComponents();
+void MapFilesToComponents(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files);
+
+void KillComponent(std::unordered_map<std::string, Component *> &components, const std::string& str);
 
 void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &includeLookup,
-                               std::map<std::string, std::vector<std::string>> &ambiguous);
+                               std::map<std::string, std::vector<std::string>> &ambiguous,
+                               std::unordered_map<std::string, Component *> &components, 
+                               std::unordered_map<std::string, File>& files);
 
-void PropagateExternalIncludes();
+void PropagateExternalIncludes(std::unordered_map<std::string, File>& files);
 
 #endif
 

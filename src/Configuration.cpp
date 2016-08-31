@@ -18,6 +18,7 @@
 #include "Constants.h"
 #include <stdlib.h>
 #include <fstream>
+#include <iostream>
 
 Configuration::Configuration()
 : companyName("YourCompany")
@@ -56,7 +57,7 @@ Configuration::Configuration()
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
     else {  
-      printf("Ignoring unknown tag in configuration file: %s\n", name.c_str());
+      std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
   }
 }

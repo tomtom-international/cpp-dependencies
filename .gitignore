@@ -34,7 +34,13 @@
 *.db
 *.suo
 
+# MSVC specific temporary files
+*.sdf
+*.opensdf
+
 # Local build outputs
+obj
 cpp-dependencies
+cpp-dependencies-unittests
 
 MSVC/x64/Debug/

@@ -23,25 +23,21 @@
 
 struct Component;
 
-void OutputFlatDependencies(const std::experimental::filesystem::path &outfile);
-
-void OutputCircularDependencies(const std::experimental::filesystem::path &outfile);
-
+void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components,
+                            const std::experimental::filesystem::path &outfile);
+void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
+                                const std::experimental::filesystem::path &outfile);
 void PrintGraphOnTarget(const std::experimental::filesystem::path &outfile, Component *c);
-
-void PrintAllComponents(const char* description, bool (*)(const Component&));
-void PrintAllFiles(const char* description, bool (*)(const File&));
-
+void PrintAllComponents(std::unordered_map<std::string, Component *> &components,
+                        const char* description,
+                        bool (*)(const Component&));
+void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&));
 void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<Component *> alreadyHad,
                            std::vector<Component *> order);
-
 void PrintCyclesForTarget(Component *c);
-
 void PrintLinksForTarget(Component *c);
-
 void PrintInfoOnTarget(Component *c);
-
-void FindSpecificLink(Component *from, Component *to);
+void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to);
 
 #endif
 

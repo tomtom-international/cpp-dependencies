@@ -17,19 +17,38 @@ LDFLAGS=-lstdc++fs
 
 STANDARD=c++11
 
-SOURCES=main.cpp Component.cpp Configuration.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
+SOURCES=Component.cpp Configuration.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
+
+TESTS=AnalysisCircularDependencies.cpp
 
 all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD
 
-cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES))
+obj/%.coverage.o: src/%.cpp
+	@mkdir -p obj
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD --coverage
+
+test/obj/%.coverage.o: test/%.cpp
+	@mkdir -p test/obj
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -Isrc -O3 -MMD --coverage
+
+cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
+
+cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 -lgtest -lgtest_main -pthread --coverage
+
+unittest: cpp-dependencies-unittests
+	./cpp-dependencies-unittests >unittest
 
 clean:
 	rm -rf obj cpp-dependencies
 
 install:
 	cp cpp-dependencies /usr/bin
+
+-include $(patsubst %.cpp,obj/%.o.d,$(SOURCES)) $(patsubst %.cpp,test/obj/%.o.d,$(TESTS))
+
