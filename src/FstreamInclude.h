@@ -24,8 +24,8 @@ using std::ofstream;
 #ifdef __GNUC__
 
 #if __GNUC__ > 5 || \
-    (__GNUC__ == 5 && (__GNUC_MINOR__ > 3 || \
-        (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0))
+    (__GNUC__ == 5 &&
+        (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
 
 #include <fstream>
 
