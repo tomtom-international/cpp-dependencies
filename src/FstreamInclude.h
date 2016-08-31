@@ -43,7 +43,7 @@ typedef std::ofstream ofstream;
 
 #else
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 namespace adapted_namespace
 {
