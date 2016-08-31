@@ -154,6 +154,8 @@
     <ClCompile Include="..\src\Output.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\BoostFilesystem.h" />
+    <ClInclude Include="..\src\BoostFstream.h" />
     <ClInclude Include="..\src\FilesystemInclude.h" />
     <ClInclude Include="..\src\Analysis.h" />
     <ClInclude Include="..\src\CmakeRegen.h" />
@@ -163,6 +165,8 @@
     <ClInclude Include="..\src\FstreamInclude.h" />
     <ClInclude Include="..\src\Input.h" />
     <ClInclude Include="..\src\Output.h" />
+    <ClInclude Include="..\src\StdFilesystem.h" />
+    <ClInclude Include="..\src\StdFstream.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

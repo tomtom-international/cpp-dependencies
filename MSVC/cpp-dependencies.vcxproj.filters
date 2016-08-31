@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\filesystem">
+      <UniqueIdentifier>{8c8aa31f-323c-449c-9523-4ed0dbcd5b70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\fstreams">
+      <UniqueIdentifier>{d3c3f021-24f7-4872-a2fd-b92c720e1f36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Analysis.cpp">
@@ -63,10 +69,22 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FilesystemInclude.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FstreamInclude.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\fstreams</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BoostFstream.h">
+      <Filter>Header Files\fstreams</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\StdFstream.h">
+      <Filter>Header Files\fstreams</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\StdFilesystem.h">
+      <Filter>Header Files\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BoostFilesystem.h">
+      <Filter>Header Files\filesystem</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

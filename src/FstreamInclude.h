@@ -1,27 +1,15 @@
-#ifndef __DEP_CHECKER__FSTREAM_H
-#define __DEP_CHECKER__FSTREAM_H
+#ifndef __DEP_CHECKER__FSTREAMINCLUDE_H
+#define __DEP_CHECKER__FSTREAMINCLUDE_H
 
 #ifdef _MSC_VER
 
 #if ( _MSC_VER < 1900 )
 
-#include <experimental/filesystem>
-
-namespace adapted_namespace
-{
-typedef boost::filesystem::ifstream ifstream;
-typedef boost::filesystem::ofstream ifstream;
-}
+#include "BoostFstream.h"
 
 #else
 
-#include <fstream>
-
-namespace adapted_namespace
-{
-typedef std::ifstream ifstream;
-typedef std::ofstream ofstream ;
-}
+#include "StdFstream.h"
 
 #endif
 
@@ -31,28 +19,22 @@ typedef std::ofstream ofstream ;
 
 #if __GNUC__ > 5 || \
     (__GNUC__ == 5 && \
-    (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
+        (__GNUC_MINOR__ > 3 || (__GNUC_MINOR__ == 3 && __GNUC_PATCHLEVEL__ > 0)))
 
-#include <fstream>
-
-namespace adapted_namespace
-{
-typedef std::ifstream ifstream;
-typedef std::ofstream ofstream;
-}
+#include "StdFstream.h"
 
 #else
 
-#include <boost/filesystem/fstream.hpp>
-
-namespace adapted_namespace
-{
-typedef boost::filesystem::ifstream ifstream;
-typedef boost::filesystem::ofstream ifstream;
-}
+#include "BoostFstream.h"
 
 #endif
 
 #endif // __GNUC__
 
-#endif // !__DEP_CHECKER__FSTREAM_H
+#ifdef __clang__
+
+#include "BoostFstream.h"
+
+#endif // __clang__
+
+#endif // !__DEP_CHECKER__FSTREAMINCLUDE_H
