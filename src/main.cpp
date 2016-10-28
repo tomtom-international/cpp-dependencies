@@ -47,7 +47,7 @@ public:
     , args(argv+1, argv+argc)
     {
         RegisterCommands();
-        projectRoot = outputRoot = current_path();
+        projectRoot = outputRoot = filesystem::current_path();
         ignorefiles = std::unordered_set<std::string>{
                 "unistd.h",
                 "console.h",
@@ -243,7 +243,7 @@ private:
     }
     void DoActualRegen(std::vector<std::string> args, bool dryRun) {
         LoadProject();
-        current_path(projectRoot);
+        filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
                 RegenerateCmakeFilesForComponent(c.second, dryRun);
@@ -353,7 +353,7 @@ private:
     std::unordered_map<std::string, std::string> includeLookup;
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
-    adapted_namespace::path outputRoot, projectRoot;
+    filesystem::path outputRoot, projectRoot;
 };
 
 int main(int argc, const char **argv) {

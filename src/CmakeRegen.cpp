@@ -23,11 +23,11 @@
 #include <set>
 
 
-static bool FilesAreDifferent(const adapted_namespace::path &a, const adapted_namespace::path &b) {
+static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path &b) {
     if (file_size(a) != file_size(b)) {
         return true;
     }
-    adapted_namespace::ifstream as(a), bs(b);
+    streams::ifstream as(a), bs(b);
     std::string l1, l2;
     while (as.good() && bs.good()) {
         getline(as, l1);
@@ -47,7 +47,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         std::list<std::string> files;
         for (auto &fp : comp->files) {
             files.push_back(fp->path.generic_string().c_str() + compname.size() + 3);
-            adapted_namespace::path p = fp->path;
+            filesystem::path p = fp->path;
             if (fp->hasInclude) {
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
                                                                            fp->includePaths.end());
@@ -75,7 +75,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
 
         {
-            adapted_namespace::ofstream o(comp->root / "CMakeLists.txt.generated");
+            streams::ofstream o(comp->root / "CMakeLists.txt.generated");
 
             o << "#\n";
             o << "# Copyright (C) " << Configuration::Get().companyName << ". All rights reserved.\n";
@@ -161,7 +161,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
                 }
             }
             // Add existing subdirectories that contain a CMakeLists file
-            adapted_namespace::directory_iterator it(comp->root), end;
+            filesystem::directory_iterator it(comp->root), end;
             std::set<std::string> items;
             for (; it != end; ++it) {
                 if (is_regular_file(it->path() / "CMakeLists.txt")) {
@@ -191,5 +191,4 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
     }
 }
-
 

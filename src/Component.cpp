@@ -34,7 +34,7 @@ std::string Component::CmakeName() const {
     return (recreate || name.empty()) ? NiceName('.') : name;
 }
 
-Component::Component(const adapted_namespace::path &path)
+Component::Component(const filesystem::path &path)
         : root(path), recreate(false), hasAddonCmake(false), type("library") {
 }
 
@@ -50,7 +50,7 @@ std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &
 }
 
 Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components,
-                                  const adapted_namespace::path &path) {
+                                  const filesystem::path &path) {
     Component *&comp = components[path.generic_string()];
     if (!comp) {
         comp = new Component(path);

@@ -44,15 +44,15 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
     return str.substr(open + 1, close - open - 1);
 }
 
-static bool IsItemBlacklisted(const adapted_namespace::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
     std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
-                          const adapted_namespace::path &path) {
-    adapted_namespace::ifstream in(path);
+                          const filesystem::path &path) {
+    streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
@@ -73,11 +73,11 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-static void ReadCode(std::unordered_map<std::string, File>& files, const adapted_namespace::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
     File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
-    adapted_namespace::ifstream in(path);
+    streams::ifstream in(path);
     std::string line;
     do {
         f.loc++;
@@ -110,12 +110,12 @@ static bool IsCode(const std::string &ext) {
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
-                  const adapted_namespace::path& sourceDir,
+                  const filesystem::path& sourceDir,
                   bool inferredComponents) {
-    adapted_namespace::path outputpath = current_path();
-    current_path(sourceDir.c_str());
+    filesystem::path outputpath = filesystem::current_path();
+    filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
-    for (adapted_namespace::recursive_directory_iterator it("."), end;
+    for (filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
         if (inferredComponents) AddComponentDefinition(components, parent);

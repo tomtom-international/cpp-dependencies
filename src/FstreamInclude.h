@@ -8,22 +8,14 @@
 
 #include <fstream>
 
-namespace adapted_namespace
-{
-typedef std::ifstream ifstream;
-typedef std::ofstream ofstream;
-}
+namespace streams = std;
 
 #else
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-namespace adapted_namespace
-{
-typedef boost::filesystem::ifstream ifstream;
-typedef boost::filesystem::ofstream ofstream;
-}
+namespace streams = boost::filesystem;
 
 #endif
 

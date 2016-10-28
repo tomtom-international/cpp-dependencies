@@ -42,7 +42,7 @@ struct File {
     {
     }
 
-    adapted_namespace::path path;
+    filesystem::path path;
     std::vector<std::string> rawIncludes;
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
@@ -59,9 +59,9 @@ struct Component {
 
     std::string CmakeName() const;
 
-    explicit Component(const adapted_namespace::path &path);
+    explicit Component(const filesystem::path &path);
 
-    adapted_namespace::path root;
+    filesystem::path root;
     std::string name;
     // deps are the dependencies of your component
     std::unordered_set<Component *> pubDeps;
@@ -85,7 +85,7 @@ struct Component {
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);
 
 Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components,
-                                  const adapted_namespace::path &path );
+                                  const filesystem::path &path );
 
 size_t NodesWithCycles(std::unordered_map<std::string, Component *> &components);
 

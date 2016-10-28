@@ -32,7 +32,7 @@ Configuration::Configuration()
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
 {
-  adapted_namespace::ifstream in(CONFIG_FILE);
+  streams::ifstream in(CONFIG_FILE);
   std::string line;
   while (in.good()) {
     std::getline(in, line);
