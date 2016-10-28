@@ -19,7 +19,6 @@ ifeq ($(GCC_VER_GTE53),1)
 LDFLAGS=-lstdc++fs
 else
 LDFLAGS=-lboost_filesystem -lboost_system
-
 endif
 
 STANDARD=c++11

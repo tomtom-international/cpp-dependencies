@@ -122,8 +122,8 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
 
         // skip hidden files and dirs
         if (is_directory(parent) &&
-            parent.filename().string().size() > 2 &&
-            parent.filename().string()[0] == '.') {
+            parent.filename().generic_string().size() > 2 &&
+            parent.filename().generic_string()[0] == '.') {
             it.pop();
             if (it == end) {
                 break;

@@ -165,7 +165,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             std::set<std::string> items;
             for (; it != end; ++it) {
                 if (is_regular_file(it->path() / "CMakeLists.txt")) {
-                    items.insert(it->path().filename().string());
+                    items.insert(it->path().filename().generic_string());
                 }
             }
 
@@ -181,7 +181,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
             }
-                remove(comp->root / "CMakeLists.txt.generated");
+            remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
