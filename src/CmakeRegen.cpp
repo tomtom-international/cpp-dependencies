@@ -24,7 +24,7 @@
 
 
 static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path &b) {
-    if (file_size(a) != file_size(b)) {
+    if (filesystem::file_size(a) != filesystem::file_size(b)) {
         return true;
     }
     streams::ifstream as(a), bs(b);
@@ -164,7 +164,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             filesystem::directory_iterator it(comp->root), end;
             std::set<std::string> items;
             for (; it != end; ++it) {
-                if (is_regular_file(it->path() / "CMakeLists.txt")) {
+                if (filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
                     items.insert(it->path().filename().generic_string());
                 }
             }
@@ -181,12 +181,12 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
             }
-            remove(comp->root / "CMakeLists.txt.generated");
+            filesystem::remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
-                rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
+                filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
             } else {
-                remove(comp->root / "CMakeLists.txt.generated");
+                filesystem::remove(comp->root / "CMakeLists.txt.generated");
             }
         }
     }

@@ -121,7 +121,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
         if (inferredComponents) AddComponentDefinition(components, parent);
 
         // skip hidden files and dirs
-        if (is_directory(parent) &&
+        if (filesystem::is_directory(parent) &&
             parent.filename().generic_string().size() > 2 &&
             parent.filename().generic_string()[0] == '.') {
             it.pop();
@@ -135,7 +135,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
-        } else if (is_regular_file(it->status())) {
+        } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
@@ -143,6 +143,6 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
             }
         }
     }
-    current_path(outputpath);
+    filesystem::current_path(outputpath);
 }
 
