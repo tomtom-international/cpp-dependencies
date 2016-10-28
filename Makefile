@@ -16,11 +16,10 @@ COMPILER?=g++
 
 GCC_VER_GTE53 := $(shell echo `gcc -dumpversion | cut -f1-2 -d.` \>= 5.3 | sed -e 's/\./*100+/g' | bc )
 ifeq ($(GCC_VER_GTE53),1)
-
 LDFLAGS=-lstdc++fs
-
 else
 LDFLAGS=-lboost_filesystem -lboost_system
+
 endif
 
 STANDARD=c++11
