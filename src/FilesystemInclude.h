@@ -14,7 +14,7 @@ namespace filesystem = std::experimental::filesystem;
 
 #include <boost/filesystem.hpp>
 
-namespace filesystem = soost::filesystem;
+namespace filesystem = boost::filesystem;
 
 #endif
 
