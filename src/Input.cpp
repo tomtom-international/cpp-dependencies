@@ -22,11 +22,16 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-static void ReadCodeFrom(File& f, std::string& buffer) {
+#ifdef USE_MMAP
+#include <fcntl.h>
+#include <sys/mman.h>
+#endif
+
+static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
     size_t offset = 0;
     enum State { None, InCComment, InCppComment, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
     size_t start = 0;
-    while (offset < buffer.size()) {
+    while (offset < buffersize) {
         switch (state) {
         case None:
             switch (buffer[offset]) {
@@ -120,7 +125,17 @@ static void ReadCodeFrom(File& f, std::string& buffer) {
     }
 }
 
-#ifndef USE_MMAP
+#ifdef USE_MMAP
+static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+    File& f = files[path.generic_string()];
+    f.path = path;
+    int fd = open(path.c_str(), O_RDONLY);
+    size_t fileSize = boost::filesystem::file_size(path);
+    void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    ReadCodeFrom(f, static_cast<const char*>(p), fileSize);
+    munmap(p, fileSize);
+}
+#else
 static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
     File &f = files[path.generic_string()];
     f.path = path;
@@ -129,11 +144,7 @@ static void ReadCode(std::unordered_map<std::string, File>& files, const boost::
     {
         boost::filesystem::ifstream(path).read(&buffer[0], buffer.size());
     }
-    ReadCodeFrom(f, buffer);
-}
-#else
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
-
+    ReadCodeFrom(f, buffer.data(), buffer.size());
 }
 #endif
 

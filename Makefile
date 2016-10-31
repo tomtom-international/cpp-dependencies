@@ -25,7 +25,11 @@ all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -g -MMD
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD
+
+obj/%.mm.o: src/%.cpp
+	@mkdir -p obj
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD -DUSE_MMAP
 
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
@@ -35,8 +39,11 @@ test/obj/%.coverage.o: test/%.cpp
 	@mkdir -p test/obj
 	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -Isrc -g -MMD --coverage
 
+cpp-dependencies-mm: $(patsubst %.cpp,obj/%.mm.o,$(SOURCES)) obj/main.mm.o
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
+
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
-	$(COMPILER) -o $@ $^ $(LDFLAGS) -g 
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
 
 cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
 	$(COMPILER) -o $@ $^ $(LDFLAGS) -g -lgtest -lgtest_main -pthread --coverage
