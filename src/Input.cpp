@@ -28,31 +28,50 @@
 #endif
 
 static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
+    if (buffersize == 0) return;
     size_t offset = 0;
-    enum State { None, InCComment, InCppComment, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
+    enum State { None, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
+    // Try to terminate reading the file when we've read the last possible preprocessor command
+    const char* lastHash = static_cast<const char*>(memrchr(buffer, '#', buffersize));
+    if (lastHash) {
+        // Common case optimization: Header with inclusion guard
+        if (strncmp(lastHash, "#endif", 6) == 0) {
+            lastHash = static_cast<const char*>(memrchr(buffer, '#', lastHash - buffer - 1));
+        }
+        if (lastHash) {
+            const char* nextNewline = static_cast<const char*>(memchr(lastHash, '\n', buffersize - (lastHash - buffer)));
+            if (nextNewline) {
+                buffersize = nextNewline - buffer;
+            }
+        }
+    }
+    const char* nextHash = static_cast<const char*>(memchr(buffer+offset, '#', buffersize-offset));
+    const char* nextSlash = static_cast<const char*>(memchr(buffer+offset, '/', buffersize-offset));
     size_t start = 0;
     while (offset < buffersize) {
         switch (state) {
         case None:
-            switch (buffer[offset]) {
-            case '/':
+        {
+            if (nextHash && nextHash < buffer + offset) nextHash = static_cast<const char*>(memchr(buffer+offset, '#', buffersize-offset));
+            if (nextHash == NULL) return;
+            if (nextSlash && nextSlash < buffer + offset) nextSlash = static_cast<const char*>(memchr(buffer+offset, '/', buffersize-offset));
+            if (nextSlash && nextSlash < nextHash) {
+                offset = nextSlash - buffer;
                 if (buffer[offset + 1] == '/') {
-                    state = InCComment;
+                    offset = static_cast<const char*>(memchr(buffer+offset, '\n', buffersize-offset)) - buffer;
                 }
                 else if (buffer[offset + 1] == '*') {
-                    state = InCppComment; offset++;
+                    do {
+                        const char* nextSlash = static_cast<const char*>(memchr(buffer + offset + 1, '/', buffersize - offset));
+                        if (!nextSlash) return;
+                        offset = nextSlash - buffer;
+                    } while (buffer[offset-1] != '*');
                 }
-                break;
-            case '#':
+            } else {
+                offset = nextHash - buffer;
                 state = AfterHash;
-                break;
             }
-            break;
-        case InCComment:
-            if (buffer[offset] == '\n') state = None;
-            break;
-        case InCppComment:
-            if (buffer[offset] == '*' && buffer[offset + 1] == '/') state = None;
+        }
             break;
         case AfterHash:
             switch (buffer[offset]) {
@@ -134,6 +153,7 @@ static void ReadCode(std::unordered_map<std::string, File>& files, const boost::
     void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
     ReadCodeFrom(f, static_cast<const char*>(p), fileSize);
     munmap(p, fileSize);
+    close(fd);
 }
 #else
 static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {

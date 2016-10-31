@@ -80,6 +80,8 @@ struct Component {
     bool recreate;
     bool hasAddonCmake;
     std::string type;
+    int index, lowlink;
+    bool onStack;
 };
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);

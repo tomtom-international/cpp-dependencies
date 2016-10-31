@@ -35,7 +35,7 @@ std::string Component::CmakeName() const {
 }
 
 Component::Component(const boost::filesystem::path &path)
-        : root(path), recreate(false), hasAddonCmake(false), type("library") {
+        : root(path), recreate(false), hasAddonCmake(false), type("library"), index(0), lowlink(0), onStack(false) {
 }
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps) {

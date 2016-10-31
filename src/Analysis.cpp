@@ -16,41 +16,53 @@
 
 #include "Analysis.h"
 
-static bool DoesDependencyTransitiveClosureContainSelf(Component *source, Component *target) {
-    std::vector<Component *> outs;
-    outs.push_back(target);
-    for (size_t index = 0; index < outs.size(); ++index) {
-        for (auto &c : outs[index]->pubDeps) {
-            if (c == source) {
-                return true;
-            }
-            if (std::find(outs.begin(), outs.end(), c) == outs.end()) {
-                outs.push_back(c);
-            }
-        }
-        for (auto &c : outs[index]->privDeps) {
-            if (c == source) {
-                return true;
-            }
-            if (std::find(outs.begin(), outs.end(), c) == outs.end()) {
-                outs.push_back(c);
-            }
-        }
+static void StrongConnect(std::vector<Component*> &stack, size_t& index, Component* c) {
+  c->index = c->lowlink = index++;
+  stack.push_back(c);
+  c->onStack = true;
+  for (auto& c2 : c->pubDeps) {
+    if (c2->index == 0) {
+      StrongConnect(stack, index, c2);
+      c->lowlink = std::min(c->lowlink, c2->lowlink);
+    } else if (c2->onStack) {
+      c->lowlink = std::min(c->lowlink, c2->index);
     }
-    return false;
+  }
+  for (auto& c2 : c->privDeps) {
+    if (c2->index == 0) {
+      StrongConnect(stack, index, c2);
+      c->lowlink = std::min(c->lowlink, c2->lowlink);
+    } else if (c2->onStack) {
+      c->lowlink = std::min(c->lowlink, c2->index);
+    }
+  }
+  if (c->lowlink == c->index) {
+    auto pos = std::find(stack.begin(), stack.end(), c);
+    for (; pos != stack.end(); ++pos) {
+      (*pos)->lowlink = c->lowlink;
+    }
+    do {
+      Component* comp = stack.back();
+      stack.pop_back();
+      for (auto& c2 : comp->pubDeps) {
+        if (c2->lowlink == comp->lowlink)
+          comp->circulars.insert(c2);
+      }
+      for (auto& c2 : comp->privDeps) {
+        if (c2->lowlink == comp->lowlink)
+          comp->circulars.insert(c2);
+      }
+      comp->onStack = false;
+    } while (c->onStack);
+  }
 }
 
 void FindCircularDependencies(std::unordered_map<std::string, Component *> &components) {
+    std::vector<Component*> stack;
+    size_t index = 1;
     for (auto &c : components) {
-        for (auto &c2 : c.second->pubDeps) {
-            if (DoesDependencyTransitiveClosureContainSelf(c.second, c2)) {
-                c.second->circulars.insert(c2);
-            }
-        }
-        for (auto &c2 : c.second->privDeps) {
-            if (DoesDependencyTransitiveClosureContainSelf(c.second, c2)) {
-                c.second->circulars.insert(c2);
-            }
+        if (c.second->index == 0) {
+            StrongConnect(stack, index, c.second);
         }
     }
 }
