@@ -22,29 +22,120 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
-static std::string GetPathFromIncludeLine(const std::string &str) {
-    size_t posAfterInclStmt = str.find("#include");
-    if (posAfterInclStmt == str.npos) {
-        return "";
+static void ReadCodeFrom(File& f, std::string& buffer) {
+    size_t offset = 0;
+    enum State { None, InCComment, InCppComment, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
+    size_t start = 0;
+    while (offset < buffer.size()) {
+        switch (state) {
+        case None:
+            switch (buffer[offset]) {
+            case '/':
+                if (buffer[offset + 1] == '/') {
+                    state = InCComment;
+                }
+                else if (buffer[offset + 1] == '*') {
+                    state = InCppComment; offset++;
+                }
+                break;
+            case '#':
+                state = AfterHash;
+                break;
+            }
+            break;
+        case InCComment:
+            if (buffer[offset] == '\n') state = None;
+            break;
+        case InCppComment:
+            if (buffer[offset] == '*' && buffer[offset + 1] == '/') state = None;
+            break;
+        case AfterHash:
+            switch (buffer[offset]) {
+            case ' ':
+            case '\t':
+                break;
+            case 'i':
+                if (buffer[offset + 1] == 'n' &&
+                    buffer[offset + 2] == 'c' &&
+                    buffer[offset + 3] == 'l' &&
+                    buffer[offset + 4] == 'u' &&
+                    buffer[offset + 5] == 'd' &&
+                    buffer[offset + 6] == 'e') {
+                    state = AfterInclude;
+                    offset += 6;
+                }
+                else
+                {
+                    state = None;
+                }
+                break;
+            default:
+                state = None;
+                break;
+            }
+            break;
+        case AfterInclude:
+            switch (buffer[offset]) {
+            case ' ':
+            case '\t':
+                break;
+            case '<':
+                start = offset + 1;
+                state = InsidePointyIncludeBrackets;
+                break;
+            case '"':
+                start = offset + 1;
+                state = InsideStraightIncludeBrackets;
+                break;
+            default:
+                // Buggy code, skip over this include.
+                state = None;
+                break;
+            }
+            break;
+        case InsidePointyIncludeBrackets:
+            switch (buffer[offset]) {
+            case '\n':
+                state = None; // Buggy code, skip over this include.
+                break;
+            case '>':
+                f.AddIncludeStmt(true, std::string(&buffer[start], &buffer[offset]));
+                state = None;
+                break;
+            }
+            break;
+        case InsideStraightIncludeBrackets:
+            switch (buffer[offset]) {
+            case '\n':
+                state = None; // Buggy code, skip over this include.
+                break;
+            case '\"':
+                f.AddIncludeStmt(false, std::string(&buffer[start], &buffer[offset]));
+                state = None;
+                break;
+            }
+            break;
+        }
+        offset++;
     }
-
-    // ignore includes that are commented out, basic heuristic
-    const std::string &lineStart = str.substr(0, 2);
-    if (lineStart == "//" || lineStart == "/*") {
-        return "";
-    }
-
-    size_t open = str.find("<", posAfterInclStmt),
-            close = str.find(">", posAfterInclStmt);
-    if (open == str.npos) {
-        open = str.find("\"", posAfterInclStmt);
-        close = str.find("\"", open + 1);
-    }
-    if (close == str.npos) {
-        return "";
-    }
-    return str.substr(open + 1, close - open - 1);
 }
+
+#ifndef USE_MMAP
+static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+    File &f = files[path.generic_string()];
+    f.path = path;
+    std::string buffer;
+    buffer.resize(boost::filesystem::file_size(path));
+    {
+        boost::filesystem::ifstream(path).read(&buffer[0], buffer.size());
+    }
+    ReadCodeFrom(f, buffer);
+}
+#else
+static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+
+}
+#endif
 
 static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
@@ -70,24 +161,6 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
             comp.type = "library";
         } else if (strstr(line.c_str(), "_executable")) {
             comp.type = "executable";
-        }
-    } while (in.good());
-}
-
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
-    File &f = files[path.generic_string()];
-    f.path = path;
-    std::vector<std::string> &includes = f.rawIncludes;
-    boost::filesystem::ifstream in(path);
-    std::string line;
-    do {
-        f.loc++;
-        getline(in, line);
-        if (strstr(line.c_str(), "#include")) {
-            std::string val = GetPathFromIncludeLine(line);
-            if (val.size()) {
-                includes.push_back(val);
-            }
         }
     } while (in.good());
 }
@@ -142,4 +215,5 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
     }
     boost::filesystem::current_path(outputpath);
 }
+
 

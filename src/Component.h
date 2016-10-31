@@ -39,6 +39,10 @@ struct File {
     {
     }
 
+    void AddIncludeStmt(bool withPointyBrackets, const std::string& filename) {
+        // TODO: use withPointyBrackets
+        rawIncludes.push_back(filename);
+    }
     boost::filesystem::path path;
     std::vector<std::string> rawIncludes;
     std::unordered_set<File *> dependencies;

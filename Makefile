@@ -25,21 +25,21 @@ all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -g -MMD
 
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD --coverage
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -g -MMD --coverage
 
 test/obj/%.coverage.o: test/%.cpp
 	@mkdir -p test/obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -Isrc -O3 -MMD --coverage
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -Isrc -g -MMD --coverage
 
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
-	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -g 
 
 cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
-	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 -lgtest -lgtest_main -pthread --coverage
+	$(COMPILER) -o $@ $^ $(LDFLAGS) -g -lgtest -lgtest_main -pthread --coverage
 
 unittest: cpp-dependencies-unittests
 	./cpp-dependencies-unittests >unittest
