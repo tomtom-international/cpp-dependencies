@@ -90,32 +90,38 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                                std::unordered_map<std::string, Component *> &components, 
                                std::unordered_map<std::string, File>& files) {
     for (auto &fp : files) {
-        for (auto &i : fp.second.rawIncludes) {
-            std::string lowercaseInclude;
-            std::transform(i.begin(), i.end(), std::back_inserter(lowercaseInclude), ::tolower);
-            std::string &fullPath = includeLookup[lowercaseInclude];
-            if (fullPath == "INVALID") {
-                ambiguous[lowercaseInclude].push_back(fp.first);
-            } else if (fullPath.find("GENERATED:") == 0) {
-                if (fp.second.component) {
-                    fp.second.component->buildAfters.insert(fullPath.substr(10));
-                    Component *c = components["./" + fullPath.substr(10)];
-                    if (c) {
-                        fp.second.component->privDeps.insert(c);
-                    }
-                }
+        for (auto &p : fp.second.rawIncludes) {
+            // If this is a non-pointy bracket include, see if there's a local match first. 
+            // If so, it always takes precedence, never needs an include path added, and never is ambiguous (at least, for the compiler).
+            std::string fullFilePath = (boost::filesystem::path(fp.first).parent_path() / p.first).generic_string();
+            if (!p.second && files.count(fullFilePath)) {
+                // This file exists as a local include.
+                File* dep = &files[fullFilePath];
+                dep->hasInclude = true;
+                fp.second.dependencies.insert(dep);
             } else {
-                auto it = files.find(fullPath);
-                if (it != files.end()) {
-                    File *dep = &it->second;
+                // We need to use an include path to find this. So let's see where we end up.
+                std::string lowercaseInclude;
+                std::transform(p.first.begin(), p.first.end(), std::back_inserter(lowercaseInclude), ::tolower);
+                const std::string &fullPath = includeLookup[lowercaseInclude];
+                if (fullPath == "INVALID") {
+                    // We end up in more than one place. That's an ambiguous include then.
+                    ambiguous[lowercaseInclude].push_back(fp.first);
+                } else if (fullPath.find("GENERATED:") == 0) {
+                    // We end up in a virtual file - it's not actually there yet, but it'll be generated.
+                    if (fp.second.component) {
+                        fp.second.component->buildAfters.insert(fullPath.substr(10));
+                        Component *c = components["./" + fullPath.substr(10)];
+                        if (c) {
+                            fp.second.component->privDeps.insert(c);
+                        }
+                    }
+                } else if (files.count(fullPath)) {
+                    File *dep = &files[fullPath];
                     fp.second.dependencies.insert(dep);
 
-                    std::string inclpath = fullPath.substr(0, fullPath.size() - i.size() - 1);
-                    if (fp.second.path.parent_path().generic_string() == dep->path.parent_path().generic_string()) {
-                        // Omit include paths for files in your own folder. This under-declares for pointy-bracket includes in your own
-                        // folder, but at least it prevents overdeclaring.
-                        inclpath = "";
-                    } else if (inclpath.size() == dep->component->root.generic_string().size()) {
+                    std::string inclpath = fullPath.substr(0, fullPath.size() - p.first.size() - 1);
+                    if (inclpath.size() == dep->component->root.generic_string().size()) {
                         inclpath = ".";
                     } else if (inclpath.size() > dep->component->root.generic_string().size() + 1) {
                         inclpath = inclpath.substr(dep->component->root.generic_string().size() + 1);
@@ -133,6 +139,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                     }
                     dep->hasInclude = true;
                 }
+                // else we don't know about it. Probably a system include of some sort.
             }
         }
     }

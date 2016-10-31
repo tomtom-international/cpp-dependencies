@@ -40,11 +40,10 @@ struct File {
     }
 
     void AddIncludeStmt(bool withPointyBrackets, const std::string& filename) {
-        // TODO: use withPointyBrackets
-        rawIncludes.push_back(filename);
+        rawIncludes.insert(std::make_pair(filename, withPointyBrackets));
     }
     boost::filesystem::path path;
-    std::vector<std::string> rawIncludes;
+    std::map<std::string, bool> rawIncludes;
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
     Component *component;
