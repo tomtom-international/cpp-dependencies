@@ -17,23 +17,27 @@
 #ifndef __DEP_CHECKER__OUTPUT_H
 #define __DEP_CHECKER__OUTPUT_H
 
-#include <boost/filesystem/path.hpp>
+#include "FilesystemInclude.h"
 #include <unordered_set>
 #include <vector>
 
 struct Component;
 
-void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile);
-void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &outfile);
-void PrintGraphOnTarget(const boost::filesystem::path &outfile, Component *c);
-void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, bool (*)(const Component&));
+void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components,
+                            const filesystem::path &outfile);
+void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
+                                const filesystem::path &outfile);
+void PrintGraphOnTarget(const filesystem::path &outfile, Component *c);
+void PrintAllComponents(std::unordered_map<std::string, Component *> &components,
+                        const char* description,
+                        bool (*)(const Component&));
 void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&));
 void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<Component *> alreadyHad,
                            std::vector<Component *> order);
 void PrintCyclesForTarget(Component *c);
 void PrintLinksForTarget(Component *c);
 void PrintInfoOnTarget(Component *c);
-void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to); 
+void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to);
 
 #endif
 

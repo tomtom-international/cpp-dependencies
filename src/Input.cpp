@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-#include "Input.h"
 #include "Component.h"
-#include "Constants.h"
 #include "Configuration.h"
+#include "FstreamInclude.h"
+#include "Input.h"
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 static std::string GetPathFromIncludeLine(const std::string &str) {
     size_t posAfterInclStmt = str.find("#include");
@@ -46,14 +44,15 @@ static std::string GetPathFromIncludeLine(const std::string &str) {
     return str.substr(open + 1, close - open - 1);
 }
 
-static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
     std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
-static void ReadCmakelist(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path) {
-    boost::filesystem::ifstream in(path);
+static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
+                          const filesystem::path &path) {
+    streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
@@ -74,11 +73,11 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
     File &f = files[path.generic_string()];
     f.path = path;
     std::vector<std::string> &includes = f.rawIncludes;
-    boost::filesystem::ifstream in(path);
+    streams::ifstream in(path);
     std::string line;
     do {
         f.loc++;
@@ -108,17 +107,21 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir, bool inferredComponents) {
-    boost::filesystem::path outputpath = boost::filesystem::current_path();
-    boost::filesystem::current_path(sourceDir.c_str());
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const filesystem::path& sourceDir,
+                  bool inferredComponents) {
+    filesystem::path outputpath = filesystem::current_path();
+    filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
-    for (boost::filesystem::recursive_directory_iterator it("."), end;
+    for (filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
         if (inferredComponents) AddComponentDefinition(components, parent);
 
         // skip hidden files and dirs
-        if (boost::filesystem::is_directory(parent) &&
+        if (filesystem::is_directory(parent) &&
             parent.filename().generic_string().size() > 2 &&
             parent.filename().generic_string()[0] == '.') {
             it.pop();
@@ -132,7 +135,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
-        } else if (boost::filesystem::is_regular_file(it->status())) {
+        } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
@@ -140,6 +143,6 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
             }
         }
     }
-    boost::filesystem::current_path(outputpath);
+    filesystem::current_path(outputpath);
 }
 

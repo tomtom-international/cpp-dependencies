@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-#include "Component.h"
 #include "CmakeRegen.h"
+#include "Component.h"
 #include "Configuration.h"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include "FstreamInclude.h"
+#include "FilesystemInclude.h"
+#include <list>
+#include <set>
 
 
-static bool FilesAreDifferent(const boost::filesystem::path &a, const boost::filesystem::path &b) {
-    if (boost::filesystem::file_size(a) != boost::filesystem::file_size(b)) {
+static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path &b) {
+    if (filesystem::file_size(a) != filesystem::file_size(b)) {
         return true;
     }
-    boost::filesystem::ifstream as(a), bs(b);
+    streams::ifstream as(a), bs(b);
     std::string l1, l2;
     while (as.good() && bs.good()) {
         getline(as, l1);
@@ -45,7 +47,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         std::list<std::string> files;
         for (auto &fp : comp->files) {
             files.push_back(fp->path.generic_string().c_str() + compname.size() + 3);
-            boost::filesystem::path p = fp->path;
+            filesystem::path p = fp->path;
             if (fp->hasInclude) {
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
                                                                            fp->includePaths.end());
@@ -73,7 +75,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
 
         {
-            boost::filesystem::ofstream o(comp->root / "CMakeLists.txt.generated");
+            streams::ofstream o(comp->root / "CMakeLists.txt.generated");
 
             o << "#\n";
             o << "# Copyright (C) " << Configuration::Get().companyName << ". All rights reserved.\n";
@@ -159,10 +161,10 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
                 }
             }
             // Add existing subdirectories that contain a CMakeLists file
-            boost::filesystem::directory_iterator it(comp->root), end;
+            filesystem::directory_iterator it(comp->root), end;
             std::set<std::string> items;
             for (; it != end; ++it) {
-                if (boost::filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
+                if (filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
                     items.insert(it->path().filename().generic_string());
                 }
             }
@@ -179,15 +181,14 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
             }
-            boost::filesystem::remove(comp->root / "CMakeLists.txt.generated");
+            filesystem::remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
-                boost::filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
+                filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
             } else {
-                boost::filesystem::remove(comp->root / "CMakeLists.txt.generated");
+                filesystem::remove(comp->root / "CMakeLists.txt.generated");
             }
         }
     }
 }
-
 
