@@ -1,17 +1,17 @@
-language: cpp
-compiler:
-  - clang
-  - gcc
-os:
-  - osx
 script:
-  - CCFLAGS="-DNO_MEMRCHR" make
+  - make
 
 sudo: required
 dist: trusty
 
 matrix:
   include:
+    - compiler: gcc
+      os: osx
+      env: CCFLAGS="-DNO_MEMRCHR"
+    - compiler: clang
+      os: osx
+      env: CCFLAGS="-DNO_MEMRCHR"
     - compiler: gcc
       os: linux
       addons:

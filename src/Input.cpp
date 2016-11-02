@@ -33,7 +33,7 @@ const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) 
   do {
     buffersize--;
     if (buf[buffersize] == value) return buf + buffersize;
-  }
+  } while(buffersize > 0);
   return NULL;
 }
 #endif
