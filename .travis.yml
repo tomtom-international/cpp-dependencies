@@ -1,5 +1,5 @@
 script:
-  - make
+  - make -j
 
 sudo: required
 dist: trusty
