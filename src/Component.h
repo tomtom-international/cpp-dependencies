@@ -83,7 +83,7 @@ struct Component {
     bool recreate;
     bool hasAddonCmake;
     std::string type;
-    int index, lowlink;
+    size_t index, lowlink;
     bool onStack;
 };
 
