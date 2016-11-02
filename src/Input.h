@@ -17,17 +17,22 @@
 #ifndef __DEP_CHECKER__INPUT_H
 #define __DEP_CHECKER__INPUT_H
 
-#include <string>
-#include <boost/filesystem/path.hpp>
+#include "FilesystemInclude.h"
 #include <regex>
-#include <unordered_set>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 struct File;
 struct Component;
 
 bool IsCompileableFile(const std::string& ext);
-void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir, bool inferredComponents);
+
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const filesystem::path& sourceDir,
+                  bool inferredComponents);
 
 #endif
 

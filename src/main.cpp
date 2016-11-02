@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-#include "Component.h"
-#include "Input.h"
-#include "CmakeRegen.h"
-#include "Output.h"
 #include "Analysis.h"
-#include "Constants.h"
+#include "CmakeRegen.h"
+#include "Component.h"
 #include "Configuration.h"
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include "Constants.h"
+#include "FilesystemInclude.h"
+#include "Input.h"
+#include "Output.h"
 #include <iostream>
 
 static bool CheckVersionFile() {
@@ -48,7 +47,7 @@ public:
     , args(argv+1, argv+argc)
     {
         RegisterCommands();
-        projectRoot = outputRoot = boost::filesystem::current_path();
+        projectRoot = outputRoot = filesystem::current_path();
         ignorefiles = std::unordered_set<std::string>{
                 "unistd.h",
                 "console.h",
@@ -98,7 +97,7 @@ private:
         std::string lowerCommand;
         std::transform(arg->begin(), arg->end(), std::back_inserter(lowerCommand), ::tolower);
         ++arg;
-        
+
         Command c = commands[lowerCommand];
         if (!c) c = commands["--help"];
         (this->*c)(std::vector<std::string>(arg, end));
@@ -244,7 +243,7 @@ private:
     }
     void DoActualRegen(std::vector<std::string> args, bool dryRun) {
         LoadProject();
-        boost::filesystem::current_path(projectRoot);
+        filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
                 RegenerateCmakeFilesForComponent(c.second, dryRun);
@@ -273,8 +272,8 @@ private:
     void Outliers(std::vector<std::string>) {
         LoadProject();
         PrintAllComponents(components, "Libraries with no links in:", [](const Component& c){
-            return c.type == "library" && 
-                !c.files.empty() && 
+            return c.type == "library" &&
+                !c.files.empty() &&
                 c.pubLinks.empty() && c.privLinks.empty();
         });
         PrintAllComponents(components, "Libraries with too many outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > Configuration::Get().componentLinkLimit; });
@@ -354,7 +353,7 @@ private:
     std::unordered_map<std::string, std::string> includeLookup;
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
-    boost::filesystem::path outputRoot, projectRoot;
+    filesystem::path outputRoot, projectRoot;
 };
 
 int main(int argc, const char **argv) {

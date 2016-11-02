@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-#include "Input.h"
 #include "Component.h"
-#include "Constants.h"
 #include "Configuration.h"
+#include "FstreamInclude.h"
+#include "Input.h"
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 #ifdef USE_MMAP
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #endif
 
 #ifdef NO_MEMRCHR
@@ -156,37 +155,38 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
 }
 
 #ifdef USE_MMAP
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
     File& f = files[path.generic_string()];
     f.path = path;
     int fd = open(path.c_str(), O_RDONLY);
-    size_t fileSize = boost::filesystem::file_size(path);
+    size_t fileSize = filesystem::file_size(path);
     void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
     ReadCodeFrom(f, static_cast<const char*>(p), fileSize);
     munmap(p, fileSize);
     close(fd);
 }
 #else
-static void ReadCode(std::unordered_map<std::string, File>& files, const boost::filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
     File &f = files[path.generic_string()];
     f.path = path;
     std::string buffer;
-    buffer.resize(boost::filesystem::file_size(path));
+    buffer.resize(filesystem::file_size(path));
     {
-        boost::filesystem::ifstream(path).read(&buffer[0], buffer.size());
+        streams::ifstream(path).read(&buffer[0], buffer.size());
     }
     ReadCodeFrom(f, buffer.data(), buffer.size());
 }
 #endif
 
-static bool IsItemBlacklisted(const boost::filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
     std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
-static void ReadCmakelist(std::unordered_map<std::string, Component *> &components, const boost::filesystem::path &path) {
-    boost::filesystem::ifstream in(path);
+static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
+                          const filesystem::path &path) {
+    streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
     do {
@@ -223,17 +223,21 @@ static bool IsCode(const std::string &ext) {
            IsCompileableFile(ext);
 }
 
-void LoadFileList(std::unordered_map<std::string, Component *> &components, std::unordered_map<std::string, File>& files, const std::unordered_set<std::string> &ignorefiles, const boost::filesystem::path& sourceDir, bool inferredComponents) {
-    boost::filesystem::path outputpath = boost::filesystem::current_path();
-    boost::filesystem::current_path(sourceDir.c_str());
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const filesystem::path& sourceDir,
+                  bool inferredComponents) {
+    filesystem::path outputpath = filesystem::current_path();
+    filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
-    for (boost::filesystem::recursive_directory_iterator it("."), end;
+    for (filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
         if (inferredComponents) AddComponentDefinition(components, parent);
 
         // skip hidden files and dirs
-        if (boost::filesystem::is_directory(parent) &&
+        if (filesystem::is_directory(parent) &&
             parent.filename().generic_string().size() > 2 &&
             parent.filename().generic_string()[0] == '.') {
             it.pop();
@@ -247,7 +251,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
-        } else if (boost::filesystem::is_regular_file(it->status())) {
+        } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
@@ -255,7 +259,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components, std:
             }
         }
     }
-    boost::filesystem::current_path(outputpath);
+    filesystem::current_path(outputpath);
 }
 
 
