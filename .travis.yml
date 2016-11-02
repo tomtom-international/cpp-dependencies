@@ -22,7 +22,6 @@ matrix:
             - g++-4.9
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
       env: USE_BOOST=1 CXX=g++-4.9
     - compiler: gcc
       os: linux
@@ -32,7 +31,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - libgtest-dev
       env: CXX=g++-5
     - compiler: clang
       os: linux
@@ -45,7 +43,6 @@ matrix:
             - clang-3.6
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
       env: USE_BOOST=1 CXX=clang++-3.6
     - compiler: clang
       os: linux
@@ -58,5 +55,4 @@ matrix:
             - clang-3.7
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
       env: USE_BOOST=1 CXX=clang++-3.7
