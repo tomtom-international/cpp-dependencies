@@ -27,6 +27,17 @@
 #include <sys/mman.h>
 #endif
 
+#ifdef NO_MEMRCHR
+const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) {
+  const unsigned char* buf = (const unsigned char*)buffer;
+  do {
+    buffersize--;
+    if (buf[buffersize] == value) return buf + buffersize;
+  }
+  return NULL;
+}
+#endif
+
 static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
     if (buffersize == 0) return;
     size_t offset = 0;

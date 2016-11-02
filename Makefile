@@ -13,6 +13,7 @@
 # limitations under the License.
 
 COMPILER?=g++
+CCFLAGS?=
 LDFLAGS=-lboost_filesystem -lboost_system
 
 STANDARD=c++11
@@ -25,19 +26,19 @@ all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -O3 -MMD
 
 obj/%.mm.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -O3 -MMD -DUSE_MMAP
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -O3 -MMD -DUSE_MMAP
 
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -g -MMD --coverage
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -g -MMD --coverage
 
 test/obj/%.coverage.o: test/%.cpp
 	@mkdir -p test/obj
-	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) -Isrc -g -MMD --coverage
+	$(COMPILER) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -Isrc -g -MMD --coverage
 
 cpp-dependencies-mm: $(patsubst %.cpp,obj/%.mm.o,$(SOURCES)) obj/main.mm.o
 	$(COMPILER) -o $@ $^ $(LDFLAGS) -O3 

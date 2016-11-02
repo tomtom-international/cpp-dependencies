@@ -5,7 +5,7 @@ compiler:
 os:
   - osx
 script:
-  - make
+  - CCFLAGS="-DNO_MEMRCHR" make
 
 sudo: required
 dist: trusty
