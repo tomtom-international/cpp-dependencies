@@ -4,10 +4,6 @@ script:
 sudo: required
 dist: trusty
 
-USE_BOOST?=0
-USE_MMAP?=1
-HAS_MEMRCHR?=1
-
 matrix:
   include:
     - compiler: gcc
