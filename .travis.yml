@@ -8,10 +8,10 @@ matrix:
   include:
     - compiler: gcc
       os: osx
-      env: CCFLAGS="-DNO_MEMRCHR"
+      env: CCFLAGS="-DNO_MEMRCHR" CXX=g++
     - compiler: clang
       os: osx
-      env: CCFLAGS="-DNO_MEMRCHR"
+      env: CCFLAGS="-DNO_MEMRCHR" CXX=clang++
     - compiler: gcc
       os: linux
       addons:
@@ -23,7 +23,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=g++-4.9
+      env: CXX=g++-4.9
     - compiler: gcc
       os: linux
       addons:
@@ -35,7 +35,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=g++-5
+      env: CXX=g++-5
     - compiler: clang
       os: linux
       addons:
@@ -48,7 +48,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=clang++-3.6
+      env: CXX=clang++-3.6
     - compiler: clang
       os: linux
       addons:
@@ -61,4 +61,4 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: COMPILER=clang++-3.7
+      env: CXX=clang++-3.7
