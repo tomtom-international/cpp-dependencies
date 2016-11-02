@@ -15,11 +15,24 @@
 CXX?=g++
 CCFLAGS?=
 
-GCC_VER_GTE53 := $(shell echo `$(CXX) -dumpversion | cut -f1-2 -d.` \>= 5.3 | sed -e 's/\./*100+/g' | bc )
-ifeq ($(GCC_VER_GTE53),1)
-LDFLAGS=-lstdc++fs
+USE_BOOST?=0
+USE_MMAP?=1
+HAS_MEMRCHR?=1
+
+ifeq ($(USE_BOOST),1)
+CCFLAGS+=-DUSE_BOOST
+LDFLAGS+=-lboost_filesystem -lboost_system
 else
-LDFLAGS=-lboost_filesystem -lboost_system
+LDFLAGS+=-lstdc++fs
+endif
+
+ifeq ($(USE_MMAP),1)
+CCFLAGS+=-DUSE_MMAP
+endif
+
+ifeq ($(HAS_MEMRCHR),1)
+else
+CCFLAGS+=-DNO_MEMRCHR
 endif
 
 STANDARD=c++11

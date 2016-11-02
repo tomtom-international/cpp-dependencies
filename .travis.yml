@@ -4,14 +4,18 @@ script:
 sudo: required
 dist: trusty
 
+USE_BOOST?=0
+USE_MMAP?=1
+HAS_MEMRCHR?=1
+
 matrix:
   include:
     - compiler: gcc
       os: osx
-      env: CCFLAGS="-DNO_MEMRCHR" CXX=g++
+      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=g++
     - compiler: clang
       os: osx
-      env: CCFLAGS="-DNO_MEMRCHR" CXX=clang++
+      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=clang++
     - compiler: gcc
       os: linux
       addons:
@@ -23,7 +27,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: CXX=g++-4.9
+      env: USE_BOOST=1 CXX=g++-4.9
     - compiler: gcc
       os: linux
       addons:
@@ -32,8 +36,6 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - libboost-system-dev
-            - libboost-filesystem-dev
             - libgtest-dev
       env: CXX=g++-5
     - compiler: clang
@@ -48,7 +50,7 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: CXX=clang++-3.6
+      env: USE_BOOST=1 CXX=clang++-3.6
     - compiler: clang
       os: linux
       addons:
@@ -61,4 +63,4 @@ matrix:
             - libboost-system-dev
             - libboost-filesystem-dev
             - libgtest-dev
-      env: CXX=clang++-3.7
+      env: USE_BOOST=1 CXX=clang++-3.7
