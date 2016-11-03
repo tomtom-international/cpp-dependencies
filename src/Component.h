@@ -42,8 +42,11 @@ struct File {
     {
     }
 
+    void AddIncludeStmt(bool withPointyBrackets, const std::string& filename) {
+        rawIncludes.insert(std::make_pair(filename, withPointyBrackets));
+    }
     filesystem::path path;
-    std::vector<std::string> rawIncludes;
+    std::map<std::string, bool> rawIncludes;
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
     Component *component;
@@ -80,6 +83,8 @@ struct Component {
     bool recreate;
     bool hasAddonCmake;
     std::string type;
+    size_t index, lowlink;
+    bool onStack;
 };
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);

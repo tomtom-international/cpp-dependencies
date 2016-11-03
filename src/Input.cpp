@@ -20,29 +20,163 @@
 #include "Input.h"
 #include <algorithm>
 
-static std::string GetPathFromIncludeLine(const std::string &str) {
-    size_t posAfterInclStmt = str.find("#include");
-    if (posAfterInclStmt == str.npos) {
-        return "";
-    }
+#ifdef USE_MMAP
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 
-    // ignore includes that are commented out, basic heuristic
-    const std::string &lineStart = str.substr(0, 2);
-    if (lineStart == "//" || lineStart == "/*") {
-        return "";
-    }
-
-    size_t open = str.find("<", posAfterInclStmt),
-            close = str.find(">", posAfterInclStmt);
-    if (open == str.npos) {
-        open = str.find("\"", posAfterInclStmt);
-        close = str.find("\"", open + 1);
-    }
-    if (close == str.npos) {
-        return "";
-    }
-    return str.substr(open + 1, close - open - 1);
+#ifdef NO_MEMRCHR
+const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) {
+  const unsigned char* buf = (const unsigned char*)buffer;
+  do {
+    buffersize--;
+    if (buf[buffersize] == value) return buf + buffersize;
+  } while(buffersize > 0);
+  return NULL;
 }
+#endif
+
+static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
+    if (buffersize == 0) return;
+    size_t offset = 0;
+    enum State { None, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
+    // Try to terminate reading the file when we've read the last possible preprocessor command
+    const char* lastHash = static_cast<const char*>(memrchr(buffer, '#', buffersize));
+    if (lastHash) {
+        // Common case optimization: Header with inclusion guard
+        if (strncmp(lastHash, "#endif", 6) == 0) {
+            lastHash = static_cast<const char*>(memrchr(buffer, '#', lastHash - buffer - 1));
+        }
+        if (lastHash) {
+            const char* nextNewline = static_cast<const char*>(memchr(lastHash, '\n', buffersize - (lastHash - buffer)));
+            if (nextNewline) {
+                buffersize = nextNewline - buffer;
+            }
+        }
+    }
+    const char* nextHash = static_cast<const char*>(memchr(buffer+offset, '#', buffersize-offset));
+    const char* nextSlash = static_cast<const char*>(memchr(buffer+offset, '/', buffersize-offset));
+    size_t start = 0;
+    while (offset < buffersize) {
+        switch (state) {
+        case None:
+        {
+            if (nextHash && nextHash < buffer + offset) nextHash = static_cast<const char*>(memchr(buffer+offset, '#', buffersize-offset));
+            if (nextHash == NULL) return;
+            if (nextSlash && nextSlash < buffer + offset) nextSlash = static_cast<const char*>(memchr(buffer+offset, '/', buffersize-offset));
+            if (nextSlash && nextSlash < nextHash) {
+                offset = nextSlash - buffer;
+                if (buffer[offset + 1] == '/') {
+                    offset = static_cast<const char*>(memchr(buffer+offset, '\n', buffersize-offset)) - buffer;
+                }
+                else if (buffer[offset + 1] == '*') {
+                    do {
+                        const char* nextSlash = static_cast<const char*>(memchr(buffer + offset + 1, '/', buffersize - offset));
+                        if (!nextSlash) return;
+                        offset = nextSlash - buffer;
+                    } while (buffer[offset-1] != '*');
+                }
+            } else {
+                offset = nextHash - buffer;
+                state = AfterHash;
+            }
+        }
+            break;
+        case AfterHash:
+            switch (buffer[offset]) {
+            case ' ':
+            case '\t':
+                break;
+            case 'i':
+                if (buffer[offset + 1] == 'n' &&
+                    buffer[offset + 2] == 'c' &&
+                    buffer[offset + 3] == 'l' &&
+                    buffer[offset + 4] == 'u' &&
+                    buffer[offset + 5] == 'd' &&
+                    buffer[offset + 6] == 'e') {
+                    state = AfterInclude;
+                    offset += 6;
+                }
+                else
+                {
+                    state = None;
+                }
+                break;
+            default:
+                state = None;
+                break;
+            }
+            break;
+        case AfterInclude:
+            switch (buffer[offset]) {
+            case ' ':
+            case '\t':
+                break;
+            case '<':
+                start = offset + 1;
+                state = InsidePointyIncludeBrackets;
+                break;
+            case '"':
+                start = offset + 1;
+                state = InsideStraightIncludeBrackets;
+                break;
+            default:
+                // Buggy code, skip over this include.
+                state = None;
+                break;
+            }
+            break;
+        case InsidePointyIncludeBrackets:
+            switch (buffer[offset]) {
+            case '\n':
+                state = None; // Buggy code, skip over this include.
+                break;
+            case '>':
+                f.AddIncludeStmt(true, std::string(&buffer[start], &buffer[offset]));
+                state = None;
+                break;
+            }
+            break;
+        case InsideStraightIncludeBrackets:
+            switch (buffer[offset]) {
+            case '\n':
+                state = None; // Buggy code, skip over this include.
+                break;
+            case '\"':
+                f.AddIncludeStmt(false, std::string(&buffer[start], &buffer[offset]));
+                state = None;
+                break;
+            }
+            break;
+        }
+        offset++;
+    }
+}
+
+#ifdef USE_MMAP
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
+    File& f = files[path.generic_string()];
+    f.path = path;
+    int fd = open(path.c_str(), O_RDONLY);
+    size_t fileSize = filesystem::file_size(path);
+    void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    ReadCodeFrom(f, static_cast<const char*>(p), fileSize);
+    munmap(p, fileSize);
+    close(fd);
+}
+#else
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
+    File &f = files[path.generic_string()];
+    f.path = path;
+    std::string buffer;
+    buffer.resize(filesystem::file_size(path));
+    {
+        streams::ifstream(path).read(&buffer[0], buffer.size());
+    }
+    ReadCodeFrom(f, buffer.data(), buffer.size());
+}
+#endif
 
 static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
     // Add your own blacklisted items here.
@@ -69,24 +203,6 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
             comp.type = "library";
         } else if (strstr(line.c_str(), "_executable")) {
             comp.type = "executable";
-        }
-    } while (in.good());
-}
-
-static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
-    File &f = files[path.generic_string()];
-    f.path = path;
-    std::vector<std::string> &includes = f.rawIncludes;
-    streams::ifstream in(path);
-    std::string line;
-    do {
-        f.loc++;
-        getline(in, line);
-        if (strstr(line.c_str(), "#include")) {
-            std::string val = GetPathFromIncludeLine(line);
-            if (val.size()) {
-                includes.push_back(val);
-            }
         }
     } while (in.good());
 }
@@ -145,4 +261,5 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
     }
     filesystem::current_path(outputpath);
 }
+
 

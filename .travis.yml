@@ -1,17 +1,17 @@
-language: cpp
-compiler:
-  - clang
-  - gcc
-os:
-  - osx
 script:
-  - make
+  - make -j
 
 sudo: required
 dist: trusty
 
 matrix:
   include:
+    - compiler: gcc
+      os: osx
+      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=g++
+    - compiler: clang
+      os: osx
+      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=clang++
     - compiler: gcc
       os: linux
       addons:
@@ -22,8 +22,7 @@ matrix:
             - g++-4.9
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
-      env: COMPILER=g++-4.9
+      env: USE_BOOST=1 CXX=g++-4.9
     - compiler: gcc
       os: linux
       addons:
@@ -32,10 +31,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-            - libboost-system-dev
-            - libboost-filesystem-dev
-            - libgtest-dev
-      env: COMPILER=g++-5
+      env: CXX=g++-5
     - compiler: clang
       os: linux
       addons:
@@ -47,8 +43,7 @@ matrix:
             - clang-3.6
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
-      env: COMPILER=clang++-3.6
+      env: USE_BOOST=1 CXX=clang++-3.6
     - compiler: clang
       os: linux
       addons:
@@ -60,5 +55,4 @@ matrix:
             - clang-3.7
             - libboost-system-dev
             - libboost-filesystem-dev
-            - libgtest-dev
-      env: COMPILER=clang++-3.7
+      env: USE_BOOST=1 CXX=clang++-3.7

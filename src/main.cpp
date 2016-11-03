@@ -88,7 +88,7 @@ private:
         commands["--stats"] = &Operations::Stats;
         commands["--inout"] = &Operations::InOut;
         commands["--shortest"] = &Operations::Shortest;
-        commands["--regeu"] = &Operations::Regen;
+        commands["--regen"] = &Operations::Regen;
         commands["--dryregen"] = &Operations::DryRegen;
         commands["--dir"] = &Operations::Dir;
         commands["--infer"] = &Operations::Infer;

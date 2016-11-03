@@ -16,41 +16,53 @@
 
 #include "Analysis.h"
 
-static bool DoesDependencyTransitiveClosureContainSelf(Component *source, Component *target) {
-    std::vector<Component *> outs;
-    outs.push_back(target);
-    for (size_t index = 0; index < outs.size(); ++index) {
-        for (auto &c : outs[index]->pubDeps) {
-            if (c == source) {
-                return true;
-            }
-            if (std::find(outs.begin(), outs.end(), c) == outs.end()) {
-                outs.push_back(c);
-            }
-        }
-        for (auto &c : outs[index]->privDeps) {
-            if (c == source) {
-                return true;
-            }
-            if (std::find(outs.begin(), outs.end(), c) == outs.end()) {
-                outs.push_back(c);
-            }
-        }
+static void StrongConnect(std::vector<Component*> &stack, size_t& index, Component* c) {
+  c->index = c->lowlink = index++;
+  stack.push_back(c);
+  c->onStack = true;
+  for (auto& c2 : c->pubDeps) {
+    if (c2->index == 0) {
+      StrongConnect(stack, index, c2);
+      c->lowlink = std::min(c->lowlink, c2->lowlink);
+    } else if (c2->onStack) {
+      c->lowlink = std::min(c->lowlink, c2->index);
     }
-    return false;
+  }
+  for (auto& c2 : c->privDeps) {
+    if (c2->index == 0) {
+      StrongConnect(stack, index, c2);
+      c->lowlink = std::min(c->lowlink, c2->lowlink);
+    } else if (c2->onStack) {
+      c->lowlink = std::min(c->lowlink, c2->index);
+    }
+  }
+  if (c->lowlink == c->index) {
+    auto pos = std::find(stack.begin(), stack.end(), c);
+    for (; pos != stack.end(); ++pos) {
+      (*pos)->lowlink = c->lowlink;
+    }
+    do {
+      Component* comp = stack.back();
+      stack.pop_back();
+      for (auto& c2 : comp->pubDeps) {
+        if (c2->lowlink == comp->lowlink)
+          comp->circulars.insert(c2);
+      }
+      for (auto& c2 : comp->privDeps) {
+        if (c2->lowlink == comp->lowlink)
+          comp->circulars.insert(c2);
+      }
+      comp->onStack = false;
+    } while (c->onStack);
+  }
 }
 
 void FindCircularDependencies(std::unordered_map<std::string, Component *> &components) {
+    std::vector<Component*> stack;
+    size_t index = 1;
     for (auto &c : components) {
-        for (auto &c2 : c.second->pubDeps) {
-            if (DoesDependencyTransitiveClosureContainSelf(c.second, c2)) {
-                c.second->circulars.insert(c2);
-            }
-        }
-        for (auto &c2 : c.second->privDeps) {
-            if (DoesDependencyTransitiveClosureContainSelf(c.second, c2)) {
-                c.second->circulars.insert(c2);
-            }
+        if (c.second->index == 0) {
+            StrongConnect(stack, index, c.second);
         }
     }
 }
@@ -90,32 +102,38 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                                std::unordered_map<std::string, Component *> &components, 
                                std::unordered_map<std::string, File>& files) {
     for (auto &fp : files) {
-        for (auto &i : fp.second.rawIncludes) {
-            std::string lowercaseInclude;
-            std::transform(i.begin(), i.end(), std::back_inserter(lowercaseInclude), ::tolower);
-            std::string &fullPath = includeLookup[lowercaseInclude];
-            if (fullPath == "INVALID") {
-                ambiguous[lowercaseInclude].push_back(fp.first);
-            } else if (fullPath.find("GENERATED:") == 0) {
-                if (fp.second.component) {
-                    fp.second.component->buildAfters.insert(fullPath.substr(10));
-                    Component *c = components["./" + fullPath.substr(10)];
-                    if (c) {
-                        fp.second.component->privDeps.insert(c);
-                    }
-                }
+        for (auto &p : fp.second.rawIncludes) {
+            // If this is a non-pointy bracket include, see if there's a local match first. 
+            // If so, it always takes precedence, never needs an include path added, and never is ambiguous (at least, for the compiler).
+            std::string fullFilePath = (filesystem::path(fp.first).parent_path() / p.first).generic_string();
+            if (!p.second && files.count(fullFilePath)) {
+                // This file exists as a local include.
+                File* dep = &files[fullFilePath];
+                dep->hasInclude = true;
+                fp.second.dependencies.insert(dep);
             } else {
-                auto it = files.find(fullPath);
-                if (it != files.end()) {
-                    File *dep = &it->second;
+                // We need to use an include path to find this. So let's see where we end up.
+                std::string lowercaseInclude;
+                std::transform(p.first.begin(), p.first.end(), std::back_inserter(lowercaseInclude), ::tolower);
+                const std::string &fullPath = includeLookup[lowercaseInclude];
+                if (fullPath == "INVALID") {
+                    // We end up in more than one place. That's an ambiguous include then.
+                    ambiguous[lowercaseInclude].push_back(fp.first);
+                } else if (fullPath.find("GENERATED:") == 0) {
+                    // We end up in a virtual file - it's not actually there yet, but it'll be generated.
+                    if (fp.second.component) {
+                        fp.second.component->buildAfters.insert(fullPath.substr(10));
+                        Component *c = components["./" + fullPath.substr(10)];
+                        if (c) {
+                            fp.second.component->privDeps.insert(c);
+                        }
+                    }
+                } else if (files.count(fullPath)) {
+                    File *dep = &files[fullPath];
                     fp.second.dependencies.insert(dep);
 
-                    std::string inclpath = fullPath.substr(0, fullPath.size() - i.size() - 1);
-                    if (fp.second.path.parent_path().generic_string() == dep->path.parent_path().generic_string()) {
-                        // Omit include paths for files in your own folder. This under-declares for pointy-bracket includes in your own
-                        // folder, but at least it prevents overdeclaring.
-                        inclpath = "";
-                    } else if (inclpath.size() == dep->component->root.generic_string().size()) {
+                    std::string inclpath = fullPath.substr(0, fullPath.size() - p.first.size() - 1);
+                    if (inclpath.size() == dep->component->root.generic_string().size()) {
                         inclpath = ".";
                     } else if (inclpath.size() > dep->component->root.generic_string().size() + 1) {
                         inclpath = inclpath.substr(dep->component->root.generic_string().size() + 1);
@@ -133,6 +151,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                     }
                     dep->hasInclude = true;
                 }
+                // else we don't know about it. Probably a system include of some sort.
             }
         }
     }
