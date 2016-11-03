@@ -1,13 +1,9 @@
-#include <gtest/gtest.h>
+#include "test.h"
 #include "Analysis.h"
 
-class AnalysisCircularFixture : public testing::Test
-{
-protected:
-  std::unordered_map<std::string, Component *> components;
-};
 
-TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsNothingInADisconnectedGraph) {
+TEST(FindCircularDependenciesFindsNothingInADisconnectedGraph) {
+  std::unordered_map<std::string, Component *> components;
   for (int n = 0; n < 10; n++) {
     char name[12];
     sprintf(name, "%d", n);
@@ -16,11 +12,12 @@ TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsNothingInADisconnec
 
   FindCircularDependencies(components);
   for (auto& p : components) {
-    ASSERT_TRUE(p.second->circulars.empty());
+    ASSERT(p.second->circulars.empty());
   }
 }
 
-TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsNothingInAHeavilyConnectedTree) {
+TEST(FindCircularDependenciesFindsNothingInAHeavilyConnectedTree) {
+  std::unordered_map<std::string, Component *> components;
   std::vector<Component*> allSoFar;
   for (int n = 0; n < 10; n++) {
     char name[12];
@@ -34,11 +31,12 @@ TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsNothingInAHeavilyCo
 
   FindCircularDependencies(components);
   for (auto& p : components) {
-    ASSERT_TRUE(p.second->circulars.empty());
+    ASSERT(p.second->circulars.empty());
   }
 }
 
-TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsASimpleCycle) {
+TEST(FindCircularDependenciesFindsASimpleCycle) {
+  std::unordered_map<std::string, Component *> components;
   Component* a = components["a"] = new Component("a");
   Component* b = components["b"] = new Component("b");
   a->pubDeps.insert(b);
@@ -46,13 +44,14 @@ TEST_F(AnalysisCircularFixture, FindCircularDependenciesFindsASimpleCycle) {
 
   FindCircularDependencies(components);
 
-  ASSERT_TRUE(a->circulars.size() == 1);
-  ASSERT_TRUE(*a->circulars.begin() == b);
-  ASSERT_TRUE(b->circulars.size() == 1);
-  ASSERT_TRUE(*b->circulars.begin() == a);
+  ASSERT(a->circulars.size() == 1);
+  ASSERT(*a->circulars.begin() == b);
+  ASSERT(b->circulars.size() == 1);
+  ASSERT(*b->circulars.begin() == a);
 }
 
-TEST_F(AnalysisCircularFixture, FindCircularDependenciesSeesLargeCycle) {
+TEST(FindCircularDependenciesSeesLargeCycle) {
+  std::unordered_map<std::string, Component *> components;
   Component* a = components["a"] = new Component("a");
   Component* b = components["b"] = new Component("b");
   Component* c = components["c"] = new Component("c");
@@ -66,16 +65,16 @@ TEST_F(AnalysisCircularFixture, FindCircularDependenciesSeesLargeCycle) {
 
   FindCircularDependencies(components);
 
-  ASSERT_TRUE(a->circulars.size() == 1);
-  ASSERT_TRUE(*a->circulars.begin() == b);
-  ASSERT_TRUE(b->circulars.size() == 1);
-  ASSERT_TRUE(*b->circulars.begin() == c);
-  ASSERT_TRUE(c->circulars.size() == 1);
-  ASSERT_TRUE(*c->circulars.begin() == d);
-  ASSERT_TRUE(d->circulars.size() == 1);
-  ASSERT_TRUE(*d->circulars.begin() == e);
-  ASSERT_TRUE(e->circulars.size() == 1);
-  ASSERT_TRUE(*e->circulars.begin() == a);
+  ASSERT(a->circulars.size() == 1);
+  ASSERT(*a->circulars.begin() == b);
+  ASSERT(b->circulars.size() == 1);
+  ASSERT(*b->circulars.begin() == c);
+  ASSERT(c->circulars.size() == 1);
+  ASSERT(*c->circulars.begin() == d);
+  ASSERT(d->circulars.size() == 1);
+  ASSERT(*d->circulars.begin() == e);
+  ASSERT(e->circulars.size() == 1);
+  ASSERT(*e->circulars.begin() == a);
 }
 
 

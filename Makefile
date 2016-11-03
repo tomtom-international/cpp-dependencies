@@ -39,7 +39,7 @@ STANDARD=c++11
 
 SOURCES=Component.cpp Configuration.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
 
-TESTS=AnalysisCircularDependencies.cpp
+TESTS=AnalysisCircularDependencies.cpp test.cpp
 
 all: cpp-dependencies
 
@@ -59,7 +59,7 @@ cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
 	$(CXX) -o $@ $^ $(LDFLAGS) -O3 
 
 cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
-	$(CXX) -o $@ $^ $(LDFLAGS) -g -lgtest -lgtest_main -pthread --coverage
+	$(CXX) -o $@ $^ $(LDFLAGS) -g -pthread --coverage
 
 unittest: cpp-dependencies-unittests
 	./cpp-dependencies-unittests >unittest
