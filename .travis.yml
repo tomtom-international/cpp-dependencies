@@ -1,5 +1,5 @@
 script:
-  - make -j
+  - make -j all unittest
 
 sudo: required
 dist: trusty
