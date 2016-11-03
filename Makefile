@@ -47,10 +47,6 @@ obj/%.o: src/%.cpp
 	@mkdir -p obj
 	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -O3 -MMD
 
-obj/%.mm.o: src/%.cpp
-	@mkdir -p obj
-	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -O3 -MMD -DUSE_MMAP
-
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
 	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -g -MMD --coverage
@@ -58,9 +54,6 @@ obj/%.coverage.o: src/%.cpp
 test/obj/%.coverage.o: test/%.cpp
 	@mkdir -p test/obj
 	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -Isrc -g -MMD --coverage
-
-cpp-dependencies-mm: $(patsubst %.cpp,obj/%.mm.o,$(SOURCES)) obj/main.mm.o
-	$(CXX) -o $@ $^ $(LDFLAGS) -O3 
 
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
 	$(CXX) -o $@ $^ $(LDFLAGS) -O3 
