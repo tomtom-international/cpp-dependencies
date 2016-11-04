@@ -1,7 +1,7 @@
 # Read Me for Dependency Checker
 
 [![Mac/Linux Build Status](https://img.shields.io/travis/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://travis-ci.org/tomtom-international/cpp-dependencies)
-[![Windows Build Status](https://img.shields.io/appveyor/ci/tomtom-international/cpp-dependencies.svg)](https://ci.appveyor.com/project/tomtom-international/cpp-dependencies)
+[![Windows Build Status](https://img.shields.io/appveyor/ci/rijnb/cpp-dependencies.svg)](https://ci.appveyor.com/project/rijnb/cpp-dependencies)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 [![Release](https://img.shields.io/github/release/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://github.com/tomtom-international/cpp-dependencies/releases)
 
