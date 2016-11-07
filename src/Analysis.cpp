@@ -108,7 +108,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
             std::string fullFilePath = (filesystem::path(fp.first).parent_path() / p.first).generic_string();
             if (!p.second && files.count(fullFilePath)) {
                 // This file exists as a local include.
-                File* dep = &files[fullFilePath];
+                File* dep = &files.find(fullFilePath)->second;
                 dep->hasInclude = true;
                 fp.second.dependencies.insert(dep);
             } else {
@@ -129,7 +129,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
                         }
                     }
                 } else if (files.count(fullPath)) {
-                    File *dep = &files[fullPath];
+                    File *dep = &files.find(fullPath)->second;
                     fp.second.dependencies.insert(dep);
 
                     std::string inclpath = fullPath.substr(0, fullPath.size() - p.first.size() - 1);

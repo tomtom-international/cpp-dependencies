@@ -21,9 +21,9 @@ std::string Component::NiceName(char sub) const {
         return std::string("ROOT");
     }
 
-    std::string name = root.generic_string().c_str() + 2;
-    std::replace(name.begin(), name.end(), '/', sub);
-    return name;
+    std::string nicename = root.generic_string().c_str() + 2;
+    std::replace(nicename.begin(), nicename.end(), '/', sub);
+    return nicename;
 }
 
 std::string Component::QuotedName() const {
@@ -35,7 +35,7 @@ std::string Component::CmakeName() const {
 }
 
 Component::Component(const filesystem::path &path)
-        : root(path), recreate(false), hasAddonCmake(false), type("library"), index(0), lowlink(0), onStack(false) {
+        : root(path), name(""), recreate(false), hasAddonCmake(false), type("library"), index(0), lowlink(0), onStack(false) {
 }
 
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps) {

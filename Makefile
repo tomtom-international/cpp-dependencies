@@ -15,7 +15,7 @@
 CXX?=g++
 CCFLAGS?=
 
-USE_BOOST?=0
+USE_BOOST?=1
 USE_MMAP?=1
 HAS_MEMRCHR?=1
 
@@ -35,6 +35,7 @@ else
 CCFLAGS+=-DNO_MEMRCHR
 endif
 
+OPTFLAGS?=-O3
 STANDARD=c++11
 
 SOURCES=Component.cpp Configuration.cpp generated.cpp Input.cpp Output.cpp CmakeRegen.cpp Analysis.cpp
@@ -45,7 +46,7 @@ all: cpp-dependencies
 
 obj/%.o: src/%.cpp
 	@mkdir -p obj
-	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -O3 -MMD
+	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) $(OPTFLAGS) -MMD
 
 obj/%.coverage.o: src/%.cpp
 	@mkdir -p obj
@@ -56,7 +57,7 @@ test/obj/%.coverage.o: test/%.cpp
 	$(CXX) -c -Wall -Wextra -Wpedantic -o $@ $< -std=$(STANDARD) $(CCFLAGS) -Isrc -g -MMD --coverage
 
 cpp-dependencies: $(patsubst %.cpp,obj/%.o,$(SOURCES)) obj/main.o
-	$(CXX) -o $@ $^ $(LDFLAGS) -O3 
+	$(CXX) -o $@ $^ $(LDFLAGS) $(OPTFLAGS) 
 
 cpp-dependencies-unittests: $(patsubst %.cpp,obj/%.coverage.o,$(SOURCES)) $(patsubst %.cpp,test/obj/%.coverage.o,$(TESTS))
 	$(CXX) -o $@ $^ $(LDFLAGS) -g -pthread --coverage

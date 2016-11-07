@@ -34,8 +34,9 @@
 struct Component;
 
 struct File {
-    File()
-    : component(NULL)
+    File(const filesystem::path& path)
+    : path(path)
+    , component(NULL)
     , loc(0)
     , hasExternalInclude(false)
     , hasInclude(false)
