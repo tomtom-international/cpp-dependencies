@@ -7,7 +7,7 @@ build_script:
   - md build
   - cd build
   - cmake -G"Visual Studio 14" ..
-  - msbuild /m /p:Configuration=Release /p:Platform="Win32" LibTemplateCmake.sln
+  - msbuild /m /p:Configuration=Release /p:Platform="Win32" cpp_dependencies.sln
 
 test_script:
   - cmd: ctest -C Release -VV
