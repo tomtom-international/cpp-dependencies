@@ -20,7 +20,7 @@
 #include "Input.h"
 #include <algorithm>
 
-#ifdef USE_MMAP
+#ifdef WITH_MMAP
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -154,7 +154,7 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
     }
 }
 
-#ifdef USE_MMAP
+#ifdef WITH_MMAP
 static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
     File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     int fd = open(path.c_str(), O_RDONLY);

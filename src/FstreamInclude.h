@@ -1,7 +1,7 @@
 #ifndef __DEP_CHECKER__FSTREAMINCLUDE_H
 #define __DEP_CHECKER__FSTREAMINCLUDE_H
 
-#ifdef USE_BOOST
+#ifdef WITH_BOOST
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
