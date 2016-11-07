@@ -2,7 +2,7 @@
 
 Test* Test::firstTest;
 
-int main() {
+int Test::RunAll() {
   Test* t = Test::firstTest;
   Test* c = t;
   int count = 0, current = 0, fails = 0;
@@ -25,5 +25,9 @@ int main() {
     printf("\rAll tests successful!                                                                \n");
   }
   return (fails > 0);
+}
+
+int main() {
+  return Test::RunAll();
 }
 
