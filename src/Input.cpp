@@ -205,23 +205,6 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-#if 1
-bool IsCompileableFile(const std::string& ext) {
-  std::string lower;
-  std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
-  return lower == ".c" ||
-         lower == ".cc" ||
-         lower == ".cpp";
-}
-
-static bool IsCode(const std::string &ext) {
-    std::string lower;
-    std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
-    return lower == ".h" ||
-           lower == ".hpp" ||
-           IsCompileableFile(ext);
-}
-#else
 bool IsCompileableFile(const std::string& ext) {
     static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp" };
     return exts.count(ext) > 0;
@@ -231,7 +214,6 @@ static bool IsCode(const std::string &ext) {
     static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".h", ".H", ".hpp" };
     return exts.count(ext) > 0;
 }
-#endif
 
 #if 1
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
