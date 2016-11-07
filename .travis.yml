@@ -1,5 +1,9 @@
 script:
-  - make -j all unittest
+  - mkdir build
+  - cd build
+  - cmake ${CMAKEFLAGS} -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC} ..
+  - make
+  - make test
 
 sudo: required
 dist: trusty
@@ -8,10 +12,16 @@ matrix:
   include:
     - compiler: gcc
       os: osx
-      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=g++
+      before_script:
+        - brew update
+        - brew outdated cmake || brew upgrade cmake
+      env: CMAKEFLAGS="-DWITH_BOOST=ON -DHAS_MEMRCHR=OFF" CXX=g++
     - compiler: clang
       os: osx
-      env: USE_BOOST=1 HAS_MEMRCHR=0 CXX=clang++
+      before_script:
+        - brew update
+        - brew outdated cmake || brew upgrade cmake
+      env: CMAKEFLAGS="-DWITH_BOOST=ON -DHAS_MEMRCHR=OFF" CXX=clang++
     - compiler: gcc
       os: linux
       addons:
@@ -20,9 +30,10 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
-      env: USE_BOOST=1 CXX=g++-4.9
+      env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=g++-4.9
     - compiler: gcc
       os: linux
       addons:
@@ -31,6 +42,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - cmake
       env: CXX=g++-5
     - compiler: clang
       os: linux
@@ -41,9 +53,10 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
-      env: USE_BOOST=1 CXX=clang++-3.6
+      env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=clang++-3.6
     - compiler: clang
       os: linux
       addons:
@@ -53,6 +66,7 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
+            - cmake
             - libboost-system-dev
             - libboost-filesystem-dev
-      env: USE_BOOST=1 CXX=clang++-3.7
+      env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=clang++-3.7

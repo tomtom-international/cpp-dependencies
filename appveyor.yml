@@ -1,0 +1,14 @@
+version: 1.0.{build}
+
+clone_folder: C:\dev\cpp-dependencies
+
+build_script:
+  - cd C:\dev\cpp-dependencies
+  - md build
+  - cd build
+  - cmake -G"Visual Studio 14" -DWITH_BOOST=OFF -DHAS_MEMRCHR=OFF -DWITH_MMAP=OFF ..
+  - msbuild /m /p:Configuration=Release /p:Platform="Win32" cpp_dependencies.sln
+
+test_script:
+  - cmd: ctest -C Release -VV
+ 
