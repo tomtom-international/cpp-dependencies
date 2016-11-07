@@ -1,0 +1,12 @@
+version: 1.0.{build}
+
+build_script:
+  - cd C:\dev\cpp-dependencies
+  - md build
+  - cd build
+  - cmake -G"Visual Studio 14" ..
+  - msbuild /m /p:Configuration=Release /p:Platform="Win32" LibTemplateCmake.sln
+
+test_script:
+  - cmd: ctest -C Release -VV
+
