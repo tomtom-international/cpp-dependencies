@@ -8,7 +8,7 @@ option(WITH_TESTS "Also build unit tests" ON)
 
 # Running with Boost filesystem is typically faster, until platform specific std::filesystem comes out that is faster yet. 
 # Note that Boost::filesystem needs to be installed for this to be used.
-option(WITH_BOOST "Use Boost filesystem" ON)
+option(WITH_BOOST "Use Boost filesystem" OFF)
 
 # Switch between using the mmap logic for reading files (faster, because one copy less) or a file read (slower, because a full copy, but portable).
 option(WITH_MMAP "Use mmapped files" ON)
