@@ -44,7 +44,7 @@ public:
     : projectLoaded(false)
     , inferredComponents(false)
     , programName(argv[0])
-    , args(argv+1, argv+argc)
+    , allArgs(argv+1, argv+argc)
     {
         RegisterCommands();
         projectRoot = outputRoot = filesystem::current_path();
@@ -59,12 +59,12 @@ public:
         };
     }
     void RunCommands() {
-        if (args.empty()) {
-            args.push_back("--help");
+        if (allArgs.empty()) {
+            allArgs.push_back("--help");
         }
-        std::vector<std::string>::iterator it = args.begin(), localEnd = args.begin(), end = args.end();
+        std::vector<std::string>::iterator it = allArgs.begin(), end = allArgs.end();
         while (it != end) {
-            localEnd = it;
+            std::vector<std::string>::iterator localEnd = it;
             localEnd++;
             while (localEnd != end && ((*localEnd)[0] != '-' || (*localEnd)[1] != '-')) localEnd++;
             RunCommand(it, localEnd);
@@ -110,7 +110,7 @@ private:
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
         for (auto &i : ambiguous) {
             for (auto &c : collisions[i.first]) {
-                files[c].hasInclude = true; // There is at least one include that might end up here.
+                files.find(c)->second.hasInclude = true; // There is at least one include that might end up here.
             }
         }
         PropagateExternalIncludes(files);
@@ -233,7 +233,7 @@ private:
             std::cout << "No files specified to find usage of...\n";
         for (auto& s : args) {
             std::cout << "File " << s << " is used by:\n";
-            auto f = &files["./" + s];
+            File* f = &files.find("./" + s)->second;
             for (auto &p : files) {
                 if (p.second.dependencies.find(f) != p.second.dependencies.end()) {
                     std::cout << "  " << p.second.path.string() << "\n";
@@ -345,7 +345,7 @@ private:
     bool inferredComponents;
     std::string programName;
     std::map<std::string, Command> commands;
-    std::vector<std::string> args;
+    std::vector<std::string> allArgs;
     std::unordered_set<std::string> ignorefiles;
     std::unordered_map<std::string, Component *> components;
     std::unordered_map<std::string, File> files;

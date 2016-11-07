@@ -156,8 +156,7 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
 
 #ifdef USE_MMAP
 static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
-    File& f = files[path.generic_string()];
-    f.path = path;
+    File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     int fd = open(path.c_str(), O_RDONLY);
     size_t fileSize = filesystem::file_size(path);
     void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -167,8 +166,7 @@ static void ReadCode(std::unordered_map<std::string, File>& files, const filesys
 }
 #else
 static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
-    File &f = files[path.generic_string()];
-    f.path = path;
+    File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     std::string buffer;
     buffer.resize(filesystem::file_size(path));
     {
@@ -208,21 +206,16 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
 }
 
 bool IsCompileableFile(const std::string& ext) {
-  std::string lower;
-  std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
-  return lower == ".c" ||
-         lower == ".cc" ||
-         lower == ".cpp";
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp" };
+    return exts.count(ext) > 0;
 }
 
 static bool IsCode(const std::string &ext) {
-    std::string lower;
-    std::transform(ext.begin(), ext.end(), std::back_inserter(lower), ::tolower);
-    return lower == ".h" ||
-           lower == ".hpp" ||
-           IsCompileableFile(ext);
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".h", ".H", ".hpp" };
+    return exts.count(ext) > 0;
 }
 
+#if 1
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
@@ -247,7 +240,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
         }
 
         if (IsItemBlacklisted(it->path(), ignorefiles)) {
-            continue;
+          continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
@@ -261,5 +254,51 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
     }
     filesystem::current_path(outputpath);
 }
+#else
+static void LoadFileListFrom(std::unordered_map<std::string, Component *> &components,
+                      std::unordered_map<std::string, File>& files,
+                      const std::unordered_set<std::string> &ignorefiles,
+                      const filesystem::path& sourceDir,
+                      bool inferredComponents) {
+    static const std::string cmakelistfilename = "CMakeLists.txt";
+    // skip hidden files and dirs
+    if (sourceDir.filename().generic_string().size() > 2 &&
+        sourceDir.filename().generic_string()[0] == '.') {
+        return;
+    }
 
+    for (filesystem::directory_iterator it(sourceDir), end;
+         it != end; ++it) {
+        if (IsItemBlacklisted(it->path(), ignorefiles)) {
+            continue;
+        }
+        const auto &parent = it->path().parent_path();
+        if (inferredComponents) AddComponentDefinition(components, parent);
+
+        if (it->path().filename() == cmakelistfilename) {
+            ReadCmakelist(components, it->path());
+        } else if (filesystem::is_regular_file(it->status())) {
+            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
+                AddComponentDefinition(components, parent).hasAddonCmake = true;
+            } else if (IsCode(it->path().extension().generic_string().c_str())) {
+                ReadCode(files, it->path());
+            }
+        } else if (filesystem::is_directory(it->status())) {
+            LoadFileListFrom(components, files, ignorefiles, it->path(), inferredComponents);
+        }
+    }
+}
+
+void LoadFileList(std::unordered_map<std::string, Component *> &components,
+                  std::unordered_map<std::string, File>& files,
+                  const std::unordered_set<std::string> &ignorefiles,
+                  const filesystem::path& sourceDir,
+                  bool inferredComponents) {
+    filesystem::path outputpath = filesystem::current_path();
+    filesystem::current_path(sourceDir.c_str());
+    AddComponentDefinition(components, ".");
+    LoadFileListFrom(components, files, ignorefiles, sourceDir, inferredComponents);
+    filesystem::current_path(outputpath);
+}
+#endif
 
