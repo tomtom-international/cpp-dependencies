@@ -41,7 +41,7 @@ std::string targetFrom(const std::string &arg) {
 class Operations {
 public:
     Operations(int argc, const char** argv)
-    : projectLoaded(false)
+    : loadStatus(Unloaded)
     , inferredComponents(false)
     , programName(argv[0])
     , allArgs(argv+1, argv+argc)
@@ -92,6 +92,7 @@ private:
         commands["--dryregen"] = &Operations::DryRegen;
         commands["--dir"] = &Operations::Dir;
         commands["--infer"] = &Operations::Infer;
+        commands["--includesize"] = &Operations::IncludeSize;
     }
     void RunCommand(std::vector<std::string>::iterator &arg, std::vector<std::string>::iterator &end) {
         std::string lowerCommand;
@@ -102,9 +103,10 @@ private:
         if (!c) c = commands["--help"];
         (this->*c)(std::vector<std::string>(arg, end));
     }
-    void LoadProject() {
-        if (projectLoaded) return;
-        LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents);
+    void LoadProject(bool withLoc = false) {
+        if (!withLoc && loadStatus >= FastLoad) return;
+        if (withLoc && loadStatus >= FullLoad) return;
+        LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
@@ -119,7 +121,7 @@ private:
         for (auto& c : deleteComponents) {
             KillComponent(components, c);
         }
-        projectLoaded = true;
+        loadStatus = (withLoc ? FullLoad : FastLoad);
     }
     void UnloadProject() {
         components.clear();
@@ -127,7 +129,7 @@ private:
         collisions.clear();
         includeLookup.clear();
         ambiguous.clear();
-        projectLoaded = false;
+        loadStatus = Unloaded;
     }
     void Dir(std::vector<std::string> args) {
         if (args.empty()) {
@@ -184,7 +186,7 @@ private:
         PrintCyclesForTarget(components[targetFrom(args[0])]);
     }
     void Stats(std::vector<std::string>) {
-        LoadProject();
+        LoadProject(true);
         std::size_t totalPublicLinks(0), totalPrivateLinks(0);
         for (const auto &c : components) {
             totalPublicLinks += c.second->pubDeps.size();
@@ -270,7 +272,7 @@ private:
         DoActualRegen(args, true);
     }
     void Outliers(std::vector<std::string>) {
-        LoadProject();
+        LoadProject(true);
         PrintAllComponents(components, "Libraries with no links in:", [](const Component& c){
             return c.type == "library" &&
                 !c.files.empty() &&
@@ -283,6 +285,48 @@ private:
         PrintAllComponents(components, "Libraries that are part of a cycle:", [](const Component& c) { return !c.circulars.empty(); });
         PrintAllFiles(files, "Files that are never used:", [](const File& f) { return !IsCompileableFile(f.path.extension().string()) && !f.hasInclude; });
         PrintAllFiles(files, "Files with too many lines of code:", [](const File& f) { return f.loc > Configuration::Get().fileLocUpperLimit; });
+    }
+    void IncludeSize(std::vector<std::string>) {
+        LoadProject(true);
+        std::unordered_map<File*, size_t> includeCount;
+        for (auto& f : files) {
+            if (f.second.hasInclude) continue;
+            std::set<File*> filesIncluded;
+            std::vector<File*> todo;
+            todo.push_back(&f.second);
+            while (!todo.empty()) {
+                File* f = todo.back();
+                todo.pop_back();
+                for (auto& d : f->dependencies) {
+                    if (filesIncluded.insert(d).second) todo.push_back(d);
+                }
+            }
+
+            size_t total = 0;
+            for (auto& i : filesIncluded) { 
+                total += i->loc;
+                i->includeCount++;
+            }
+        }
+        for (auto& f : files) {
+            if (!f.second.hasInclude) continue;
+            std::set<File*> filesIncluded;
+            std::vector<File*> todo;
+            todo.push_back(&f.second);
+            while (!todo.empty()) {
+                File* f = todo.back();
+                todo.pop_back();
+                for (auto& d : f->dependencies) {
+                    if (filesIncluded.insert(d).second) todo.push_back(d);
+                }
+            }
+            size_t total = 0;
+            for (auto& i : filesIncluded) total += i->loc;
+            if (f.second.includeCount > 0 && total > 0) {
+                std::cout << total << " LOC used " << f.second.includeCount << " times from " << f.second.path.string() << "\n";
+                std::cout << "impact " << f.second.includeCount * total << " for " << f.second.path.string() << "\n";
+            }
+        }
     }
     void Ambiguous(std::vector<std::string>) {
         LoadProject();
@@ -341,7 +385,11 @@ private:
         std::cout << "  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n";
         std::cout << "  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
-    bool projectLoaded;
+    enum LoadStatus {
+      Unloaded,
+      FastLoad,
+      FullLoad,
+    } loadStatus;
     bool inferredComponents;
     std::string programName;
     std::map<std::string, Command> commands;

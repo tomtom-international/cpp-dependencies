@@ -38,6 +38,7 @@ struct File {
     : path(path)
     , component(NULL)
     , loc(0)
+    , includeCount(0)
     , hasExternalInclude(false)
     , hasInclude(false)
     {
@@ -52,6 +53,7 @@ struct File {
     std::unordered_set<std::string> includePaths;
     Component *component;
     size_t loc;
+    size_t includeCount;
     bool hasExternalInclude;
     bool hasInclude;
 };

@@ -37,7 +37,7 @@ const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) 
 }
 #endif
 
-static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
+static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize, bool withLoc) {
     if (buffersize == 0) return;
     size_t offset = 0;
     enum State { None, AfterHash, AfterInclude, InsidePointyIncludeBrackets, InsideStraightIncludeBrackets } state = None;
@@ -53,6 +53,12 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
             if (nextNewline) {
                 buffersize = nextNewline - buffer;
             }
+        }
+    }
+    if (withLoc) {
+        f.loc = 0;
+        for (size_t n = 0; n < buffersize; n++) {
+            if (buffer[n] == '\n') f.loc++;
         }
     }
     const char* nextHash = static_cast<const char*>(memchr(buffer+offset, '#', buffersize-offset));
@@ -89,7 +95,15 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
             case '\t':
                 break;
             case 'i':
-                if (buffer[offset + 1] == 'n' &&
+                if (buffer[offset + 1] == 'm' &&
+                    buffer[offset + 2] == 'p' &&
+                    buffer[offset + 3] == 'o' &&
+                    buffer[offset + 4] == 'r' &&
+                    buffer[offset + 5] == 't') {
+                    state = AfterInclude;
+                    offset += 5;
+                }
+                else if (buffer[offset + 1] == 'n' &&
                     buffer[offset + 2] == 'c' &&
                     buffer[offset + 3] == 'l' &&
                     buffer[offset + 4] == 'u' &&
@@ -155,24 +169,24 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize) {
 }
 
 #ifdef WITH_MMAP
-static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path, bool withLoc) {
     File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     int fd = open(path.c_str(), O_RDONLY);
     size_t fileSize = filesystem::file_size(path);
     void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
-    ReadCodeFrom(f, static_cast<const char*>(p), fileSize);
+    ReadCodeFrom(f, static_cast<const char*>(p), fileSize, withLoc);
     munmap(p, fileSize);
     close(fd);
 }
 #else
-static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path, bool withLoc) {
     File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     std::string buffer;
     buffer.resize(filesystem::file_size(path));
     {
         streams::ifstream(path).read(&buffer[0], buffer.size());
     }
-    ReadCodeFrom(f, buffer.data(), buffer.size());
+    ReadCodeFrom(f, buffer.data(), buffer.size(), withLoc);
 }
 #endif
 
@@ -206,12 +220,12 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
 }
 
 bool IsCompileableFile(const std::string& ext) {
-    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp" };
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm" };
     return exts.count(ext) > 0;
 }
 
 static bool IsCode(const std::string &ext) {
-    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".h", ".H", ".hpp" };
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm", ".h", ".H", ".hpp" };
     return exts.count(ext) > 0;
 }
 
@@ -220,7 +234,8 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
                   const filesystem::path& sourceDir,
-                  bool inferredComponents) {
+                  bool inferredComponents,
+                  bool withLoc) {
     filesystem::path outputpath = filesystem::current_path();
     filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
@@ -248,7 +263,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
-                ReadCode(files, it->path());
+                ReadCode(files, it->path(), withLoc);
             }
         }
     }
@@ -281,7 +296,7 @@ static void LoadFileListFrom(std::unordered_map<std::string, Component *> &compo
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
-                ReadCode(files, it->path());
+                ReadCode(files, it->path(), withLoc);
             }
         } else if (filesystem::is_directory(it->status())) {
             LoadFileListFrom(components, files, ignorefiles, it->path(), inferredComponents);
@@ -293,7 +308,8 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
                   const filesystem::path& sourceDir,
-                  bool inferredComponents) {
+                  bool inferredComponents,
+                  bool withLoc) {
     filesystem::path outputpath = filesystem::current_path();
     filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
