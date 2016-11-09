@@ -181,9 +181,11 @@ private:
     }
     void Cycles(std::vector<std::string> args) {
         LoadProject();
-        if (args.empty())
+        if (args.empty()) {
             std::cout << "No targets specified for finding in- and out-going links.\n";
-        PrintCyclesForTarget(components[targetFrom(args[0])]);
+        } else {
+            PrintCyclesForTarget(components[targetFrom(args[0])]);
+        }
     }
     void Stats(std::vector<std::string>) {
         LoadProject(true);
