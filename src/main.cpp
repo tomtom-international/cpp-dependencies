@@ -360,7 +360,7 @@ private:
         std::cout << "  Extracting graphs:\n";
         std::cout << "  --graph <output>              : Graph of all components with dependencies\n";
         std::cout << "  --graph-cycles <output>       : Graph of components with cyclic dependencies on other components\n";
-        std::cout << "  --graph-for <output> <target> : Graph for all dependencies of a specific target\n";
+        std::cout << "  --graph-target <target> <output> : Graph for all dependencies of a specific target\n";
         std::cout << "\n";
         std::cout << "  Getting information:\n";
         std::cout << "  --stats                       : Info about code base size, complexity and cyclic dependency count\n";
