@@ -74,25 +74,26 @@ public:
 private:
     typedef void (Operations::*Command)(std::vector<std::string>);
     void RegisterCommands() {
-        commands["--outliers"] = &Operations::Outliers;
         commands["--ambiguous"] = &Operations::Ambiguous;
-        commands["--help"] = &Operations::Help;
-        commands["--info"] = &Operations::Info;
-        commands["--usedby"] = &Operations::UsedBy;
-        commands["--ignore"] = &Operations::Ignore;
-        commands["--drop"] = &Operations::Drop;
-        commands["--graph"] = &Operations::Graph;
-        commands["--graph-cycles"] = &Operations::GraphCycles;
-        commands["--graph-target"] = &Operations::GraphTarget;
         commands["--cycles"] = &Operations::Cycles;
-        commands["--stats"] = &Operations::Stats;
-        commands["--inout"] = &Operations::InOut;
-        commands["--shortest"] = &Operations::Shortest;
-        commands["--regen"] = &Operations::Regen;
-        commands["--dryregen"] = &Operations::DryRegen;
         commands["--dir"] = &Operations::Dir;
-        commands["--infer"] = &Operations::Infer;
+        commands["--drop"] = &Operations::Drop;
+        commands["--dryregen"] = &Operations::DryRegen;
+        commands["--fixincludes"] = &Operations::FixIncludes;
+        commands["--graph-cycles"] = &Operations::GraphCycles;
+        commands["--graph"] = &Operations::Graph;
+        commands["--graph-target"] = &Operations::GraphTarget;
+        commands["--help"] = &Operations::Help;
+        commands["--ignore"] = &Operations::Ignore;
         commands["--includesize"] = &Operations::IncludeSize;
+        commands["--infer"] = &Operations::Infer;
+        commands["--info"] = &Operations::Info;
+        commands["--inout"] = &Operations::InOut;
+        commands["--outliers"] = &Operations::Outliers;
+        commands["--regen"] = &Operations::Regen;
+        commands["--shortest"] = &Operations::Shortest;
+        commands["--stats"] = &Operations::Stats;
+        commands["--usedby"] = &Operations::UsedBy;
     }
     void RunCommand(std::vector<std::string>::iterator &arg, std::vector<std::string>::iterator &end) {
         std::string lowerCommand;
@@ -270,6 +271,22 @@ private:
     }
     void DryRegen(std::vector<std::string> args) {
         DoActualRegen(args, true);
+    }
+    void FixIncludes(std::vector<std::string> args) {
+        if (args.size() < 2 || args.size() > 3) {
+            std::cout << "Invalid input to fixincludes command\n";
+            std::cout << "Required: --fixincludes <component> <desired path> [<relative root>]";
+            std::cout << "Relative root can be \"project\" for absolute paths or \"component\" for component-relative paths";
+        }
+
+        LoadProject();
+        bool absolute = args.size() == 3 && args[2] == "project";
+        Component* c = components[targetFrom(args[0])];
+        if (!c) {
+            std::cout << "No such component " << args[0] << "\n";
+        } else {
+            UpdateIncludes(files, c, args[1], absolute);
+        }
     }
     void Outliers(std::vector<std::string>) {
         LoadProject(true);
