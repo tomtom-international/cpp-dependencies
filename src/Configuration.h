@@ -33,10 +33,12 @@ struct Configuration {
   std::string privateDepColor;
   std::unordered_set<std::string> addLibraryAliases;
   std::unordered_set<std::string> addExecutableAliases;
+  std::unordered_set<std::string> addIgnores;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;
   size_t fileLocUpperLimit;
+  bool reuseCustomSections;
 };
 
 #endif
