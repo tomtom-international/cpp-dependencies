@@ -206,8 +206,28 @@ static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
+static bool TryGetComponentType(Component& component,
+                                std::unordered_set<std::string> componentTypes,
+                                const std::string& line)
+{
+  for (std::unordered_set<std::string>::const_iterator it = componentTypes.begin();
+       it != componentTypes.end();
+       ++it)
+  {
+    if (strstr(line.c_str(), it->c_str()))
+    {
+      component.type = *it;
+      return true;
+    }
+  }
+  return false;
+}
+
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
+    
+    const Configuration& config = Configuration::Get();
+
     streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
@@ -221,10 +241,11 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
             if (end != line.npos) {
                 comp.name = line.substr(8, end - 8);
             }
-        } else if (strstr(line.c_str(), "_library")) {
-            comp.type = "library";
-        } else if (strstr(line.c_str(), "_executable")) {
-            comp.type = "executable";
+        }
+        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
+            // next line
+        } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
+            // next line
         }
     } while (in.good());
 }

@@ -33,6 +33,9 @@ Configuration::Configuration()
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
 {
+  addLibraryAliases.insert("add_library");
+  addExecutableAliases.insert("add_executable");
+
   streams::ifstream in(CONFIG_FILE);
   std::string line;
   while (in.good()) {
@@ -57,6 +60,8 @@ Configuration::Configuration()
     else if (name == "componentLocLowerLimit") { componentLocLowerLimit = atol(value.c_str()); }
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
+    else if (name == "addLibraryAlias") { addLibraryAliases.insert(value); }
+    else if (name == "addExecutableAlias") { addExecutableAliases.insert(value); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
