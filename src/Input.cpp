@@ -280,11 +280,10 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
             if (end != line.npos) {
                 comp.name = line.substr(8, end - 8);
             }
-        } else if (strstr(line.c_str(), "_library")) {
-            comp.type = "library";
+        }
+        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
             inTargetDefinition = true;
-        } else if (strstr(line.c_str(), "_executable")) {
-            comp.type = "executable";
+        } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
             inTargetDefinition = true;
         } else if (inTargetDefinition) {
             const size_t endOfLine = (newParenLevel == 0) ? line.length()
