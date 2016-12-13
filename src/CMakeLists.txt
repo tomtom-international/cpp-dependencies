@@ -10,7 +10,8 @@ add_library(cpp_dependencies_lib STATIC
   Analysis.cpp
   CmakeRegen.cpp
   Component.cpp
-  Configuration.cpp
+  #Configuration.cpp
+  ConfigurationNavKit.cpp
   generated.cpp
   Input.cpp
   Output.cpp
@@ -26,8 +27,8 @@ target_link_libraries(cpp_dependencies_lib
 )
 target_include_directories(cpp_dependencies_lib
   PUBLIC 
-    "${CMAKE_CURRENT_LIST_DIR}"
-    "${Boost_INCLUDE_DIRS}"
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${Boost_INCLUDE_DIRS}
 )
 
 add_library(cpp_dependencies_coverage STATIC
@@ -42,7 +43,8 @@ add_library(cpp_dependencies_coverage STATIC
   Analysis.cpp
   CmakeRegen.cpp
   Component.cpp
-  Configuration.cpp
+  #Configuration.cpp
+  ConfigurationNavKit.cpp
   generated.cpp
   Input.cpp
   Output.cpp
@@ -58,8 +60,8 @@ target_link_libraries(cpp_dependencies_coverage
 )
 target_include_directories(cpp_dependencies_coverage
   PUBLIC 
-    "${CMAKE_CURRENT_LIST_DIR}"
-    "${Boost_INCLUDE_DIRS}"
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${Boost_INCLUDE_DIRS}
 )
 
 add_executable(cpp-dependencies
@@ -70,5 +72,4 @@ target_link_libraries(cpp-dependencies
     cpp_dependencies_lib
 )
 
-install(TARGETS cpp-dependencies
-        RUNTIME DESTINATION bin)
+install(TARGETS cpp-dependencies RUNTIME DESTINATION bin)

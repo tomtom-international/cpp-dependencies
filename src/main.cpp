@@ -74,25 +74,26 @@ public:
 private:
     typedef void (Operations::*Command)(std::vector<std::string>);
     void RegisterCommands() {
-        commands["--outliers"] = &Operations::Outliers;
         commands["--ambiguous"] = &Operations::Ambiguous;
-        commands["--help"] = &Operations::Help;
-        commands["--info"] = &Operations::Info;
-        commands["--usedby"] = &Operations::UsedBy;
-        commands["--ignore"] = &Operations::Ignore;
-        commands["--drop"] = &Operations::Drop;
-        commands["--graph"] = &Operations::Graph;
-        commands["--graph-cycles"] = &Operations::GraphCycles;
-        commands["--graph-target"] = &Operations::GraphTarget;
         commands["--cycles"] = &Operations::Cycles;
-        commands["--stats"] = &Operations::Stats;
-        commands["--inout"] = &Operations::InOut;
-        commands["--shortest"] = &Operations::Shortest;
-        commands["--regen"] = &Operations::Regen;
-        commands["--dryregen"] = &Operations::DryRegen;
         commands["--dir"] = &Operations::Dir;
-        commands["--infer"] = &Operations::Infer;
+        commands["--drop"] = &Operations::Drop;
+        commands["--dryregen"] = &Operations::DryRegen;
+        commands["--fixincludes"] = &Operations::FixIncludes;
+        commands["--graph-cycles"] = &Operations::GraphCycles;
+        commands["--graph"] = &Operations::Graph;
+        commands["--graph-target"] = &Operations::GraphTarget;
+        commands["--help"] = &Operations::Help;
+        commands["--ignore"] = &Operations::Ignore;
         commands["--includesize"] = &Operations::IncludeSize;
+        commands["--infer"] = &Operations::Infer;
+        commands["--info"] = &Operations::Info;
+        commands["--inout"] = &Operations::InOut;
+        commands["--outliers"] = &Operations::Outliers;
+        commands["--regen"] = &Operations::Regen;
+        commands["--shortest"] = &Operations::Shortest;
+        commands["--stats"] = &Operations::Stats;
+        commands["--usedby"] = &Operations::UsedBy;
     }
     void RunCommand(std::vector<std::string>::iterator &arg, std::vector<std::string>::iterator &end) {
         std::string lowerCommand;
@@ -181,9 +182,11 @@ private:
     }
     void Cycles(std::vector<std::string> args) {
         LoadProject();
-        if (args.empty())
+        if (args.empty()) {
             std::cout << "No targets specified for finding in- and out-going links.\n";
-        PrintCyclesForTarget(components[targetFrom(args[0])]);
+        } else {
+            PrintCyclesForTarget(components[targetFrom(args[0])]);
+        }
     }
     void Stats(std::vector<std::string>) {
         LoadProject(true);
@@ -271,6 +274,22 @@ private:
     void DryRegen(std::vector<std::string> args) {
         DoActualRegen(args, true);
     }
+    void FixIncludes(std::vector<std::string> args) {
+        if (args.size() < 2 || args.size() > 3) {
+            std::cout << "Invalid input to fixincludes command\n";
+            std::cout << "Required: --fixincludes <component> <desired path> [<relative root>]";
+            std::cout << "Relative root can be \"project\" for absolute paths or \"component\" for component-relative paths";
+        }
+
+        LoadProject();
+        bool absolute = args.size() == 3 && args[2] == "project";
+        Component* c = components[targetFrom(args[0])];
+        if (!c) {
+            std::cout << "No such component " << args[0] << "\n";
+        } else {
+            UpdateIncludes(files, c, args[1], absolute);
+        }
+    }
     void Outliers(std::vector<std::string>) {
         LoadProject(true);
         PrintAllComponents(components, "Libraries with no links in:", [](const Component& c){
@@ -353,37 +372,37 @@ private:
         std::cout << "    Source directory is assumed to be the current one if unspecified\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
-        std::cout << "  --help                        : Produce this help text\n";
+        std::cout << "  --help                           : Produce this help text\n";
         std::cout << "\n";
         std::cout << "  Extracting graphs:\n";
-        std::cout << "  --graph <output>              : Graph of all components with dependencies\n";
-        std::cout << "  --graph-cycles <output>       : Graph of components with cyclic dependencies on other components\n";
-        std::cout << "  --graph-for <output> <target> : Graph for all dependencies of a specific target\n";
+        std::cout << "  --graph <output>                 : Graph of all components with dependencies\n";
+        std::cout << "  --graph-cycles <output>          : Graph of components with cyclic dependencies on other components\n";
+        std::cout << "  --graph-target <target> <output> : Graph for all dependencies of a specific target\n";
         std::cout << "\n";
         std::cout << "  Getting information:\n";
-        std::cout << "  --stats                       : Info about code base size, complexity and cyclic dependency count\n";
-        std::cout << "  --cycles <targetname>         : Find all possible paths from this target back to itself\n";
-        std::cout << "  --shortest                    : Determine shortest path between components and its reason\n";
-        std::cout << "  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n";
-        std::cout << "                                       - libraries that are not used\n";
-        std::cout << "                                       - components that use a lot of other components\n";
-        std::cout << "                                       - components with dependencies towards executables\n";
-        std::cout << "                                       - components with less than 200 LoC\n";
-        std::cout << "                                       - components with more than 20 kLoC\n";
-        std::cout << "                                       - components that are part of a cycle\n";
-        std::cout << "                                       - files that are more than 2000 LoC\n";
-        std::cout << "                                       - files that are not compiled and never included\n";
+        std::cout << "  --stats                          : Info about code base size, complexity and cyclic dependency count\n";
+        std::cout << "  --cycles <targetname>            : Find all possible paths from this target back to itself\n";
+        std::cout << "  --shortest                       : Determine shortest path between components and its reason\n";
+        std::cout << "  --outliers                       : Finds all components and files that match a criterium for being out of the ordinary\n";
+        std::cout << "                                          - libraries that are not used\n";
+        std::cout << "                                          - components that use a lot of other components\n";
+        std::cout << "                                          - components with dependencies towards executables\n";
+        std::cout << "                                          - components with less than 200 LoC\n";
+        std::cout << "                                          - components with more than 20 kLoC\n";
+        std::cout << "                                          - components that are part of a cycle\n";
+        std::cout << "                                          - files that are more than 2000 LoC\n";
+        std::cout << "                                          - files that are not compiled and never included\n";
         std::cout << "\n";
         std::cout << "  Target information:\n";
-        std::cout << "  --info                        : Show all information on a given specific target\n";
-        std::cout << "  --usedby                      : Find all references to a specific header file\n";
-        std::cout << "  --inout                       : Find all incoming and outgoing links for a target\n";
-        std::cout << "  --ambiguous                   : Find all include statements that could refer to more than one header\n";
+        std::cout << "  --info                           : Show all information on a given specific target\n";
+        std::cout << "  --usedby                         : Find all references to a specific header file\n";
+        std::cout << "  --inout                          : Find all incoming and outgoing links for a target\n";
+        std::cout << "  --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
         std::cout << "  Automatic CMakeLists.txt generation:\n";
         std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << Configuration::Get().regenTag << "\"\n";
-        std::cout << "  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n";
-        std::cout << "  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "  --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
+        std::cout << "  --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
     enum LoadStatus {
       Unloaded,
