@@ -55,6 +55,10 @@ componentLocUpperLimit: 20000
 # logical units, which are then easy to mix up and conflate.
 fileLocUpperLimit: 2000
 
+# Whether custom sections, like "set_target_property(...)", from an existing CMakeLists.txt
+# file should be reused.
+reuseCustomSections: false
+
 # Aliases for CMake command add_library. Each alias is assumed to take similar arguments as the
 # vanilla CMake command.
 # Each alias must be on its own line. The last line should only contain the closing bracket.

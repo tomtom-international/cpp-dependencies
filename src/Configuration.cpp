@@ -81,6 +81,7 @@ Configuration::Configuration()
 , componentLocLowerLimit(200)
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
+, reuseCustomSections(false)
 {
   addLibraryAliases.insert("add_library");
   addExecutableAliases.insert("add_executable");
@@ -112,6 +113,7 @@ Configuration::Configuration()
     else if (name == "addLibraryAlias") { ReadSet(addLibraryAliases, in); }
     else if (name == "addExecutableAlias") { ReadSet(addExecutableAliases, in); }
     else if (name == "licenseString") { licenseString = ReadMultilineString(in); }
+    else if (name == "reuseCustomSections") { reuseCustomSections = (value == "true"); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }

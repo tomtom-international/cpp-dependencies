@@ -223,6 +223,18 @@ static bool TryGetComponentType(Component& component,
   return false;
 }
 
+static bool IsAutomaticlyGeneratedSection(std::string line) {
+    return strstr(line.c_str(), "target_link_libraries(") ||
+           strstr(line.c_str(), "add_subdirectory(") ||
+           strstr(line.c_str(), "target_include_directories(") ||
+           strstr(line.c_str(), "add_dependencies(") ||
+           strstr(line.c_str(), "include(CMakeAddon.txt)") ||
+           strstr(line.c_str(), "source_group(\"Implementation\\") ||
+           strstr(line.c_str(), "set(IMPLEMENTATION_SOURCES") ||
+           strstr(line.c_str(), "set(IMPLEMENTATION_HEADERS") ||
+           strstr(line.c_str(), "set(INTERFACE_FILES");
+}
+
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
     
@@ -251,12 +263,13 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
 }
 
 #define DEBUG(...) \
-    if (path == "./ClientAPI/iMapErrorReport/CMakeLists.txt") { \
+    if (path == "./Engines/Routing/Implementation/RoutingService/Internal/CMakeLists.txt") { \
         printf(__VA_ARGS__); }
 
 static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
-//    printf("DEBUG: reading %s\n", path.c_str());
+    const Configuration& config = Configuration::Get();
+
     streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
@@ -265,7 +278,7 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
     int parenLevel = 0;
     do {
         getline(in, line);
-        if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
+        if (strstr(line.c_str(), config.regenTag.c_str())) {
             comp.recreate = true;
             continue;
         }
@@ -286,9 +299,8 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
         } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
             inTargetDefinition = true;
         } else if (inTargetDefinition) {
-            const size_t endOfLine = (newParenLevel == 0) ? line.length()
-                                                          : line.find_last_of(')');
-
+            const size_t endOfLine = (newParenLevel == 0) ? line.find_last_of(')')
+                                                          : line.length();
             if (endOfLine > 0) {
                 const std::string targetLine(line.substr(0, endOfLine));
                 if (!strstr(targetLine.c_str(), "${IMPLEMENTATION_SOURCES}") &&
@@ -301,16 +313,8 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
             if (newParenLevel == 0) {
                 inTargetDefinition = false;
             }
-        } else {
-            if (strstr(line.c_str(), "target_link_libraries(") ||
-                strstr(line.c_str(), "add_subdirectory(") ||
-                strstr(line.c_str(), "target_include_directories(") ||
-                strstr(line.c_str(), "add_dependencies(") ||
-                strstr(line.c_str(), "include(CMakeAddon.txt)") ||
-                strstr(line.c_str(), "source_group(") ||
-                strstr(line.c_str(), "set(IMPLEMENTATION_SOURCES") ||
-                strstr(line.c_str(), "set(IMPLEMENTATION_HEADERS") ||
-                strstr(line.c_str(), "set(INTERFACE_FILES"))
+        } else if (config.reuseCustomSections) {
+            if (IsAutomaticlyGeneratedSection(line))
             {
                 inAutoSection = true;
             } else {

@@ -37,6 +37,7 @@ struct Configuration {
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;
   size_t fileLocUpperLimit;
+  bool reuseCustomSections;
 };
 
 #endif

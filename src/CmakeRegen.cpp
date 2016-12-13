@@ -77,21 +77,21 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
 
         {
             streams::ofstream o(comp->root / "CMakeLists.txt.generated");
-            // replace all newlines in licenString with "\n# "
+            // replace all newlines in licenseString with "\n# "
             std::string licenseString;
-            licenseString.reserve(Configuration::Get().licenseString.size());
+            licenseString.reserve(config.licenseString.size());
             std::string::difference_type lastPos = 0, findPos;
-            while ((findPos = Configuration::Get().licenseString.find('\n', lastPos)) != std::string::npos) {
-                licenseString.append(Configuration::Get().licenseString, lastPos, findPos - lastPos + 1);
-                licenseString.append("# ");
+            while ((findPos = config.licenseString.find('\n', lastPos)) != std::string::npos) {
+                licenseString.append(config.licenseString, lastPos, findPos - lastPos + 1);
+                licenseString.append(findPos == config.licenseString.size()-1 ? "#" : "# ");
                 lastPos = findPos + 1;
             }
             // last piece
-            licenseString.append(Configuration::Get().licenseString, lastPos);
+            licenseString.append(config.licenseString, lastPos);
 
             o << "#\n";
-            o << "# Copyright (c) " << Configuration::Get().companyName << ". All rights reserved.\n";
-            o << "# " << licenseString << "\n#\n\n";
+            o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
+            o << "# " << licenseString << "\n\n";
 
             o << "# " << Configuration::Get().regenTag << " - do not edit, your changes will be lost" << "\n";
             o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
@@ -187,7 +187,9 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
                 o << "include(CMakeAddon.txt)" << "\n";
             }
 
-            o << comp->additionalCmakeDeclarations;
+            if (config.reuseCustomSections) {
+                o << comp->additionalCmakeDeclarations;
+            }
 
             for (auto &i : items) {
                 o << "add_subdirectory(" << i << ")" << "\n";
