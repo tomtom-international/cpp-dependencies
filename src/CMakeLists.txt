@@ -10,7 +10,8 @@ add_library(cpp_dependencies_lib STATIC
   Analysis.cpp
   CmakeRegen.cpp
   Component.cpp
-  Configuration.cpp
+  #Configuration.cpp
+  ConfigurationNavKit.cpp
   generated.cpp
   Input.cpp
   Output.cpp
@@ -42,7 +43,8 @@ add_library(cpp_dependencies_coverage STATIC
   Analysis.cpp
   CmakeRegen.cpp
   Component.cpp
-  Configuration.cpp
+  #Configuration.cpp
+  ConfigurationNavKit.cpp
   generated.cpp
   Input.cpp
   Output.cpp
