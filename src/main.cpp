@@ -182,9 +182,11 @@ private:
     }
     void Cycles(std::vector<std::string> args) {
         LoadProject();
-        if (args.empty())
+        if (args.empty()) {
             std::cout << "No targets specified for finding in- and out-going links.\n";
-        PrintCyclesForTarget(components[targetFrom(args[0])]);
+        } else {
+            PrintCyclesForTarget(components[targetFrom(args[0])]);
+        }
     }
     void Stats(std::vector<std::string>) {
         LoadProject(true);
@@ -370,37 +372,37 @@ private:
         std::cout << "    Source directory is assumed to be the current one if unspecified\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
-        std::cout << "  --help                        : Produce this help text\n";
+        std::cout << "  --help                           : Produce this help text\n";
         std::cout << "\n";
         std::cout << "  Extracting graphs:\n";
-        std::cout << "  --graph <output>              : Graph of all components with dependencies\n";
-        std::cout << "  --graph-cycles <output>       : Graph of components with cyclic dependencies on other components\n";
-        std::cout << "  --graph-for <output> <target> : Graph for all dependencies of a specific target\n";
+        std::cout << "  --graph <output>                 : Graph of all components with dependencies\n";
+        std::cout << "  --graph-cycles <output>          : Graph of components with cyclic dependencies on other components\n";
+        std::cout << "  --graph-target <target> <output> : Graph for all dependencies of a specific target\n";
         std::cout << "\n";
         std::cout << "  Getting information:\n";
-        std::cout << "  --stats                       : Info about code base size, complexity and cyclic dependency count\n";
-        std::cout << "  --cycles <targetname>         : Find all possible paths from this target back to itself\n";
-        std::cout << "  --shortest                    : Determine shortest path between components and its reason\n";
-        std::cout << "  --outliers                    : Finds all components and files that match a criterium for being out of the ordinary\n";
-        std::cout << "                                       - libraries that are not used\n";
-        std::cout << "                                       - components that use a lot of other components\n";
-        std::cout << "                                       - components with dependencies towards executables\n";
-        std::cout << "                                       - components with less than 200 LoC\n";
-        std::cout << "                                       - components with more than 20 kLoC\n";
-        std::cout << "                                       - components that are part of a cycle\n";
-        std::cout << "                                       - files that are more than 2000 LoC\n";
-        std::cout << "                                       - files that are not compiled and never included\n";
+        std::cout << "  --stats                          : Info about code base size, complexity and cyclic dependency count\n";
+        std::cout << "  --cycles <targetname>            : Find all possible paths from this target back to itself\n";
+        std::cout << "  --shortest                       : Determine shortest path between components and its reason\n";
+        std::cout << "  --outliers                       : Finds all components and files that match a criterium for being out of the ordinary\n";
+        std::cout << "                                          - libraries that are not used\n";
+        std::cout << "                                          - components that use a lot of other components\n";
+        std::cout << "                                          - components with dependencies towards executables\n";
+        std::cout << "                                          - components with less than 200 LoC\n";
+        std::cout << "                                          - components with more than 20 kLoC\n";
+        std::cout << "                                          - components that are part of a cycle\n";
+        std::cout << "                                          - files that are more than 2000 LoC\n";
+        std::cout << "                                          - files that are not compiled and never included\n";
         std::cout << "\n";
         std::cout << "  Target information:\n";
-        std::cout << "  --info                        : Show all information on a given specific target\n";
-        std::cout << "  --usedby                      : Find all references to a specific header file\n";
-        std::cout << "  --inout                       : Find all incoming and outgoing links for a target\n";
-        std::cout << "  --ambiguous                   : Find all include statements that could refer to more than one header\n";
+        std::cout << "  --info                           : Show all information on a given specific target\n";
+        std::cout << "  --usedby                         : Find all references to a specific header file\n";
+        std::cout << "  --inout                          : Find all incoming and outgoing links for a target\n";
+        std::cout << "  --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
         std::cout << "  Automatic CMakeLists.txt generation:\n";
         std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << Configuration::Get().regenTag << "\"\n";
-        std::cout << "  --regen                       : Re-generate all marked CMakeLists.txt with the component information derived.\n";
-        std::cout << "  --dryregen                    : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "  --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
+        std::cout << "  --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
     enum LoadStatus {
       Unloaded,

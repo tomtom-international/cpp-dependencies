@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(cpp_dependencies
-        LANGUAGES CXX)
+project(cpp_dependencies LANGUAGES CXX)
 
 # Enables running the unit tests
 option(WITH_TESTS "Also build unit tests" ON)
@@ -20,36 +19,34 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES GNU)
-    set(COMPILE_FLAGS -Wall -Wextra -Wpedantic)
-elseif(${MSVC})
-    set(COMPILE_FLAGS /W4)
-    # boost gets compiled as static libs on Windows
-    set(Boost_USE_STATIC_LIBS ON)
+  set(COMPILE_FLAGS -Wall -Wextra -Wpedantic)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  set(COMPILE_FLAGS /W4)
+  # boost gets compiled as static libs on Windows
+  set(Boost_USE_STATIC_LIBS ON)
 endif()
 
-if (${WITH_MMAP})
-  LIST(APPEND COMPILE_FLAGS -DWITH_MMAP)
+if(WITH_MMAP)
+  list(APPEND COMPILE_FLAGS -DWITH_MMAP)
 endif()
 
-if (NOT ${HAS_MEMRCHR})
-  LIST(APPEND COMPILE_FLAGS -DNO_MEMRCHR)
+if(NOT HAS_MEMRCHR)
+  list(APPEND COMPILE_FLAGS -DNO_MEMRCHR)
 endif()
 
-if (${WITH_BOOST})
-  LIST(APPEND COMPILE_FLAGS -DWITH_BOOST)
-  find_package(Boost
-               COMPONENTS filesystem system
-               REQUIRED)
-  SET(FILESYSTEM_LIBS ${Boost_LIBRARIES})
+if(WITH_BOOST)
+  list(APPEND COMPILE_FLAGS -DWITH_BOOST)
+  find_package(Boost COMPONENTS filesystem system REQUIRED)
+  set(FILESYSTEM_LIBS ${Boost_LIBRARIES})
 else()
-  if (NOT WIN32)
-    SET(FILESYSTEM_LIBS stdc++fs)
+  if(NOT WIN32)
+    set(FILESYSTEM_LIBS stdc++fs)
   endif()
 endif()
 
 add_subdirectory(src)
 
-if(${WITH_TESTS})
-    enable_testing()
-    add_subdirectory(test)
+if(WITH_TESTS)
+  enable_testing()
+  add_subdirectory(test)
 endif()

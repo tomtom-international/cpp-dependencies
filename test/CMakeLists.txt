@@ -7,7 +7,5 @@ target_link_libraries(unittests
     cpp_dependencies_coverage
 )
 
-set_property(TARGET unittests
-             APPEND PROPERTY LINK_FLAGS --coverage)
-add_test(NAME unittests
-         COMMAND unittests)
+set_property(TARGET unittests APPEND PROPERTY LINK_FLAGS --coverage)
+add_test(NAME unittests COMMAND unittests)
