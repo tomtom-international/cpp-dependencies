@@ -20,6 +20,39 @@
 #include <iostream>
 #include <stdlib.h>
 
+// trim from start (in place)
+static inline void LTrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+// trim from end (in place)
+static inline void RTrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void Trim(std::string &s) {
+    LTrim(s);
+    RTrim(s);
+}
+
+void ReadSet(std::unordered_set<std::string>& set,
+             streams::ifstream& in)
+{
+  std::string line;
+  while (in.good()) {
+    std::getline(in, line);
+    size_t pos = line.find_first_of("]");
+    if (pos != std::string::npos) {
+      return;
+    }
+    Trim(line);
+    set.insert(line);
+  }
+}
+
 Configuration::Configuration()
 : companyName("YourCompany")
 , licenseString("")
@@ -60,8 +93,8 @@ Configuration::Configuration()
     else if (name == "componentLocLowerLimit") { componentLocLowerLimit = atol(value.c_str()); }
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
-    else if (name == "addLibraryAlias") { addLibraryAliases.insert(value); }
-    else if (name == "addExecutableAlias") { addExecutableAliases.insert(value); }
+    else if (name == "addLibraryAlias") { ReadSet(addLibraryAliases, in); }
+    else if (name == "addExecutableAlias") { ReadSet(addExecutableAliases, in); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
