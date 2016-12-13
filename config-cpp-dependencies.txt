@@ -41,11 +41,17 @@ componentLocUpperLimit: 20000
 fileLocUpperLimit: 2000
 
 # Aliases for CMake command add_library. Each alias is assumed to take similar arguments as the
-# vanilla CMake command. Each alias should be defined on its own.
-#addLibraryAlias: add_my_library
-#addLibraryAlias: add_my_special_library
+# vanilla CMake command.
+# Each alias must be on its own line. The last line should only contain the closing bracket.
+#addLibraryAlias: [
+#  add_my_library
+#  add_my_special_library
+#  ]
 
 # Aliases for CMake command add_executable. Each alias is assumed to take similar arguments as the
-# vanilla CMake command. Each alias should be defined on its own.
-#addExecutableAlias: add_my_library
-#addExecutableAlias: add_my_special_library
+# vanilla CMake command.
+# Each alias must be on its own line. The last line should only contain the closing bracket.
+#addExecutableAlias: [
+#  add_my_library
+#  add_my_special_library
+#  ]

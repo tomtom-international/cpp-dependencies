@@ -79,10 +79,14 @@ TEST(ReadConfigurationFile_Aliases)
 
   {
     streams::ofstream out(CONFIG_FILE);
-    out << "addLibraryAlias: add_special_library\n"
-        << "addLibraryAlias: add_test_lib\n"
-        << "addExecutableAlias: add_special_exe\n"
-        << "addExecutableAlias: add_test\n";
+    out << "addLibraryAlias: [\n"
+        << "      add_special_library  \n"
+        << "      add_test_lib\n"
+        << "     ]\n"
+        << "addExecutableAlias: [\n"
+        << "         add_special_exe\n"
+        << "add_test\n"
+        << "]\n";
   }
 
   Configuration config;
