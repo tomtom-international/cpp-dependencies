@@ -23,6 +23,7 @@
 struct Configuration {
   Configuration();
   static const Configuration& Get();
+  static void Set(Configuration& newConfig);
   std::string companyName;
   std::string licenseString;
   std::string regenTag;

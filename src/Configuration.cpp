@@ -68,10 +68,16 @@ Configuration::Configuration()
   }
 }
 
+static Configuration config;
+
 const Configuration& Configuration::Get()
 {
-  static Configuration config;
   return config;
+}
+
+void Configuration::Set(Configuration& newConfig)
+{
+  config = newConfig;
 }
 
 
