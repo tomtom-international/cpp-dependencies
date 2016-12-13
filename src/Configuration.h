@@ -18,7 +18,7 @@
 #define __DEP_CHECKER__CONFIGURATION_H
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 struct Configuration {
   Configuration();
@@ -29,6 +29,8 @@ struct Configuration {
   std::string cycleColor;
   std::string publicDepColor;
   std::string privateDepColor;
+  std::unordered_set<std::string> addLibraryAliases;
+  std::unordered_set<std::string> addExecutableAliases;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;

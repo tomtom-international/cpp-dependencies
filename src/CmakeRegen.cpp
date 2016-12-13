@@ -41,6 +41,7 @@ static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path 
 
 void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
     if (comp->recreate) {
+        const Configuration& config = Configuration::Get();
         std::string compname = comp->CmakeName();
         bool isHeaderOnly = true;
         std::set<std::string> publicDeps, privateDeps, publicIncl, privateIncl;
@@ -64,7 +65,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
         files.sort();
         if (!files.empty() && comp->type == "") {
-            comp->type = "library";
+            comp->type = "add_library";
         }
 
         for (auto &s : publicDeps) {
@@ -90,12 +91,12 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             o << "\n";
 
             if (!files.empty()) {
-                o << "add_" << comp->type << "(${PROJECT_NAME}";
+                o << comp->type << "(${PROJECT_NAME}";
 
                 if (isHeaderOnly) {
                     o << " INTERFACE" << "\n";
                 } else {
-                    if (comp->type == "library") {
+                    if (config.addLibraryAliases.count(comp->type) == 1) {
                         o << " STATIC" << "\n";
                     } else {
                         o << "\n";

@@ -1,5 +1,6 @@
 add_executable(unittests
   AnalysisCircularDependencies.cpp
+  ConfigurationTest.cpp
   test.cpp
 )
 target_link_libraries(unittests
