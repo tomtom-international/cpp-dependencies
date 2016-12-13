@@ -262,10 +262,6 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
     } while (in.good());
 }
 
-#define DEBUG(...) \
-    if (path == "./Engines/Routing/Implementation/RoutingService/Internal/CMakeLists.txt") { \
-        printf(__VA_ARGS__); }
-
 static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
     const Configuration& config = Configuration::Get();
@@ -285,7 +281,6 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
         if (line.size() > 0 && line[0] == '#') {
             continue;
         }
-        DEBUG("Line is:%s\n", line.c_str());
         int newParenLevel = parenLevel + std::count(line.begin(), line.end(), '(')
                                 - std::count(line.begin(), line.end(), ')');
         if (strstr(line.c_str(), "project(") == line.c_str()) {
@@ -306,7 +301,6 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
                 if (!strstr(targetLine.c_str(), "${IMPLEMENTATION_SOURCES}") &&
                     !strstr(targetLine.c_str(), "${IMPLEMENTATION_HEADERS}") &&
                     !IsCode(filesystem::path(targetLine).extension().generic_string())) {
-                    DEBUG("added target param:%s\n", targetLine.c_str());
                     comp.additionalTargetParameters.append(targetLine + '\n');
                 }
             }
@@ -319,7 +313,6 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
                 inAutoSection = true;
             } else {
                 if (!inAutoSection && !line.empty()) {
-                    DEBUG("added CMake decl:%s\n", line.c_str());
                     comp.additionalCmakeDeclarations.append(line + '\n');
                 }
             }
@@ -330,9 +323,6 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
         parenLevel = newParenLevel;
     } while (in.good());
     assert(parenLevel == 0 || (printf("final level of parentheses=%d\n", parenLevel), 0));
-    DEBUG("DEBUG:\n%s---------------------\n%s---------------------------\n",
-           comp.additionalTargetParameters.c_str(),
-           comp.additionalCmakeDeclarations.c_str());
 }
 
 #if 1
