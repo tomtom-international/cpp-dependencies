@@ -53,6 +53,22 @@ void ReadSet(std::unordered_set<std::string>& set,
   }
 }
 
+std::string ReadMultilineString(streams::ifstream& in)
+{
+  std::string multiline;
+  std::string line;
+  while (in.good()) {
+    std::getline(in, line);
+    size_t pos = line.find_first_of("\"\"\"");
+    if (pos != std::string::npos) {
+      break;
+    }
+    multiline += line;
+    multiline += "\n";
+  }
+  return multiline;
+}
+
 Configuration::Configuration()
 : companyName("YourCompany")
 , licenseString("")
@@ -95,6 +111,7 @@ Configuration::Configuration()
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
     else if (name == "addLibraryAlias") { ReadSet(addLibraryAliases, in); }
     else if (name == "addExecutableAlias") { ReadSet(addExecutableAliases, in); }
+    else if (name == "licenseString") { licenseString = ReadMultilineString(in); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
