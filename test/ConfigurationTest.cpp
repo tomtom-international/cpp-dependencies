@@ -4,6 +4,9 @@
 #include "FilesystemInclude.h"
 #include "FstreamInclude.h"
 
+// tmp
+#include <iostream>
+
 TEST(NoConfigurationFile)
 {
   const filesystem::path tempDir = filesystem::unique_path(filesystem::temp_directory_path() / "%%%%%-%%%%%");
@@ -99,6 +102,32 @@ TEST(ReadConfigurationFile_Aliases)
   ASSERT(config.addExecutableAliases.count("add_executable") == 1);
   ASSERT(config.addExecutableAliases.count("add_special_exe") == 1);
   ASSERT(config.addExecutableAliases.count("add_test") == 1);
+
+  filesystem::current_path(curDir);
+}
+
+TEST(ReadConfigurationFile_LicenseString)
+{
+  const filesystem::path tempDir = filesystem::unique_path(filesystem::temp_directory_path() / "%%%%%-%%%%%");
+  ASSERT(filesystem::create_directories(tempDir));
+  const filesystem::path curDir = filesystem::current_path();
+  filesystem::current_path(tempDir);
+
+  std::string licenseString(
+      "My license\n"
+      "It has multiple lines\n"
+      "\n"
+      "  including whitespace  \n");
+
+  {
+    streams::ofstream out(CONFIG_FILE);
+    out << "licenseString: \"\"\"\n"
+        << licenseString
+        << "  \"\"\"\n";
+  }
+
+  Configuration config;
+  ASSERT(config.licenseString == licenseString);
 
   filesystem::current_path(curDir);
 }
