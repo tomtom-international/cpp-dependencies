@@ -37,18 +37,19 @@ TEST(ReadConfigurationFile)
   const filesystem::path curDir = filesystem::current_path();
   filesystem::current_path(tempDir);
 
-  streams::ofstream out(CONFIG_FILE);
-  out << "versionUsed: 3\n"
-      << "companyName: MyCompany\n"
-      << "regenTag: MY_REGEN_TAG\n"
-      << "cycleColor: brown\n"
-      << "publicDepColor: black\n"
-      << "privateDepColor: grey\n"
-      << "componentLinkLimit: 2\n"
-      << "componentLocLowerLimit: 1\n"
-      << "componentLocUpperLimit: 123\n"
-      << "fileLocUpperLimit: 567\n";
-  out.close();
+  {
+    streams::ofstream out(CONFIG_FILE);
+    out << "versionUsed: 3\n"
+        << "companyName: MyCompany\n"
+        << "regenTag: MY_REGEN_TAG\n"
+        << "cycleColor: brown\n"
+        << "publicDepColor: black\n"
+        << "privateDepColor: grey\n"
+        << "componentLinkLimit: 2\n"
+        << "componentLocLowerLimit: 1\n"
+        << "componentLocUpperLimit: 123\n"
+        << "fileLocUpperLimit: 567\n";
+  }
 
   Configuration config;
   ASSERT(config.companyName == "MyCompany");
@@ -76,12 +77,13 @@ TEST(ReadConfigurationFile_Aliases)
   const filesystem::path curDir = filesystem::current_path();
   filesystem::current_path(tempDir);
 
-  streams::ofstream out(CONFIG_FILE);
-  out << "addLibraryAlias: add_special_library\n"
-      << "addLibraryAlias: add_test_lib\n"
-      << "addExecutableAlias: add_special_exe\n"
-      << "addExecutableAlias: add_test\n";
-  out.close();
+  {
+    streams::ofstream out(CONFIG_FILE);
+    out << "addLibraryAlias: add_special_library\n"
+        << "addLibraryAlias: add_test_lib\n"
+        << "addExecutableAlias: add_special_exe\n"
+        << "addExecutableAlias: add_test\n";
+  }
 
   Configuration config;
   ASSERT(config.addLibraryAliases.size() == 3);
