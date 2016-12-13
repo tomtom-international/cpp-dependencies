@@ -38,6 +38,7 @@ void PrintCyclesForTarget(Component *c);
 void PrintLinksForTarget(Component *c);
 void PrintInfoOnTarget(Component *c);
 void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to);
+void UpdateIncludes(std::unordered_map<std::string, File>& files, Component* component, const std::string& desiredPath, bool isAbsolute);
 
 #endif
 

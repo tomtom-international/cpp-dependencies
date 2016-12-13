@@ -321,3 +321,19 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
     std::cout << "No path could be found from " << from->NiceName('.') << " to " << to->NiceName('.') << '\n';
 }
 
+void UpdateIncludeFor(File* from, File* to, const std::string& aNewIncludeStatement) {
+
+}
+
+void UpdateIncludes(std::unordered_map<std::string, File>& files, Component* component, const std::string& desiredPath, bool isAbsolute) {
+    for (auto& s : component->files) {
+        File* f = &files.find("./" + s->path.string())->second;
+        for (auto &p : files) {
+            if (p.second.dependencies.find(f) != p.second.dependencies.end()) {
+                std::cout << "  " << p.second.path.string() << "\n";
+            }
+        }
+    }
+}
+
+
