@@ -87,6 +87,8 @@ struct Component {
     bool hasAddonCmake;
     std::string type;
     size_t index, lowlink;
+    std::string additionalTargetParameters;
+    std::string additionalCmakeDeclarations;
     bool onStack;
 };
 
