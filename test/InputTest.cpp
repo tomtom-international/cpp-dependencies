@@ -1,0 +1,103 @@
+#include "test.h"
+#include "Component.h"
+#include "Configuration.h"
+#include "Constants.h"
+#include "Input.h"
+#include "FilesystemInclude.h"
+#include "FstreamInclude.h"
+
+class TemporaryWorkingDirectory
+{
+public:
+  TemporaryWorkingDirectory()
+  {
+    originalDir = filesystem::current_path();
+    workDir = filesystem::unique_path(filesystem::temp_directory_path() / "%%%%%-%%%%%");
+    ASSERT(filesystem::create_directories(workDir));
+    filesystem::current_path(workDir);
+  }
+
+  ~TemporaryWorkingDirectory()
+  {
+    filesystem::current_path(originalDir);
+    filesystem::remove_all(workDir);
+  }
+
+  const filesystem::path& operator()() const
+  {
+    return workDir;
+  }
+
+private:
+  filesystem::path originalDir;
+  filesystem::path workDir;
+};
+
+void CreateCMakeProject(const std::string projectName,
+                        const std::string alias,
+                        const filesystem::path& workDir)
+{
+  filesystem::create_directories(workDir / projectName);
+  streams::ofstream out(workDir / projectName / "CMakeLists.txt");
+  out << "project(" << projectName << ")\n"
+      << alias << "(${PROJECT_NAME}\n"
+      << "  somesourcefile.cpp\n"
+      << ")\n";
+}
+
+TEST(Input_Aliases)
+{
+  TemporaryWorkingDirectory workDir;
+
+  CreateCMakeProject("Renderer", "add_render_library", workDir());
+  CreateCMakeProject("UI", "add_ui_library", workDir());
+  CreateCMakeProject("DrawTest", "add_test", workDir());
+  CreateCMakeProject("Service", "add_service", workDir());
+
+  {
+    streams::ofstream out(workDir() / "CMakeLists.txt");
+    out << "add_subdirectory(Renderer)\n"
+        << "add_subdirectory(UI)\n"
+        << "add_subdirectory(DrawTest)\n"
+        << "add_subdirectory(Service)\n";
+  }
+
+  {
+    streams::ofstream out(workDir() / CONFIG_FILE);
+    out << "addLibraryAlias: [\n"
+        << "  add_render_library\n"
+        << "  add_ui_library\n"
+        << "  ]\n"
+        << "addExecutableAlias: [\n"
+        << "  add_service\n"
+        << "  add_test\n"
+        << "  ]\n";
+  }
+
+  Configuration config;
+  Configuration::Set(config);
+
+  std::unordered_map<std::string, Component*> components;
+  std::unordered_map<std::string, File> files;
+  std::unordered_set<std::string> ignorefiles;
+
+  LoadFileList(components, files, ignorefiles, workDir(), true, false);
+
+  ASSERT(components.size() == 5);
+
+  for (auto& pair : components) {
+    const Component& comp = *pair.second;
+
+    if (comp.CmakeName() == "Renderer") {
+      ASSERT(comp.type == "add_render_library");
+    } else if (comp.CmakeName() == "UI") {
+      ASSERT(comp.type == "add_ui_library");
+    } else if (comp.CmakeName() == "DrawTest") {
+      ASSERT(comp.type == "add_test");
+    } else if (comp.CmakeName() == "Service") {
+      ASSERT(comp.type == "add_service");
+    } else {
+      ASSERT(comp.CmakeName() == "ROOT");
+    }
+  }
+}
