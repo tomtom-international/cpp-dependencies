@@ -46,8 +46,9 @@ create a build directory outside this source directory and run
 
     cmake <PATH_TO_THIS_SOURCE_DIR>
     
-In case Boost was installed in a non-default path (i.e. manually compiled with `--prefix`)
-add `-DBOOST_ROOT=<BOOST_PREFIX_PATH>` to the invocation of _CMake_. 
+If you want to use Boost::Filesystem instead of std::filesystem, if your platform does 
+not have a std::filesystem implementation yet or if you prefer it, add `-DWITH_BOOST` 
+to the invocation of _CMake_. 
 
 for GNU make or open the Visual Studio solution file generated in the build directory.
 
