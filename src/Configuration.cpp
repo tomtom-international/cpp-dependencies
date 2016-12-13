@@ -111,6 +111,7 @@ Configuration::Configuration()
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
     else if (name == "addLibraryAlias") { ReadSet(addLibraryAliases, in); }
     else if (name == "addExecutableAlias") { ReadSet(addExecutableAliases, in); }
+    else if (name == "addIgnores") { ReadSet(addIgnores, in); }
     else if (name == "licenseString") { licenseString = ReadMultilineString(in); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";

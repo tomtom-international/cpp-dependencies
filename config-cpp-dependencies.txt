@@ -70,3 +70,9 @@ fileLocUpperLimit: 2000
 #  add_my_library
 #  add_my_special_library
 #  ]
+#
+#addIgnores: [
+# Example/ThirdParty
+# Example/test.txt
+# ]
+

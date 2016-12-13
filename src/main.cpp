@@ -57,6 +57,10 @@ public:
                 "endian.h",
                 "rle.h",
         };
+        for(auto& it: Configuration::Get().addIgnores)
+        {
+            ignorefiles.insert(it);
+        }
     }
     void RunCommands() {
         if (allArgs.empty()) {
