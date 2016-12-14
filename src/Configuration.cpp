@@ -20,6 +20,55 @@
 #include <iostream>
 #include <stdlib.h>
 
+// trim from start (in place)
+static inline void LTrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+// trim from end (in place)
+static inline void RTrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void Trim(std::string &s) {
+    LTrim(s);
+    RTrim(s);
+}
+
+void ReadSet(std::unordered_set<std::string>& set,
+             streams::ifstream& in)
+{
+  std::string line;
+  while (in.good()) {
+    std::getline(in, line);
+    size_t pos = line.find_first_of("]");
+    if (pos != std::string::npos) {
+      return;
+    }
+    Trim(line);
+    set.insert(line);
+  }
+}
+
+std::string ReadMultilineString(streams::ifstream& in)
+{
+  std::string multiline;
+  std::string line;
+  while (in.good()) {
+    std::getline(in, line);
+    size_t pos = line.find_first_of("\"\"\"");
+    if (pos != std::string::npos) {
+      break;
+    }
+    multiline += line;
+    multiline += "\n";
+  }
+  return multiline;
+}
+
 Configuration::Configuration()
 : companyName("YourCompany")
 , licenseString("")
@@ -32,7 +81,11 @@ Configuration::Configuration()
 , componentLocLowerLimit(200)
 , componentLocUpperLimit(20000)
 , fileLocUpperLimit(2000)
+, reuseCustomSections(false)
 {
+  addLibraryAliases.insert("add_library");
+  addExecutableAliases.insert("add_executable");
+
   streams::ifstream in(CONFIG_FILE);
   std::string line;
   while (in.good()) {
@@ -57,16 +110,27 @@ Configuration::Configuration()
     else if (name == "componentLocLowerLimit") { componentLocLowerLimit = atol(value.c_str()); }
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
+    else if (name == "addLibraryAlias") { ReadSet(addLibraryAliases, in); }
+    else if (name == "addExecutableAlias") { ReadSet(addExecutableAliases, in); }
+    else if (name == "addIgnores") { ReadSet(addIgnores, in); }
+    else if (name == "licenseString") { licenseString = ReadMultilineString(in); }
+    else if (name == "reuseCustomSections") { reuseCustomSections = (value == "true"); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
   }
 }
 
+static Configuration config;
+
 const Configuration& Configuration::Get()
 {
-  static Configuration config;
   return config;
+}
+
+void Configuration::Set(Configuration& newConfig)
+{
+  config = newConfig;
 }
 
 

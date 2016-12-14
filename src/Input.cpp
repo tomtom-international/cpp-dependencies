@@ -37,6 +37,16 @@ const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) 
 }
 #endif
 
+bool IsCompileableFile(const std::string& ext) {
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm" };
+    return exts.count(ext) > 0;
+}
+
+static bool IsCode(const std::string &ext) {
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm", ".h", ".H", ".hpp" };
+    return exts.count(ext) > 0;
+}
+
 static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize, bool withLoc) {
     if (buffersize == 0) return;
     size_t offset = 0;
@@ -196,8 +206,40 @@ static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered
     return ignorefiles.find(file) != ignorefiles.end();
 }
 
+static bool TryGetComponentType(Component& component,
+                                std::unordered_set<std::string> componentTypes,
+                                const std::string& line)
+{
+  for (std::unordered_set<std::string>::const_iterator it = componentTypes.begin();
+       it != componentTypes.end();
+       ++it)
+  {
+    if (strstr(line.c_str(), it->c_str()))
+    {
+      component.type = *it;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool IsAutomaticlyGeneratedSection(std::string line) {
+    return strstr(line.c_str(), "target_link_libraries(") ||
+           strstr(line.c_str(), "add_subdirectory(") ||
+           strstr(line.c_str(), "target_include_directories(") ||
+           strstr(line.c_str(), "add_dependencies(") ||
+           strstr(line.c_str(), "include(CMakeAddon.txt)") ||
+           strstr(line.c_str(), "source_group(\"Implementation\\") ||
+           strstr(line.c_str(), "set(IMPLEMENTATION_SOURCES") ||
+           strstr(line.c_str(), "set(IMPLEMENTATION_HEADERS") ||
+           strstr(line.c_str(), "set(INTERFACE_FILES");
+}
+
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
+    
+    const Configuration& config = Configuration::Get();
+
     streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
@@ -211,22 +253,76 @@ static void ReadCmakelist(std::unordered_map<std::string, Component *> &componen
             if (end != line.npos) {
                 comp.name = line.substr(8, end - 8);
             }
-        } else if (strstr(line.c_str(), "_library")) {
-            comp.type = "library";
-        } else if (strstr(line.c_str(), "_executable")) {
-            comp.type = "executable";
+        }
+        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
+            // next line
+        } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
+            // next line
         }
     } while (in.good());
 }
 
-bool IsCompileableFile(const std::string& ext) {
-    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm" };
-    return exts.count(ext) > 0;
-}
+static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &components,
+                          const filesystem::path &path) {
+    const Configuration& config = Configuration::Get();
 
-static bool IsCode(const std::string &ext) {
-    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm", ".h", ".H", ".hpp" };
-    return exts.count(ext) > 0;
+    streams::ifstream in(path);
+    std::string line;
+    Component &comp = AddComponentDefinition(components, path.parent_path());
+    bool inTargetDefinition = false;
+    bool inAutoSection = false;
+    int parenLevel = 0;
+    do {
+        getline(in, line);
+        if (strstr(line.c_str(), config.regenTag.c_str())) {
+            comp.recreate = true;
+            continue;
+        }
+        if (line.size() > 0 && line[0] == '#') {
+            continue;
+        }
+        int newParenLevel = parenLevel + std::count(line.begin(), line.end(), '(')
+                                - std::count(line.begin(), line.end(), ')');
+        if (strstr(line.c_str(), "project(") == line.c_str()) {
+            size_t end = line.find(')');
+            if (end != line.npos) {
+                comp.name = line.substr(8, end - 8);
+            }
+        }
+        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
+            inTargetDefinition = true;
+        } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
+            inTargetDefinition = true;
+        } else if (inTargetDefinition) {
+            const size_t endOfLine = (newParenLevel == 0) ? line.find_last_of(')')
+                                                          : line.length();
+            if (endOfLine > 0) {
+                const std::string targetLine(line.substr(0, endOfLine));
+                if (!strstr(targetLine.c_str(), "${IMPLEMENTATION_SOURCES}") &&
+                    !strstr(targetLine.c_str(), "${IMPLEMENTATION_HEADERS}") &&
+                    !IsCode(filesystem::path(targetLine).extension().generic_string())) {
+                    comp.additionalTargetParameters.append(targetLine + '\n');
+                }
+            }
+            if (newParenLevel == 0) {
+                inTargetDefinition = false;
+            }
+        } else if (config.reuseCustomSections) {
+            if (IsAutomaticlyGeneratedSection(line))
+            {
+                inAutoSection = true;
+            } else {
+                if (!inAutoSection && !line.empty()) {
+                    comp.additionalCmakeDeclarations.append(line + '\n');
+                }
+            }
+            if (inAutoSection && newParenLevel == 0) {
+                inAutoSection = false;
+            }
+        }
+        parenLevel = newParenLevel;
+    } while (in.good());
+    assert(parenLevel == 0 || (printf("final level of parentheses=%d\n", parenLevel), 0));
 }
 
 #if 1
@@ -258,11 +354,11 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
           continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
-            ReadCmakelist(components, it->path());
+            ReadCmakelistNew(components, it->path());
         } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().generic_string().c_str())) {
+            } else if (IsCode(it->path().extension().generic_string())) {
                 ReadCode(files, it->path(), withLoc);
             }
         }
@@ -291,7 +387,7 @@ static void LoadFileListFrom(std::unordered_map<std::string, Component *> &compo
         if (inferredComponents) AddComponentDefinition(components, parent);
 
         if (it->path().filename() == cmakelistfilename) {
-            ReadCmakelist(components, it->path());
+            ReadCmakelistNew(components, it->path());
         } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;

@@ -18,11 +18,12 @@
 #define __DEP_CHECKER__CONFIGURATION_H
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 struct Configuration {
   Configuration();
   static const Configuration& Get();
+  static void Set(Configuration& newConfig);
   std::string companyName;
   std::string licenseString;
   std::string regenTag;
@@ -30,10 +31,14 @@ struct Configuration {
   std::string cycleColor;
   std::string publicDepColor;
   std::string privateDepColor;
+  std::unordered_set<std::string> addLibraryAliases;
+  std::unordered_set<std::string> addExecutableAliases;
+  std::unordered_set<std::string> addIgnores;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;
   size_t fileLocUpperLimit;
+  bool reuseCustomSections;
 };
 
 #endif

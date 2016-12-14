@@ -41,6 +41,7 @@ static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path 
 
 void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
     if (comp->recreate) {
+        const Configuration& config = Configuration::Get();
         std::string compname = comp->CmakeName();
         bool isHeaderOnly = true;
         std::set<std::string> publicDeps, privateDeps, publicIncl, privateIncl;
@@ -64,7 +65,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         }
         files.sort();
         if (!files.empty() && comp->type == "") {
-            comp->type = "library";
+            comp->type = "add_library";
         }
 
         for (auto &s : publicDeps) {
@@ -76,10 +77,22 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
 
         {
             streams::ofstream o(comp->root / "CMakeLists.txt.generated");
+            // replace all newlines in licenseString with "\n# "
+            std::string licenseString;
+            licenseString.reserve(config.licenseString.size());
+            std::string::difference_type lastPos = 0, findPos;
+            while ((findPos = config.licenseString.find('\n', lastPos)) != std::string::npos) {
+                licenseString.append(config.licenseString, lastPos, findPos - lastPos + 1);
+                licenseString.append(findPos == config.licenseString.size()-1 ? "#" : "# ");
+                lastPos = findPos + 1;
+            }
+            // last piece
+            licenseString.append(config.licenseString, lastPos);
 
             o << "#\n";
-            o << "# Copyright (C) " << Configuration::Get().companyName << ". All rights reserved.\n";
-            o << "#\n";
+            o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
+            o << "# " << licenseString << "\n\n";
+
             o << "# " << Configuration::Get().regenTag << " - do not edit, your changes will be lost" << "\n";
             o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
 
@@ -90,12 +103,12 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             o << "\n";
 
             if (!files.empty()) {
-                o << "add_" << comp->type << "(${PROJECT_NAME}";
+                o << comp->type << "(${PROJECT_NAME}";
 
                 if (isHeaderOnly) {
                     o << " INTERFACE" << "\n";
                 } else {
-                    if (comp->type == "library") {
+                    if (config.addLibraryAliases.count(comp->type) == 1) {
                         o << " STATIC" << "\n";
                     } else {
                         o << "\n";
@@ -105,6 +118,7 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
                         o << "  " << f << "\n";
                     }
                 }
+                o << comp->additionalTargetParameters;
                 o << ")" << "\n\n";
 
                 if (!publicDeps.empty() || !privateDeps.empty()) {
@@ -173,6 +187,10 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
                 o << "include(CMakeAddon.txt)" << "\n";
             }
 
+            if (config.reuseCustomSections) {
+                o << comp->additionalCmakeDeclarations;
+            }
+
             for (auto &i : items) {
                 o << "add_subdirectory(" << i << ")" << "\n";
             }
@@ -180,8 +198,9 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
         if (dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
+            } else {
+                filesystem::remove(comp->root / "CMakeLists.txt.generated");
             }
-            filesystem::remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");

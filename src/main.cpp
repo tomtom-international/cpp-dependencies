@@ -57,6 +57,10 @@ public:
                 "endian.h",
                 "rle.h",
         };
+        for(auto& it: Configuration::Get().addIgnores)
+        {
+            ignorefiles.insert(it);
+        }
     }
     void RunCommands() {
         if (allArgs.empty()) {
@@ -294,7 +298,7 @@ private:
     void Outliers(std::vector<std::string>) {
         LoadProject(true);
         PrintAllComponents(components, "Libraries with no links in:", [](const Component& c){
-            return c.type == "library" &&
+            return Configuration::Get().addLibraryAliases.count(c.type) == 1 &&
                 !c.files.empty() &&
                 c.pubLinks.empty() && c.privLinks.empty();
         });
