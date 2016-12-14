@@ -349,7 +349,6 @@ static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::
                         File* f = &files.find(postLookup)->second;
                         std::string path = f->path.generic_string();
                         std::string pathToStrip = (isAbsolute ? "." : comp->root.generic_string()) + "/" + desiredPath + "/";
-                        printf("comparing %s to %s\n", path.c_str(), pathToStrip.c_str());
                         if (path.compare(0, pathToStrip.size(), pathToStrip) == 0) {
                             isReplacement = true;
                             if (from->component == f->component) {
@@ -357,7 +356,6 @@ static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::
                             } else {
                                 out << "#include <" + path.substr(pathToStrip.size()) + ">\n";
                             }
-                            printf("Replaced\n%s\nby\n%s\n", line.c_str(), path.c_str());
                         }
                     }
                 }
@@ -375,7 +373,7 @@ void UpdateIncludes(std::unordered_map<std::string, File>& files, std::unordered
         for (auto& d : p.second.dependencies) {
             if (component->files.find(d) != component->files.end()) {
                 UpdateIncludeFor(files, includeLookup, &p.second, component, desiredPath, isAbsolute);
-                std::cout << p.second.path.generic_string().c_str();
+                std::cout << p.second.path.generic_string() << "\n";
                 break;
             }
         }
