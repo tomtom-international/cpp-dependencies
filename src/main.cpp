@@ -277,8 +277,9 @@ private:
     void FixIncludes(std::vector<std::string> args) {
         if (args.size() < 2 || args.size() > 3) {
             std::cout << "Invalid input to fixincludes command\n";
-            std::cout << "Required: --fixincludes <component> <desired path> [<relative root>]";
-            std::cout << "Relative root can be \"project\" for absolute paths or \"component\" for component-relative paths";
+            std::cout << "Required: --fixincludes <component> <desired path> [<relative root>]\n";
+            std::cout << "Relative root can be \"project\" for absolute paths or \"component\" for component-relative paths\n";
+            return;
         }
 
         LoadProject();
@@ -287,7 +288,7 @@ private:
         if (!c) {
             std::cout << "No such component " << args[0] << "\n";
         } else {
-            UpdateIncludes(files, c, args[1], absolute);
+            UpdateIncludes(files, includeLookup, c, args[1], absolute);
         }
     }
     void Outliers(std::vector<std::string>) {

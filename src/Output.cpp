@@ -321,16 +321,62 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
     std::cout << "No path could be found from " << from->NiceName('.') << " to " << to->NiceName('.') << '\n';
 }
 
-void UpdateIncludeFor(File* from, File* to, const std::string& aNewIncludeStatement) {
-
+static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, File* from, Component* comp, const std::string& desiredPath, bool isAbsolute) {
+    filesystem::path newName = from->path.generic_string() + ".new";
+    {
+        std::ifstream in(from->path);
+        std::ofstream out(newName.generic_string().c_str());
+        while (in.good()) {
+            bool isReplacement = false;
+            std::string line;
+            std::getline(in, line);
+            const char* l = strstr(line.c_str(), "#");
+            if (l && (l = strstr(l, "include"))) {
+                const char* start = strstr(l, "<");
+                const char* end;
+                if (start) {
+                    end = strstr(start + 1, ">");
+                } else {
+                    start = strstr(l, "\"");
+                    end = start ? strstr(start+1, "\"") : nullptr;
+                }
+                if (start && end) {
+                    std::string includePath(start+1, end);
+                    std::string lowerPath;
+                    std::transform(includePath.begin(), includePath.end(), std::back_inserter(lowerPath), ::tolower);
+                    std::string postLookup = includeLookup[lowerPath];
+                    if (!postLookup.empty() && postLookup != "INVALID" && files.find(postLookup) != files.end()) {
+                        File* f = &files.find(postLookup)->second;
+                        std::string path = f->path.generic_string();
+                        std::string pathToStrip = (isAbsolute ? "." : comp->root.generic_string()) + "/" + desiredPath + "/";
+                        printf("comparing %s to %s\n", path.c_str(), pathToStrip.c_str());
+                        if (path.compare(0, pathToStrip.size(), pathToStrip) == 0) {
+                            isReplacement = true;
+                            if (from->component == f->component) {
+                                out << "#include \"" + path.substr(pathToStrip.size()) + "\"\n";
+                            } else {
+                                out << "#include <" + path.substr(pathToStrip.size()) + ">\n";
+                            }
+                            printf("Replaced\n%s\nby\n%s\n", line.c_str(), path.c_str());
+                        }
+                    }
+                }
+            }
+            if (!isReplacement) {
+                out << line << '\n';
+            }
+        }
+    }
+    filesystem::rename(newName, from->path);
 }
 
-void UpdateIncludes(std::unordered_map<std::string, File>& files, Component* component, const std::string& desiredPath, bool isAbsolute) {
-    for (auto& s : component->files) {
-        File* f = &files.find("./" + s->path.string())->second;
-        for (auto &p : files) {
-            if (p.second.dependencies.find(f) != p.second.dependencies.end()) {
-                std::cout << "  " << p.second.path.string() << "\n";
+void UpdateIncludes(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, Component* component, const std::string& desiredPath, bool isAbsolute) {
+    for (auto& p : files) {
+        for (auto& d : p.second.dependencies) {
+            if (component->files.find(d) != component->files.end()) {
+                UpdateIncludeFor(files, includeLookup, &p.second, component, desiredPath, isAbsolute);
+                std::cout << p.second.path.generic_string().c_str();
+                break;
             }
         }
     }
