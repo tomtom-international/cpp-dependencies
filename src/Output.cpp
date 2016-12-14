@@ -348,8 +348,10 @@ static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::
                     if (!postLookup.empty() && postLookup != "INVALID" && files.find(postLookup) != files.end()) {
                         File* f = &files.find(postLookup)->second;
                         std::string path = f->path.generic_string();
-                        std::string pathToStrip = (isAbsolute ? "." : comp->root.generic_string()) + "/" + desiredPath + "/";
-                        if (path.compare(0, pathToStrip.size(), pathToStrip) == 0) {
+                        std::string pathToStrip = (isAbsolute ? "." : comp->root.generic_string()) + "/";
+                        if (desiredPath != ".") pathToStrip += desiredPath + "/";
+                        std::string componentPath = comp->root.generic_string();
+                        if (path.compare(0, componentPath.size(), componentPath) == 0 && path.compare(0, pathToStrip.size(), pathToStrip) == 0) {
                             isReplacement = true;
                             if (from->component == f->component) {
                                 out << "#include \"" + path.substr(pathToStrip.size()) + "\"\n";
