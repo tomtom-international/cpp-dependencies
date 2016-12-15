@@ -39,9 +39,8 @@ static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path 
     return !(as.eof() && bs.eof());
 }
 
-void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
+void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun) {
     if (comp->recreate) {
-        const Configuration& config = Configuration::Get();
         std::string compname = comp->CmakeName();
         bool isHeaderOnly = true;
         std::set<std::string> publicDeps, privateDeps, publicIncl, privateIncl;
@@ -80,20 +79,20 @@ void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun) {
             // replace all newlines in licenseString with "\n# "
             std::string licenseString;
             licenseString.reserve(config.licenseString.size());
-            std::string::difference_type lastPos = 0, findPos;
+            size_t lastPos = 0, findPos;
             while ((findPos = config.licenseString.find('\n', lastPos)) != std::string::npos) {
                 licenseString.append(config.licenseString, lastPos, findPos - lastPos + 1);
                 licenseString.append(findPos == config.licenseString.size()-1 ? "#" : "# ");
                 lastPos = findPos + 1;
             }
             // last piece
-            licenseString.append(config.licenseString, lastPos);
+            licenseString.append(config.licenseString.c_str(), lastPos);
 
             o << "#\n";
             o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
             o << "# " << licenseString << "\n\n";
 
-            o << "# " << Configuration::Get().regenTag << " - do not edit, your changes will be lost" << "\n";
+            o << "# " << config.regenTag << " - do not edit, your changes will be lost" << "\n";
             o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
 
             if (!files.empty()) {

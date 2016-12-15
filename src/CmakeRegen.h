@@ -18,7 +18,8 @@
 #define __DEP_CHECKER__CMAKEREGEN_H
 
 struct Component;
+struct Configuration;
 
-void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun);
+void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun);
 
 #endif

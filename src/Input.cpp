@@ -19,6 +19,7 @@
 #include "FstreamInclude.h"
 #include "Input.h"
 #include <algorithm>
+#include <assert.h>
 
 #ifdef WITH_MMAP
 #include <fcntl.h>
@@ -235,37 +236,8 @@ static bool IsAutomaticlyGeneratedSection(std::string line) {
            strstr(line.c_str(), "set(INTERFACE_FILES");
 }
 
-static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
+static void ReadCmakelist(const Configuration& config, std::unordered_map<std::string, Component *> &components,
                           const filesystem::path &path) {
-    
-    const Configuration& config = Configuration::Get();
-
-    streams::ifstream in(path);
-    std::string line;
-    Component &comp = AddComponentDefinition(components, path.parent_path());
-    do {
-        getline(in, line);
-        if (strstr(line.c_str(), Configuration::Get().regenTag.c_str())) {
-            comp.recreate = true;
-        }
-        if (strstr(line.c_str(), "project(") == line.c_str()) {
-            size_t end = line.find(')');
-            if (end != line.npos) {
-                comp.name = line.substr(8, end - 8);
-            }
-        }
-        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
-            // next line
-        } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
-            // next line
-        }
-    } while (in.good());
-}
-
-static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &components,
-                          const filesystem::path &path) {
-    const Configuration& config = Configuration::Get();
-
     streams::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
@@ -325,8 +297,8 @@ static void ReadCmakelistNew(std::unordered_map<std::string, Component *> &compo
     assert(parenLevel == 0 || (printf("final level of parentheses=%d\n", parenLevel), 0));
 }
 
-#if 1
-void LoadFileList(std::unordered_map<std::string, Component *> &components,
+void LoadFileList(const Configuration& config,
+                  std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const std::unordered_set<std::string> &ignorefiles,
                   const filesystem::path& sourceDir,
@@ -354,7 +326,7 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
           continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
-            ReadCmakelistNew(components, it->path());
+            ReadCmakelist(config, components, it->path());
         } else if (filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
@@ -365,52 +337,4 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
     }
     filesystem::current_path(outputpath);
 }
-#else
-static void LoadFileListFrom(std::unordered_map<std::string, Component *> &components,
-                      std::unordered_map<std::string, File>& files,
-                      const std::unordered_set<std::string> &ignorefiles,
-                      const filesystem::path& sourceDir,
-                      bool inferredComponents) {
-    static const std::string cmakelistfilename = "CMakeLists.txt";
-    // skip hidden files and dirs
-    if (sourceDir.filename().generic_string().size() > 2 &&
-        sourceDir.filename().generic_string()[0] == '.') {
-        return;
-    }
-
-    for (filesystem::directory_iterator it(sourceDir), end;
-         it != end; ++it) {
-        if (IsItemBlacklisted(it->path(), ignorefiles)) {
-            continue;
-        }
-        const auto &parent = it->path().parent_path();
-        if (inferredComponents) AddComponentDefinition(components, parent);
-
-        if (it->path().filename() == cmakelistfilename) {
-            ReadCmakelistNew(components, it->path());
-        } else if (filesystem::is_regular_file(it->status())) {
-            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
-                AddComponentDefinition(components, parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().generic_string().c_str())) {
-                ReadCode(files, it->path(), withLoc);
-            }
-        } else if (filesystem::is_directory(it->status())) {
-            LoadFileListFrom(components, files, ignorefiles, it->path(), inferredComponents);
-        }
-    }
-}
-
-void LoadFileList(std::unordered_map<std::string, Component *> &components,
-                  std::unordered_map<std::string, File>& files,
-                  const std::unordered_set<std::string> &ignorefiles,
-                  const filesystem::path& sourceDir,
-                  bool inferredComponents,
-                  bool withLoc) {
-    filesystem::path outputpath = filesystem::current_path();
-    filesystem::current_path(sourceDir.c_str());
-    AddComponentDefinition(components, ".");
-    LoadFileListFrom(components, files, ignorefiles, sourceDir, inferredComponents);
-    filesystem::current_path(outputpath);
-}
-#endif
 

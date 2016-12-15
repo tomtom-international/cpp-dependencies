@@ -20,13 +20,14 @@
 #include "Configuration.h"
 #include "Constants.h"
 #include "FilesystemInclude.h"
+#include "FstreamInclude.h"
 #include "Input.h"
 #include "Output.h"
 #include <iostream>
 
-static bool CheckVersionFile() {
+static bool CheckVersionFile(const Configuration& config) {
     const std::string currentVersion = CURRENT_VERSION;
-    return currentVersion == Configuration::Get().versionUsed;
+    return currentVersion == config.versionUsed;
 }
 
 std::string targetFrom(const std::string &arg) {
@@ -46,6 +47,10 @@ public:
     , programName(argv[0])
     , allArgs(argv+1, argv+argc)
     {
+        if (filesystem::is_regular_file(CONFIG_FILE)) {
+            streams::ifstream in(CONFIG_FILE);
+            config.read(in);
+        }
         RegisterCommands();
         projectRoot = outputRoot = filesystem::current_path();
         ignorefiles = std::unordered_set<std::string>{
@@ -57,7 +62,7 @@ public:
                 "endian.h",
                 "rle.h",
         };
-        for(auto& it: Configuration::Get().addIgnores)
+        for(auto& it: config.addIgnores)
         {
             ignorefiles.insert(it);
         }
@@ -111,7 +116,7 @@ private:
     void LoadProject(bool withLoc = false) {
         if (!withLoc && loadStatus >= FastLoad) return;
         if (withLoc && loadStatus >= FullLoad) return;
-        LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents, withLoc);
+        LoadFileList(config, components, files, ignorefiles, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
@@ -165,7 +170,7 @@ private:
         if (args.empty()) {
             std::cout << "No output file specified for graph\n";
         } else {
-            OutputFlatDependencies(components, args[0]);
+            OutputFlatDependencies(config, components, args[0]);
         }
     }
     void GraphCycles(std::vector<std::string> args) {
@@ -173,7 +178,7 @@ private:
         if (args.empty()) {
             std::cout << "No output file specified for cycle graph\n";
         } else {
-            OutputCircularDependencies(components, args[0]);
+            OutputCircularDependencies(config, components, args[0]);
         }
     }
     void GraphTarget(std::vector<std::string> args) {
@@ -181,7 +186,7 @@ private:
         if (args.size() != 2) {
             std::cout << "--graph-target requires a single component and a single output file name.\n";
         } else {
-            PrintGraphOnTarget(args[1], components[targetFrom(args[0])]);
+            PrintGraphOnTarget(config, args[1], components[targetFrom(args[0])]);
         }
     }
     void Cycles(std::vector<std::string> args) {
@@ -225,7 +230,7 @@ private:
         } else if (!to) {
             std::cout << "No such component " << args[1] << "\n";
         } else {
-            FindSpecificLink(files, from, to);
+            FindSpecificLink(config, files, from, to);
         }
     }
     void Info(std::vector<std::string> args) {
@@ -255,12 +260,12 @@ private:
         filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
-                RegenerateCmakeFilesForComponent(c.second, dryRun);
+                RegenerateCmakeFilesForComponent(config, c.second, dryRun);
             }
         } else {
             for (auto& s : args) {
                 if (components.find(targetFrom(s)) != components.end()) {
-                    RegenerateCmakeFilesForComponent(components[targetFrom(s)], dryRun);
+                    RegenerateCmakeFilesForComponent(config, components[targetFrom(s)], dryRun);
                 } else {
                     std::cout << "Target '" << targetFrom(s) << "' not found\n";
                 }
@@ -268,7 +273,7 @@ private:
         }
     }
     void Regen(std::vector<std::string> args) {
-        bool versionIsCorrect = CheckVersionFile();
+        bool versionIsCorrect = CheckVersionFile(config);
         if (!versionIsCorrect)
             std::cout << "Version of dependency checker not the same as the one used to generate the existing cmakelists. Refusing to regen\n"
                             "Please update " CONFIG_FILE " to version \"" CURRENT_VERSION "\" if you really want to do this.\n";
@@ -297,18 +302,18 @@ private:
     }
     void Outliers(std::vector<std::string>) {
         LoadProject(true);
-        PrintAllComponents(components, "Libraries with no links in:", [](const Component& c){
-            return Configuration::Get().addLibraryAliases.count(c.type) == 1 &&
+        PrintAllComponents(components, "Libraries with no links in:", [this](const Component& c){
+            return config.addLibraryAliases.count(c.type) == 1 &&
                 !c.files.empty() &&
                 c.pubLinks.empty() && c.privLinks.empty();
         });
-        PrintAllComponents(components, "Libraries with too many outward links:", [](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > Configuration::Get().componentLinkLimit; });
-        PrintAllComponents(components, "Libraries with too few lines of code:", [](const Component& c) { return !c.files.empty() && c.loc() < Configuration::Get().componentLocLowerLimit; });
-        PrintAllComponents(components, "Libraries with too many lines of code:", [](const Component& c) { return c.loc() > Configuration::Get().componentLocUpperLimit; });
+        PrintAllComponents(components, "Libraries with too many outward links:", [this](const Component& c){ return c.pubDeps.size() + c.privDeps.size() > config.componentLinkLimit; });
+        PrintAllComponents(components, "Libraries with too few lines of code:", [this](const Component& c) { return !c.files.empty() && c.loc() < config.componentLocLowerLimit; });
+        PrintAllComponents(components, "Libraries with too many lines of code:", [this](const Component& c) { return c.loc() > config.componentLocUpperLimit; });
         FindCircularDependencies(components);
         PrintAllComponents(components, "Libraries that are part of a cycle:", [](const Component& c) { return !c.circulars.empty(); });
         PrintAllFiles(files, "Files that are never used:", [](const File& f) { return !IsCompileableFile(f.path.extension().string()) && !f.hasInclude; });
-        PrintAllFiles(files, "Files with too many lines of code:", [](const File& f) { return f.loc > Configuration::Get().fileLocUpperLimit; });
+        PrintAllFiles(files, "Files with too many lines of code:", [this](const File& f) { return f.loc > config.fileLocUpperLimit; });
     }
     void IncludeSize(std::vector<std::string>) {
         LoadProject(true);
@@ -405,10 +410,11 @@ private:
         std::cout << "  --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
         std::cout << "  Automatic CMakeLists.txt generation:\n";
-        std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << Configuration::Get().regenTag << "\"\n";
+        std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << config.regenTag << "\"\n";
         std::cout << "  --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
         std::cout << "  --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
     }
+    Configuration config;
     enum LoadStatus {
       Unloaded,
       FastLoad,

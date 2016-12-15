@@ -9,10 +9,10 @@
 class TemporaryWorkingDirectory
 {
 public:
-  TemporaryWorkingDirectory()
+  TemporaryWorkingDirectory(const char* name)
   {
     originalDir = filesystem::current_path();
-    workDir = filesystem::unique_path(filesystem::temp_directory_path() / "%%%%%-%%%%%");
+    workDir = filesystem::temp_directory_path() / name;
     ASSERT(filesystem::create_directories(workDir));
     filesystem::current_path(workDir);
   }
@@ -47,7 +47,7 @@ void CreateCMakeProject(const std::string projectName,
 
 TEST(Input_Aliases)
 {
-  TemporaryWorkingDirectory workDir;
+  TemporaryWorkingDirectory workDir(name);
 
   CreateCMakeProject("Renderer", "add_render_library", workDir());
   CreateCMakeProject("UI", "add_ui_library", workDir());
@@ -62,26 +62,24 @@ TEST(Input_Aliases)
         << "add_subdirectory(Service)\n";
   }
 
-  {
-    streams::ofstream out(workDir() / CONFIG_FILE);
-    out << "addLibraryAlias: [\n"
-        << "  add_render_library\n"
-        << "  add_ui_library\n"
-        << "  ]\n"
-        << "addExecutableAlias: [\n"
-        << "  add_service\n"
-        << "  add_test\n"
-        << "  ]\n";
-  }
+  std::stringstream ss;
+  ss << "addLibraryAlias: [\n"
+     << "  add_render_library\n"
+     << "  add_ui_library\n"
+     << "  ]\n"
+     << "addExecutableAlias: [\n"
+     << "  add_service\n"
+     << "  add_test\n"
+     << "  ]\n";
 
   Configuration config;
-  Configuration::Set(config);
+  config.read(ss);
 
   std::unordered_map<std::string, Component*> components;
   std::unordered_map<std::string, File> files;
   std::unordered_set<std::string> ignorefiles;
 
-  LoadFileList(components, files, ignorefiles, workDir(), true, false);
+  LoadFileList(config, components, files, ignorefiles, workDir(), true, false);
 
   ASSERT(components.size() == 5);
 

@@ -22,8 +22,7 @@
 
 struct Configuration {
   Configuration();
-  static const Configuration& Get();
-  static void Set(Configuration& newConfig);
+  void read(std::istream& inputFile);
   std::string companyName;
   std::string licenseString;
   std::string regenTag;

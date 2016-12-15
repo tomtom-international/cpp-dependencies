@@ -20,26 +20,13 @@
 #include <iostream>
 #include <stdlib.h>
 
-// trim from start (in place)
-static inline void LTrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
-
-// trim from end (in place)
-static inline void RTrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-}
-
-// trim from both ends (in place)
-static inline void Trim(std::string &s) {
-    LTrim(s);
-    RTrim(s);
+static inline std::string Trim(const std::string &s) {
+    size_t first = s.find_first_not_of(" \t\r\n"), last = s.find_last_not_of(" \t\r\n");
+    return s.substr(first, last - first);
 }
 
 void ReadSet(std::unordered_set<std::string>& set,
-             streams::ifstream& in)
+             streams::istream& in)
 {
   std::string line;
   while (in.good()) {
@@ -48,12 +35,11 @@ void ReadSet(std::unordered_set<std::string>& set,
     if (pos != std::string::npos) {
       return;
     }
-    Trim(line);
-    set.insert(line);
+    set.insert(Trim(line));
   }
 }
 
-std::string ReadMultilineString(streams::ifstream& in)
+std::string ReadMultilineString(streams::istream& in)
 {
   std::string multiline;
   std::string line;
@@ -85,8 +71,10 @@ Configuration::Configuration()
 {
   addLibraryAliases.insert("add_library");
   addExecutableAliases.insert("add_executable");
+}
 
-  streams::ifstream in(CONFIG_FILE);
+void Configuration::read(streams::istream& in)
+{
   std::string line;
   while (in.good()) {
     std::getline(in, line);
@@ -119,18 +107,6 @@ Configuration::Configuration()
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
   }
-}
-
-static Configuration config;
-
-const Configuration& Configuration::Get()
-{
-  return config;
-}
-
-void Configuration::Set(Configuration& newConfig)
-{
-  config = newConfig;
 }
 
 
