@@ -324,9 +324,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* f = todo.back();
+                File* tf = todo.back();
                 todo.pop_back();
-                for (auto& d : f->dependencies) {
+                for (auto& d : tf->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }
@@ -343,9 +343,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* f = todo.back();
+                File* tf = todo.back();
                 todo.pop_back();
-                for (auto& d : f->dependencies) {
+                for (auto& d : tf->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }
