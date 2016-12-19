@@ -26,6 +26,7 @@ struct Configuration {
   std::string companyName;
   std::string licenseString;
   std::string regenTag;
+  std::string cmakeVersion;
   std::string versionUsed;
   std::string cycleColor;
   std::string publicDepColor;

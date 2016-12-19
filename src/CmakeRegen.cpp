@@ -95,6 +95,12 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
             o << "# " << config.regenTag << " - do not edit, your changes will be lost" << "\n";
             o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
 
+            if (comp->root == ".") {
+                // Do this for the user, so that you don't get a warning on either 
+                // not doing this, or doing this in the addon file.
+                o << "cmake_minimum_required(VERSION " << config.cmakeVersion << ")\n";
+            }
+
             if (!files.empty()) {
                 o << "project(" << compname << ")" << "\n\n";
             }
