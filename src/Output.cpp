@@ -324,8 +324,8 @@ void FindSpecificLink(const Configuration& config, std::unordered_map<std::strin
 static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, File* from, Component* comp, const std::string& desiredPath, bool isAbsolute) {
     filesystem::path newName = from->path.generic_string() + ".new";
     {
-        std::ifstream in(from->path);
-        std::ofstream out(newName.generic_string().c_str());
+        streams::ifstream in(from->path);
+        streams::ofstream out(newName.generic_string().c_str());
         while (in.good()) {
             bool isReplacement = false;
             std::string line;

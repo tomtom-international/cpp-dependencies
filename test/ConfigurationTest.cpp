@@ -5,7 +5,7 @@
 #include "FstreamInclude.h"
 
 // tmp
-#include <iostream>
+#include <sstream>
 
 TEST(DefaultConfiguration)
 {
