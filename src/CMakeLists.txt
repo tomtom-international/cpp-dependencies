@@ -45,6 +45,7 @@ target_compile_options(cpp_dependencies_coverage
   PUBLIC 
     ${COMPILE_FLAGS}
     --coverage
+    -g
 )
 target_link_libraries(cpp_dependencies_coverage
   PRIVATE 

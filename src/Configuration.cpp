@@ -22,7 +22,7 @@
 
 static inline std::string Trim(const std::string &s) {
     size_t first = s.find_first_not_of(" \t\r\n"), last = s.find_last_not_of(" \t\r\n");
-    return s.substr(first, last - first);
+    return s.substr(first, last - first + 1);
 }
 
 void ReadSet(std::unordered_set<std::string>& set,
