@@ -5,6 +5,7 @@
 #include "Input.h"
 #include "FilesystemInclude.h"
 #include "FstreamInclude.h"
+#include <sstream>
 
 class TemporaryWorkingDirectory
 {
