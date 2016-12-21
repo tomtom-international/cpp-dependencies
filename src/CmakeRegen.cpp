@@ -19,6 +19,7 @@
 #include "Configuration.h"
 #include "FstreamInclude.h"
 #include "FilesystemInclude.h"
+#include "Input.h"
 #include <list>
 #include <set>
 
@@ -52,7 +53,7 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
                                                                            fp->includePaths.end());
             }
-            if (p.extension() == ".cpp") {
+            if (IsCompileableFile(p.extension().string())) {
                 isHeaderOnly = false;
             }
         }
