@@ -24,7 +24,7 @@ endif()
 # Switch between using the mmap logic for reading files (faster, because one copy less) or a file read (slower, because a full copy, but portable).
 option(WITH_MMAP "Use mmapped files" ${DEFAULT_MMAP})
 
-if (WIN32 OR OSX)
+if (WIN32 OR APPLE)
   set(DEFAULT_MEMRCHR OFF)
 else()
   set(DEFAULT_MEMRCHR ON)
