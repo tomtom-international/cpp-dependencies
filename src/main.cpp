@@ -46,6 +46,7 @@ public:
     , inferredComponents(false)
     , programName(argv[0])
     , allArgs(argv+1, argv+argc)
+    , recursive(false)
     {
         if (filesystem::is_regular_file(CONFIG_FILE)) {
             streams::ifstream in(CONFIG_FILE);
@@ -99,6 +100,7 @@ private:
         commands["--info"] = &Operations::Info;
         commands["--inout"] = &Operations::InOut;
         commands["--outliers"] = &Operations::Outliers;
+        commands["--recursive"] = &Operations::Recursive;
         commands["--regen"] = &Operations::Regen;
         commands["--shortest"] = &Operations::Shortest;
         commands["--stats"] = &Operations::Stats;
@@ -264,10 +266,19 @@ private:
             }
         } else {
             for (auto& s : args) {
-                if (components.find(targetFrom(s)) != components.end()) {
-                    RegenerateCmakeFilesForComponent(config, components[targetFrom(s)], dryRun);
+                const std::string target = targetFrom(s);
+                if (recursive) {
+                    for (auto& c : components) {
+                        if (strstr(c.first.c_str(), target.c_str())) {
+                            RegenerateCmakeFilesForComponent(config, c.second, dryRun);
+                        }
+                    }
                 } else {
-                    std::cout << "Target '" << targetFrom(s) << "' not found\n";
+                    if (components.find(target) != components.end()) {
+                        RegenerateCmakeFilesForComponent(config, components[target], dryRun);
+                    } else {
+                        std::cout << "Target '" << target << "' not found\n";
+                    }
                 }
             }
         }
@@ -372,47 +383,55 @@ private:
             std::cout << "\n";
         }
     }
+    void Recursive(std::vector<std::string>) {
+        recursive = true;
+        UnloadProject();
+    }
     void Help(std::vector<std::string>) {
         std::cout << "C++ Dependencies -- a tool to analyze large C++ code bases for #include dependency information\n";
         std::cout << "Copyright (C) 2016, TomTom International BV\n";
         std::cout << "Version " CURRENT_VERSION "\n";
         std::cout << "\n";
         std::cout << "  Usage:\n";
-        std::cout << "    " << programName << " [--dir <source - directory>] <command>\n";
-        std::cout << "    Source directory is assumed to be the current one if unspecified\n";
+        std::cout << "    " << programName << " [options] <command>\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
-        std::cout << "  --help                           : Produce this help text\n";
+        std::cout << "    --help                           : Produce this help text\n";
         std::cout << "\n";
-        std::cout << "  Extracting graphs:\n";
-        std::cout << "  --graph <output>                 : Graph of all components with dependencies\n";
-        std::cout << "  --graph-cycles <output>          : Graph of components with cyclic dependencies on other components\n";
-        std::cout << "  --graph-target <target> <output> : Graph for all dependencies of a specific target\n";
+        std::cout << "    Extracting graphs:\n";
+        std::cout << "    --graph <output>                 : Graph of all components with dependencies\n";
+        std::cout << "    --graph-cycles <output>          : Graph of components with cyclic dependencies on other components\n";
+        std::cout << "    --graph-target <target> <output> : Graph for all dependencies of a specific target\n";
         std::cout << "\n";
-        std::cout << "  Getting information:\n";
-        std::cout << "  --stats                          : Info about code base size, complexity and cyclic dependency count\n";
-        std::cout << "  --cycles <targetname>            : Find all possible paths from this target back to itself\n";
-        std::cout << "  --shortest                       : Determine shortest path between components and its reason\n";
-        std::cout << "  --outliers                       : Finds all components and files that match a criterium for being out of the ordinary\n";
-        std::cout << "                                          - libraries that are not used\n";
-        std::cout << "                                          - components that use a lot of other components\n";
-        std::cout << "                                          - components with dependencies towards executables\n";
-        std::cout << "                                          - components with less than 200 LoC\n";
-        std::cout << "                                          - components with more than 20 kLoC\n";
-        std::cout << "                                          - components that are part of a cycle\n";
-        std::cout << "                                          - files that are more than 2000 LoC\n";
-        std::cout << "                                          - files that are not compiled and never included\n";
+        std::cout << "    Getting information:\n";
+        std::cout << "    --stats                          : Info about code base size, complexity and cyclic dependency count\n";
+        std::cout << "    --cycles <targetname>            : Find all possible paths from this target back to itself\n";
+        std::cout << "    --shortest                       : Determine shortest path between components and its reason\n";
+        std::cout << "    --outliers                       : Finds all components and files that match a criterium for being out of the ordinary\n";
+        std::cout << "                                            - libraries that are not used\n";
+        std::cout << "                                            - components that use a lot of other components\n";
+        std::cout << "                                            - components with dependencies towards executables\n";
+        std::cout << "                                            - components with less than 200 LoC\n";
+        std::cout << "                                            - components with more than 20 kLoC\n";
+        std::cout << "                                            - components that are part of a cycle\n";
+        std::cout << "                                            - files that are more than 2000 LoC\n";
+        std::cout << "                                            - files that are not compiled and never included\n";
         std::cout << "\n";
-        std::cout << "  Target information:\n";
-        std::cout << "  --info                           : Show all information on a given specific target\n";
-        std::cout << "  --usedby                         : Find all references to a specific header file\n";
-        std::cout << "  --inout                          : Find all incoming and outgoing links for a target\n";
-        std::cout << "  --ambiguous                      : Find all include statements that could refer to more than one header\n";
+        std::cout << "    Target information:\n";
+        std::cout << "    --info                           : Show all information on a given specific target\n";
+        std::cout << "    --usedby                         : Find all references to a specific header file\n";
+        std::cout << "    --inout                          : Find all incoming and outgoing links for a target\n";
+        std::cout << "    --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
-        std::cout << "  Automatic CMakeLists.txt generation:\n";
-        std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << config.regenTag << "\"\n";
-        std::cout << "  --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
-        std::cout << "  --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "    Automatic CMakeLists.txt generation:\n";
+        std::cout << "       Note: These commands only have any effect on CMakeLists.txt marked with \"" << config.regenTag << "\"\n";
+        std::cout << "    --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
+        std::cout << "    --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "\n";
+        std::cout << "  Options:\n";
+        std::cout << "    --dir <sourcedirectory>          : Source directory to run in. Assumed current one if unspecified.\n";
+        std::cout << "    --recursive                      : If for the following command a single target/directory is specified\n";
+        std::cout << "                                       recursively process the underlying targets/directories too.\n";
     }
     Configuration config;
     enum LoadStatus {
@@ -432,6 +451,7 @@ private:
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
     filesystem::path outputRoot, projectRoot;
+    bool recursive;
 };
 
 int main(int argc, const char **argv) {
