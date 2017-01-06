@@ -416,6 +416,7 @@ private:
         std::cout << "                                            - components that are part of a cycle\n";
         std::cout << "                                            - files that are more than 2000 LoC\n";
         std::cout << "                                            - files that are not compiled and never included\n";
+        std::cout << "    --includesize                    : Calculate the total number of lines added to each file through #include\n";
         std::cout << "\n";
         std::cout << "    Target information:\n";
         std::cout << "    --info                           : Show all information on a given specific target\n";
@@ -428,8 +429,18 @@ private:
         std::cout << "    --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
         std::cout << "    --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
         std::cout << "\n";
+        std::cout << "    Refactoring:\n";
+        std::cout << "    --fixincludes <targetname> <desired path> [<relative root>]\n";
+        std::cout << "                                     : Unify include paths for headers in <targetname> in  all source files.\n";
+        std::cout << "                                       <relative root> can be:\n";
+        std::cout << "                                            - \"project\" for absolute paths (default);\n";
+        std::cout << "                                            - \"component\" for component-relative paths.\n";
+        std::cout << "\n";
         std::cout << "  Options:\n";
         std::cout << "    --dir <sourcedirectory>          : Source directory to run in. Assumed current one if unspecified.\n";
+        std::cout << "    --drop <targetname>              : Targets to ignore.\n";
+        std::cout << "    --ignore <filename>              : Files to ignore.\n";
+        std::cout << "    --infer                          : Assume each directory is a component, even if no CMakeLists.txt is present.\n";
         std::cout << "    --recursive                      : If for the following command a single target/directory is specified\n";
         std::cout << "                                       recursively process the underlying targets/directories too.\n";
     }
