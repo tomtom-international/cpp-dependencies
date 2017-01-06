@@ -93,17 +93,8 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
 
         {
             streams::ofstream o(comp->root / "CMakeLists.txt.generated");
-            // replace all newlines in licenseString with "\n# "
-            std::string licenseString;
-            MakeCmakeComment(licenseString, config.licenseString);
 
-            o << "#\n";
-            o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
-            o << licenseString;
-            o << "#\n\n";
-
-            o << "# " << config.regenTag << " - do not edit, your changes will be lost" << "\n";
-            o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
+            RegenerateCmakeHeader(o, config);
 
             if (comp->root == ".") {
                 // Do this for the user, so that you don't get a warning on either 
@@ -118,76 +109,10 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
             o << "\n";
 
             if (!files.empty()) {
-                o << comp->type << "(${PROJECT_NAME}";
-
-                if (isHeaderOnly) {
-                    o << " INTERFACE" << "\n";
-                } else {
-                    if (config.addLibraryAliases.count(comp->type) == 1) {
-                        o << " STATIC" << "\n";
-                    } else {
-                        o << "\n";
-                    }
-
-                    for (auto &f : files) {
-                        o << "  " << f << "\n";
-                    }
-                }
-                o << comp->additionalTargetParameters;
-                o << ")" << "\n\n";
-
-                if (!publicDeps.empty() || !privateDeps.empty()) {
-                    o << "target_link_libraries(${PROJECT_NAME}" << "\n";
-                    if (isHeaderOnly) {
-                        o << "  INTERFACE" << "\n";
-                    }
-
-                    if (!publicDeps.empty() && !isHeaderOnly) {
-                        o << "  PUBLIC" << "\n";
-                    }
-                    for (auto &s : publicDeps) {
-                        o << "    " << s << "\n";
-                    }
-
-                    if (!privateDeps.empty() && !isHeaderOnly) {
-                        o << "  PRIVATE" << "\n";
-                    }
-                    for (auto &s : privateDeps) {
-                        o << "    " << s << "\n";
-                    }
-
-                    o << ")" << "\n\n";
-                }
-
-                if (!publicIncl.empty() || !privateIncl.empty()) {
-                    o << "target_include_directories(${PROJECT_NAME}" << "\n";
-                    if (isHeaderOnly) {
-                        o << "  INTERFACE" << "\n";
-                    }
-
-                    if (!publicIncl.empty() && !isHeaderOnly) {
-                        o << "  PUBLIC" << "\n";
-                    }
-                    for (auto &s : publicIncl) {
-                        o << "    " << s << "\n";
-                    }
-
-                    if (!privateIncl.empty() && !isHeaderOnly) {
-                        o << "  PRIVATE" << "\n";
-                    }
-                    for (auto &s : privateIncl) {
-                        o << "    " << s << "\n";
-                    }
-                    o << ")" << "\n\n";
-                }
-
-                if (!comp->buildAfters.empty()) {
-                    o << "add_dependencies(${PROJECT_NAME}" << "\n";
-                    for (auto &s : comp->buildAfters) {
-                        o << "  " << s << "\n";
-                    }
-                    o << ")" << "\n\n";
-                }
+                RegenerateCmakeAddTarget(o, config, *comp, files, isHeaderOnly);
+                RegenerateCmakeTargetLinkLibraries(o, publicDeps, privateDeps, isHeaderOnly);
+                RegenerateCmakeTargetIncludeDirectories(o, publicIncl, privateIncl, isHeaderOnly);
+                RegenerateCmakeAddDependencies(o, *comp);
             }
             // Add existing subdirectories that contain a CMakeLists file
             filesystem::directory_iterator it(comp->root), end;
@@ -226,3 +151,104 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
     }
 }
 
+void RegenerateCmakeHeader(std::ostream& o, const Configuration& config) {
+    std::string licenseString;
+    MakeCmakeComment(licenseString, config.licenseString);
+
+    o << "#\n";
+    o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
+    o << licenseString;
+    o << "#\n\n";
+
+    o << "# " << config.regenTag << " - do not edit, your changes will be lost\n";
+    o << "# If you must edit, remove these two lines to avoid regeneration\n\n";
+}
+
+void RegenerateCmakeAddDependencies(std::ostream& o, const Component& comp) {
+    if (!comp.buildAfters.empty()) {
+        o << "add_dependencies(${PROJECT_NAME}\n";
+        for (auto &s : comp.buildAfters) {
+            o << "  " << s << "\n";
+        }
+        o << ")\n\n";
+    }
+}
+
+void RegenerateCmakeAddTarget(std::ostream& o,
+                              const Configuration& config,
+                              const Component& comp,
+                              const std::list<std::string>& files,
+                              bool isHeaderOnly) {
+    o << comp.type << "(${PROJECT_NAME}";
+
+    if (isHeaderOnly) {
+        o << " INTERFACE\n";
+    } else {
+        if (config.addLibraryAliases.count(comp.type) == 1) {
+            o << " STATIC\n";
+        } else {
+            o << "\n";
+        }
+
+        for (auto &f : files) {
+            o << "  " << f << "\n";
+        }
+    }
+    o << comp.additionalTargetParameters;
+    o << ")\n\n";
+}
+
+void RegenerateCmakeTargetIncludeDirectories(std::ostream& o,
+                                             const std::set<std::string>& publicIncl,
+                                             const std::set<std::string>& privateIncl,
+                                             bool isHeaderOnly) {
+    if (!publicIncl.empty() || !privateIncl.empty()) {
+        o << "target_include_directories(${PROJECT_NAME}\n";
+        if (isHeaderOnly) {
+            o << "  INTERFACE\n";
+        }
+
+        if (!publicIncl.empty() && !isHeaderOnly) {
+            o << "  PUBLIC\n";
+        }
+        for (auto &s : publicIncl) {
+            o << "    " << s << "\n";
+        }
+
+        if (!privateIncl.empty() && !isHeaderOnly) {
+            o << "  PRIVATE\n";
+        }
+        for (auto &s : privateIncl) {
+            o << "    " << s << "\n";
+        }
+        o << ")\n\n";
+    }
+}
+
+void RegenerateCmakeTargetLinkLibraries(std::ostream& o,
+                                        const std::set<std::string>& publicDeps,
+                                        const std::set<std::string>& privateDeps,
+                                        bool isHeaderOnly) {
+    if (!publicDeps.empty() || !privateDeps.empty()) {
+        o << "target_link_libraries(${PROJECT_NAME}\n";
+        if (isHeaderOnly) {
+            o << "  INTERFACE\n";
+        }
+
+        if (!publicDeps.empty() && !isHeaderOnly) {
+            o << "  PUBLIC\n";
+        }
+        for (auto &s : publicDeps) {
+            o << "    " << s << "\n";
+        }
+
+        if (!privateDeps.empty() && !isHeaderOnly) {
+            o << "  PRIVATE\n";
+        }
+        for (auto &s : privateDeps) {
+            o << "    " << s << "\n";
+        }
+
+        o << ")\n\n";
+    }
+}
