@@ -51,7 +51,7 @@ void MakeCmakeComment(std::string& cmakeComment, const std::string& contents)
     }
     if (lastPos < contents.size()) {
         cmakeComment.append("# ");
-        cmakeComment.append(contents, lastPos);
+        cmakeComment.append(contents, lastPos, std::string::npos);
         cmakeComment.append("\n");
     }
 }
