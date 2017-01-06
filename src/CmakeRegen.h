@@ -17,9 +17,12 @@
 #ifndef __DEP_CHECKER__CMAKEREGEN_H
 #define __DEP_CHECKER__CMAKEREGEN_H
 
+#include <string>
+
 struct Component;
 struct Configuration;
 
+void MakeCmakeComment(std::string& cmakeComment, const std::string& contents);
 void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun);
 
 #endif

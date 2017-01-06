@@ -40,6 +40,22 @@ static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path 
     return !(as.eof() && bs.eof());
 }
 
+void MakeCmakeComment(std::string& cmakeComment, const std::string& contents)
+{
+    cmakeComment.reserve(contents.size());
+    size_t lastPos = 0, findPos;
+    while ((findPos = contents.find('\n', lastPos)) != std::string::npos) {
+        cmakeComment.append("# ");
+        cmakeComment.append(contents, lastPos, findPos - lastPos + 1);
+        lastPos = findPos + 1;
+    }
+    if (lastPos < contents.size()) {
+        cmakeComment.append("# ");
+        cmakeComment.append(contents, lastPos);
+        cmakeComment.append("\n");
+    }
+}
+
 void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun) {
     if (comp->recreate) {
         std::string compname = comp->CmakeName();
@@ -79,19 +95,12 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
             streams::ofstream o(comp->root / "CMakeLists.txt.generated");
             // replace all newlines in licenseString with "\n# "
             std::string licenseString;
-            licenseString.reserve(config.licenseString.size());
-            size_t lastPos = 0, findPos;
-            while ((findPos = config.licenseString.find('\n', lastPos)) != std::string::npos) {
-                licenseString.append(config.licenseString, lastPos, findPos - lastPos + 1);
-                licenseString.append(findPos == config.licenseString.size()-1 ? "#" : "# ");
-                lastPos = findPos + 1;
-            }
-            // last piece
-            licenseString.append(config.licenseString.c_str(), lastPos);
+            MakeCmakeComment(licenseString, config.licenseString);
 
             o << "#\n";
             o << "# Copyright (c) " << config.companyName << ". All rights reserved.\n";
-            o << "# " << licenseString << "\n\n";
+            o << licenseString;
+            o << "#\n\n";
 
             o << "# " << config.regenTag << " - do not edit, your changes will be lost" << "\n";
             o << "# If you must edit, remove these two lines to avoid regeneration" << "\n\n";
