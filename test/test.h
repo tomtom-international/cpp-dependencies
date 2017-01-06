@@ -18,7 +18,7 @@ private:
   static Test* firstTest;
 };
 
-#define TEST(x) static struct Test##x : public Test { Test##x() : Test(#x) {} void Run() override; } __inst_##x; void Test##x::Run()
+#define TEST(x) static struct Test##x : public Test { Test##x() : Test(#x) {} void Run(); } __inst_##x; void Test##x::Run()
 #define ASSERT(x) do { auto v = (x); if (!v) { throw std::runtime_error("Assertion failed: " #x); } } while(0)
 
 #endif
