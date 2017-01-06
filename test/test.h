@@ -2,6 +2,7 @@
 #define TEST_H
 
 #include <stdexcept>
+#include "compiler_feature_detection.h"
 
 class Test {
 public:
@@ -18,7 +19,7 @@ private:
   static Test* firstTest;
 };
 
-#define TEST(x) static struct Test##x : public Test { Test##x() : Test(#x) {} void Run() override; } __inst_##x; void Test##x::Run()
+#define TEST(x) static struct Test##x : public Test { Test##x() : Test(#x) {} void Run() OPTIONAL_FEATURE_OVERRIDE; } __inst_##x; void Test##x::Run()
 #define ASSERT(x) do { auto v = (x); if (!v) { throw std::runtime_error("Assertion failed: " #x); } } while(0)
 
 #endif
