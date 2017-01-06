@@ -32,7 +32,7 @@ static bool CheckVersionFile() {
 std::string targetFrom(const std::string &arg) {
     std::string target = arg;
     if (!target.empty() && target.back() == '/') {
-        target.pop_back();
+        target.erase(target.end() - 1);
     }
     std::replace(target.begin(), target.end(), '.', '/');
     return "./" + target;
