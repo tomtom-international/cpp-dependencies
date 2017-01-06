@@ -11,4 +11,4 @@ build_script:
 
 test_script:
   - cmd: ctest -C Release -VV
- 
+  - cmd: cmake --build . --config Release --target package
