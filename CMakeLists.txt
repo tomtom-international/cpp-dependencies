@@ -19,7 +19,14 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES GNU)
-  set(COMPILE_FLAGS -Wall -Wextra -Wpedantic)
+  include(CheckCXXCompilerFlag)
+
+  set(COMPILE_FLAGS -Wall -Wextra)
+
+  check_cxx_compiler_flag("-Wpedantic" PEDANTIC_SUPPORTED)
+  if(PEDANTIC_SUPPORTED)
+    list(APPEND COMPILE_FLAGS -Wpedantic)
+  endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(COMPILE_FLAGS /W4)
   # boost gets compiled as static libs on Windows

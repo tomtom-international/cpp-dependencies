@@ -24,6 +24,20 @@ matrix:
       env: CMAKEFLAGS="-DWITH_BOOST=ON -DHAS_MEMRCHR=OFF" CXX=clang++
     - compiler: gcc
       os: linux
+      dist: precise
+      sudo: false
+      addons:
+        apt:
+          sources:
+            - george-edison55-precise-backports
+          packages:
+            - cmake
+            - cmake-data
+            - libboost-system-dev
+            - libboost-filesystem-dev
+      env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=g++-4.6
+    - compiler: gcc
+      os: linux
       addons:
         apt:
           sources:
