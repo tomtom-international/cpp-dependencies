@@ -5,15 +5,33 @@ project(cpp_dependencies LANGUAGES CXX)
 # Enables running the unit tests
 option(WITH_TESTS "Also build unit tests" ON)
 
+if (WIN32)
+  set(DEFAULT_BOOST OFF)
+else()
+  set(DEFAULT_BOOST ON)
+endif()
+
 # Running with Boost filesystem is typically faster, until platform specific std::filesystem comes out that is faster yet. 
 # Note that Boost::filesystem needs to be installed for this to be used.
-option(WITH_BOOST "Use Boost filesystem" OFF)
+option(WITH_BOOST "Use Boost filesystem" ${DEFAULT_BOOST})
+
+if (WIN32)
+  set(DEFAULT_MMAP OFF)
+else()
+  set(DEFAULT_MMAP ON)
+endif()
 
 # Switch between using the mmap logic for reading files (faster, because one copy less) or a file read (slower, because a full copy, but portable).
-option(WITH_MMAP "Use mmapped files" ON)
+option(WITH_MMAP "Use mmapped files" ${DEFAULT_MMAP})
+
+if (WIN32 OR APPLE)
+  set(DEFAULT_MEMRCHR OFF)
+else()
+  set(DEFAULT_MEMRCHR ON)
+endif()
 
 # Whether your platform provides a fast memrchr function. If it does not, turn this off and a slower replacement will be used.
-option(HAS_MEMRCHR "Platform has memrchr function" ON)
+option(HAS_MEMRCHR "Platform has memrchr function" ${DEFAULT_MEMRCHR})
 
 # Default package format to use when building a package with CPack
 if(APPLE)
