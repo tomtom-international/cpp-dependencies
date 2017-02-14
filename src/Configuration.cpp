@@ -85,16 +85,14 @@ Configuration::Configuration()
     else if (name == "componentLocLowerLimit") { componentLocLowerLimit = atol(value.c_str()); }
     else if (name == "componentLocUpperLimit") { componentLocUpperLimit = atol(value.c_str()); }
     else if (name == "fileLocUpperLimit") { fileLocUpperLimit = atol(value.c_str()); }
-    else if (name == "blacklistedFolders") {
-      blacklistedFolders = split(value);
-    }
+    else if (name == "blacklist") { blacklist = split(value); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }
   }
 }
 
-const Configuration& Configuration::Get()
+Configuration& Configuration::Get()
 {
   static Configuration config;
   return config;

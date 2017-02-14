@@ -190,16 +190,17 @@ static void ReadCode(std::unordered_map<std::string, File>& files, const filesys
 }
 #endif
 
-static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+static bool IsItemBlacklisted(const filesystem::path &path) {
     std::string pathS = path.generic_string();
-    for (auto& s : Configuration::Get().blacklistedFolders) {
+    std::string fileName = path.filename().generic_string();
+    for (auto& s : Configuration::Get().blacklist) {
         if (pathS.compare(2, s.size(), s) == 0) {
             return true;
         }
+        if (s == fileName) 
+            return true;
     }
-    // Add your own blacklisted items here.
-    std::string file = path.filename().generic_string();
-    return ignorefiles.find(file) != ignorefiles.end();
+    return false;
 }
 
 static void ReadCmakelist(std::unordered_map<std::string, Component *> &components,
@@ -238,7 +239,6 @@ static bool IsCode(const std::string &ext) {
 #if 1
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
-                  const std::unordered_set<std::string> &ignorefiles,
                   const filesystem::path& sourceDir,
                   bool inferredComponents,
                   bool withLoc) {
@@ -260,8 +260,9 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
             }
         }
 
-        if (IsItemBlacklisted(it->path(), ignorefiles)) {
-          continue;
+        if (IsItemBlacklisted(it->path())) {
+            it.disable_recursion_pending();
+            continue;
         }
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
@@ -278,7 +279,6 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
 #else
 static void LoadFileListFrom(std::unordered_map<std::string, Component *> &components,
                       std::unordered_map<std::string, File>& files,
-                      const std::unordered_set<std::string> &ignorefiles,
                       const filesystem::path& sourceDir,
                       bool inferredComponents) {
     static const std::string cmakelistfilename = "CMakeLists.txt";
@@ -290,7 +290,7 @@ static void LoadFileListFrom(std::unordered_map<std::string, Component *> &compo
 
     for (filesystem::directory_iterator it(sourceDir), end;
          it != end; ++it) {
-        if (IsItemBlacklisted(it->path(), ignorefiles)) {
+        if (IsItemBlacklisted(it->path())) {
             continue;
         }
         const auto &parent = it->path().parent_path();
@@ -305,21 +305,20 @@ static void LoadFileListFrom(std::unordered_map<std::string, Component *> &compo
                 ReadCode(files, it->path(), withLoc);
             }
         } else if (filesystem::is_directory(it->status())) {
-            LoadFileListFrom(components, files, ignorefiles, it->path(), inferredComponents);
+            LoadFileListFrom(components, files, it->path(), inferredComponents);
         }
     }
 }
 
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
-                  const std::unordered_set<std::string> &ignorefiles,
                   const filesystem::path& sourceDir,
                   bool inferredComponents,
                   bool withLoc) {
     filesystem::path outputpath = filesystem::current_path();
     filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
-    LoadFileListFrom(components, files, ignorefiles, sourceDir, inferredComponents);
+    LoadFileListFrom(components, files, sourceDir, inferredComponents);
     filesystem::current_path(outputpath);
 }
 #endif

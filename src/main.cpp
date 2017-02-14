@@ -48,15 +48,6 @@ public:
     {
         RegisterCommands();
         projectRoot = outputRoot = filesystem::current_path();
-        ignorefiles = std::unordered_set<std::string>{
-                "unistd.h",
-                "console.h",
-                "stdint.h",
-                "windows.h",
-                "library.h",
-                "endian.h",
-                "rle.h",
-        };
     }
     void RunCommands() {
         if (allArgs.empty()) {
@@ -106,7 +97,7 @@ private:
     void LoadProject(bool withLoc = false) {
         if (!withLoc && loadStatus >= FastLoad) return;
         if (withLoc && loadStatus >= FullLoad) return;
-        LoadFileList(components, files, ignorefiles, projectRoot, inferredComponents, withLoc);
+        LoadFileList(components, files, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
@@ -142,7 +133,7 @@ private:
     void Ignore(std::vector<std::string> args) {
         if (args.empty())
             std::cout << "No files specified to ignore?\n";
-        for (auto& s : args) ignorefiles.insert(s);
+        for (auto& s : args) Configuration::Get().blacklist.push_back(s);
         UnloadProject();
     }
     void Infer(std::vector<std::string> ) {
@@ -375,6 +366,8 @@ private:
         std::cout << "                                          - components that are part of a cycle\n";
         std::cout << "                                          - files that are more than 2000 LoC\n";
         std::cout << "                                          - files that are not compiled and never included\n";
+        std::cout << "  --includesize                    : For every file, calculate its contribution when included, and the total impact on\n";
+        std::cout << "                                     the project, for each header\n";
         std::cout << "\n";
         std::cout << "  Target information:\n";
         std::cout << "  --info                           : Show all information on a given specific target\n";
@@ -386,6 +379,16 @@ private:
         std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << Configuration::Get().regenTag << "\"\n";
         std::cout << "  --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
         std::cout << "  --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "\n";
+        std::cout << "  What-if analysis:\n";
+        std::cout << "     Note: These commands modify the analysis results and are intended for interactive analysis.\n";
+        std::cout << "           They only affect the commands after their own position in the argument list. You can use them to\n";
+        std::cout << "           analyze twice with a given what-if in between. For example: --stats --ignore myFile.h --stats\n";
+        std::cout << "  --ignore                         : Ignore the following path(s) or file names in the analysis.\n";
+        std::cout << "  --drop                           : Completely remove knowledge of a given component and re-analyze dependencies. Differs\n";
+        std::cout << "                                     from ignoring the component as it will not disambiguate headers that are ambiguous\n";
+        std::cout << "                                     because of this component\n";
+        std::cout << "  --infer                          : Pretend that every folder that holds a source file is also a component.\n";
     }
     enum LoadStatus {
       Unloaded,
@@ -396,7 +399,6 @@ private:
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> allArgs;
-    std::unordered_set<std::string> ignorefiles;
     std::unordered_map<std::string, Component *> components;
     std::unordered_map<std::string, File> files;
     std::map<std::string, std::set<std::string>> collisions;
