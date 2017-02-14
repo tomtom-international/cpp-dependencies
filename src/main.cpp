@@ -288,9 +288,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* f = todo.back();
+                File* file_todo = todo.back();
                 todo.pop_back();
-                for (auto& d : f->dependencies) {
+                for (auto& d : file_todo->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }

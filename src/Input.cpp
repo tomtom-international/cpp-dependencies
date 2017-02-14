@@ -78,9 +78,9 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize, bool wi
                 }
                 else if (buffer[offset + 1] == '*') {
                     do {
-                        const char* nextSlash = static_cast<const char*>(memchr(buffer + offset + 1, '/', buffersize - offset));
-                        if (!nextSlash) return;
-                        offset = nextSlash - buffer;
+                        const char* endSlash = static_cast<const char*>(memchr(buffer + offset + 1, '/', buffersize - offset));
+                        if (!endSlash) return;
+                        offset = endSlash - buffer;
                     } while (buffer[offset-1] != '*');
                 }
             } else {

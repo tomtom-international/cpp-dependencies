@@ -5,9 +5,9 @@
 TEST(FindCircularDependenciesFindsNothingInADisconnectedGraph) {
   std::unordered_map<std::string, Component *> components;
   for (int n = 0; n < 10; n++) {
-    char name[12];
-    sprintf(name, "%d", n);
-    components[name] = new Component(name);
+    char compName[12];
+    sprintf(compName, "%d", n);
+    components[compName] = new Component(compName);
   }
 
   FindCircularDependencies(components);
@@ -20,9 +20,9 @@ TEST(FindCircularDependenciesFindsNothingInAHeavilyConnectedTree) {
   std::unordered_map<std::string, Component *> components;
   std::vector<Component*> allSoFar;
   for (int n = 0; n < 10; n++) {
-    char name[12];
-    sprintf(name, "%d", n);
-    Component* thisOne = components[name] = new Component(name);
+    char compName[12];
+    sprintf(compName, "%d", n);
+    Component* thisOne = components[compName] = new Component(compName);
     for (auto& c : allSoFar) {
       thisOne->pubDeps.insert(c);
     }
