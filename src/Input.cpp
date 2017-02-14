@@ -191,6 +191,12 @@ static void ReadCode(std::unordered_map<std::string, File>& files, const filesys
 #endif
 
 static bool IsItemBlacklisted(const filesystem::path &path, const std::unordered_set<std::string> &ignorefiles) {
+    std::string pathS = path.generic_string();
+    for (auto& s : Configuration::Get().blacklistedFolders) {
+        if (pathS.compare(2, s.size(), s) == 0) {
+            return true;
+        }
+    }
     // Add your own blacklisted items here.
     std::string file = path.filename().generic_string();
     return ignorefiles.find(file) != ignorefiles.end();

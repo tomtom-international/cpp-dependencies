@@ -29,6 +29,7 @@ struct Configuration {
   std::string cycleColor;
   std::string publicDepColor;
   std::string privateDepColor;
+  std::vector<std::string> blacklistedFolders;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;

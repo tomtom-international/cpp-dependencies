@@ -40,3 +40,7 @@ componentLocUpperLimit: 20000
 # logical units, which are then easy to mix up and conflate.
 fileLocUpperLimit: 2000
 
+# List of folder paths (from the root) that should be completely ignored. May contain multiple
+# space-separated values, including values with spaces escaped with quotation marks.
+blacklistedFolders: build Build "Visual Studio Projects"
+
