@@ -45,3 +45,4 @@ cpp-dependencies-unittests
 
 MSVC/x64/Debug/
 MSVC/*.opendb
+build
