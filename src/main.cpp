@@ -30,6 +30,9 @@ static bool CheckVersionFile() {
 }
 
 std::string targetFrom(const std::string &arg) {
+    if (arg == "ROOT") {
+      return ".";
+    }
     std::string target = arg;
     if (!target.empty() && target.back() == '/') {
         target.erase(target.end() - 1);
