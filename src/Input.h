@@ -28,6 +28,7 @@ struct Component;
 
 bool IsCompileableFile(const std::string& ext);
 
+void ForgetEmptyComponents(std::unordered_map<std::string, Component *> &components);
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const filesystem::path& sourceDir,

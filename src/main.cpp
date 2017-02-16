@@ -100,6 +100,7 @@ private:
         LoadFileList(components, files, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
+        ForgetEmptyComponents(components);
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
         for (auto &i : ambiguous) {
             for (auto &c : collisions[i.first]) {
