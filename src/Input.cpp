@@ -236,7 +236,6 @@ static bool IsCode(const std::string &ext) {
     return exts.count(ext) > 0;
 }
 
-#if 1
 void LoadFileList(std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
                   const filesystem::path& sourceDir,
@@ -248,22 +247,21 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
     for (filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
-        if (inferredComponents) AddComponentDefinition(components, parent);
 
         // skip hidden files and dirs
-        if (filesystem::is_directory(parent) &&
-            parent.filename().generic_string().size() > 2 &&
-            parent.filename().generic_string()[0] == '.') {
-            it.pop();
-            if (it == end) {
-                break;
-            }
-        }
-
-        if (IsItemBlacklisted(it->path())) {
+        const auto& fileName = it->path().filename().generic_string();
+        if ((fileName.size() >= 2 && fileName[0] == '.') ||
+            IsItemBlacklisted(it->path())) {
+#if defined(BOOST_VERSION) && BOOST_VERSION < 160000
+            it.no_push();
+#else
             it.disable_recursion_pending();
+#endif
             continue;
-        }
+        }       
+
+        if (inferredComponents) AddComponentDefinition(components, parent);
+
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(components, it->path());
         } else if (filesystem::is_regular_file(it->status())) {
@@ -276,50 +274,14 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
     }
     filesystem::current_path(outputpath);
 }
-#else
-static void LoadFileListFrom(std::unordered_map<std::string, Component *> &components,
-                      std::unordered_map<std::string, File>& files,
-                      const filesystem::path& sourceDir,
-                      bool inferredComponents) {
-    static const std::string cmakelistfilename = "CMakeLists.txt";
-    // skip hidden files and dirs
-    if (sourceDir.filename().generic_string().size() > 2 &&
-        sourceDir.filename().generic_string()[0] == '.') {
-        return;
-    }
 
-    for (filesystem::directory_iterator it(sourceDir), end;
-         it != end; ++it) {
-        if (IsItemBlacklisted(it->path())) {
-            continue;
-        }
-        const auto &parent = it->path().parent_path();
-        if (inferredComponents) AddComponentDefinition(components, parent);
-
-        if (it->path().filename() == cmakelistfilename) {
-            ReadCmakelist(components, it->path());
-        } else if (filesystem::is_regular_file(it->status())) {
-            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
-                AddComponentDefinition(components, parent).hasAddonCmake = true;
-            } else if (IsCode(it->path().extension().generic_string().c_str())) {
-                ReadCode(files, it->path(), withLoc);
-            }
-        } else if (filesystem::is_directory(it->status())) {
-            LoadFileListFrom(components, files, it->path(), inferredComponents);
-        }
-    }
+void ForgetEmptyComponents(std::unordered_map<std::string, Component *> &components) {
+  for (auto it = begin(components); it != end(components);) {
+    if (it->second->files.empty())
+      it = components.erase(it);
+    else
+      ++it;
+  }
 }
 
-void LoadFileList(std::unordered_map<std::string, Component *> &components,
-                  std::unordered_map<std::string, File>& files,
-                  const filesystem::path& sourceDir,
-                  bool inferredComponents,
-                  bool withLoc) {
-    filesystem::path outputpath = filesystem::current_path();
-    filesystem::current_path(sourceDir.c_str());
-    AddComponentDefinition(components, ".");
-    LoadFileListFrom(components, files, sourceDir, inferredComponents);
-    filesystem::current_path(outputpath);
-}
-#endif
 
