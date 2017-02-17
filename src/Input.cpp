@@ -252,10 +252,10 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
         const auto& fileName = it->path().filename().generic_string();
         if ((fileName.size() >= 2 && fileName[0] == '.') ||
             IsItemBlacklisted(it->path())) {
-#if defined(BOOST_VERSION) && BOOST_VERSION < 160000
-            it.no_push();
-#else
+#if !defined(BOOST_VERSION) || BOOST_VERSION >= 106000
             it.disable_recursion_pending();
+#else
+            it.no_push();
 #endif
             continue;
         }       
