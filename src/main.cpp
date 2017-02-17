@@ -109,6 +109,18 @@ private:
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
         ForgetEmptyComponents(components);
+        if (components.size() < 3) {
+            std::cout << "Warning: Analyzing your project resulted in a very low amount of components. This either points to a small project, or\n";
+            std::cout << "to cpp-dependencies not recognizing the components.\n\n";
+
+            std::cout << "It tries to recognize components by the existence of project build files - CMakeLists.txt, Makefiles, MyProject.vcxproj\n";
+            std::cout << "or similar files. If it does not recognize any such files, it will assume everything belongs to the project it is\n";
+            std::cout << "contained in. You can invert this behaviour to assume that any code file will belong to a component local to it - in\n";
+            std::cout << "effect, making every folder of code a single component - by using the --infer option.\n\n";
+
+            std::cout << "Another reason for this warning may be running the tool in a folder that doesn't have any code. You can either change\n";
+            std::cout << "to the desired directory, or use the --dir <myProject> option to make it analyze another directory.\n\n";
+        }
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
         for (auto &i : ambiguous) {
             for (auto &c : collisions[i.first]) {
@@ -122,6 +134,7 @@ private:
             KillComponent(components, c);
         }
         loadStatus = (withLoc ? FullLoad : FastLoad);
+        lastCommandDidNothing = false;
     }
     void UnloadProject() {
         components.clear();
