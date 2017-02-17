@@ -428,7 +428,7 @@ private:
       FullLoad,
     } loadStatus;
     bool inferredComponents;
-    bool lastCommandDidNothing = false;
+    bool lastCommandDidNothing;
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> allArgs;

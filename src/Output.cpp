@@ -64,11 +64,12 @@ struct OstreamHolder {
     if (outFile == "-") {
       isStdout = true;
     } else {
+      isStdout = false;
       out.open(outFile);
     }
   }
   ::std::ostream& get() { return isStdout ? std::cout : out; }
-  bool isStdout = false;
+  bool isStdout;
   streams::ofstream out;
 };
 
