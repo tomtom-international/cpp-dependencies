@@ -64,6 +64,14 @@ public:
             RunCommand(it, localEnd);
             it = localEnd;
         }
+        if (lastCommandDidNothing) {
+            std::cout << "\nThe last command you entered did not result in output, so in effect it did nothing.\n";
+            std::cout << "Remember that commands are executed in the order in which they appear on the command-line, so\n";
+            std::cout << "if you want an analysis-changing command (such as --infer) to change the analysis, it has to\n";
+            std::cout << "come before the analysis you want it to affect.\n\n";
+            std::cout << "You can also use this to run an analysis multiple times with a single change between them, or\n";
+            std::cout << "to get various outputs from a single analysis run.\n";
+        }
     }
 private:
     typedef void (Operations::*Command)(std::vector<std::string>);
@@ -103,6 +111,19 @@ private:
         LoadFileList(components, files, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
+        ForgetEmptyComponents(components);
+        if (components.size() < 3) {
+            std::cout << "Warning: Analyzing your project resulted in a very low amount of components. This either points to a small project, or\n";
+            std::cout << "to cpp-dependencies not recognizing the components.\n\n";
+
+            std::cout << "It tries to recognize components by the existence of project build files - CMakeLists.txt, Makefiles, MyProject.vcxproj\n";
+            std::cout << "or similar files. If it does not recognize any such files, it will assume everything belongs to the project it is\n";
+            std::cout << "contained in. You can invert this behaviour to assume that any code file will belong to a component local to it - in\n";
+            std::cout << "effect, making every folder of code a single component - by using the --infer option.\n\n";
+
+            std::cout << "Another reason for this warning may be running the tool in a folder that doesn't have any code. You can either change\n";
+            std::cout << "to the desired directory, or use the --dir <myProject> option to make it analyze another directory.\n\n";
+        }
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
         for (auto &i : ambiguous) {
             for (auto &c : collisions[i.first]) {
@@ -116,6 +137,7 @@ private:
             KillComponent(components, c);
         }
         loadStatus = (withLoc ? FullLoad : FastLoad);
+        lastCommandDidNothing = false;
     }
     void UnloadProject() {
         components.clear();
@@ -124,6 +146,7 @@ private:
         includeLookup.clear();
         ambiguous.clear();
         loadStatus = Unloaded;
+        lastCommandDidNothing = true;
     }
     void Dir(std::vector<std::string> args) {
         if (args.empty()) {
@@ -244,12 +267,18 @@ private:
         filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
-                RegenerateCmakeFilesForComponent(c.second, dryRun);
+                RegenerateCmakeFilesForComponent(c.second, dryRun, false);
             }
         } else {
+            bool writeToStdoutInstead = false;
+            if (args[0] == "-") {
+                dryRun = true; // Can't rewrite actual CMakeFiles if you asked them to be sent to stdout.
+                writeToStdoutInstead = true;
+                args.erase(args.begin());
+            }
             for (auto& s : args) {
                 if (components.find(targetFrom(s)) != components.end()) {
-                    RegenerateCmakeFilesForComponent(components[targetFrom(s)], dryRun);
+                    RegenerateCmakeFilesForComponent(components[targetFrom(s)], dryRun, writeToStdoutInstead);
                 } else {
                     std::cout << "Target '" << targetFrom(s) << "' not found\n";
                 }
@@ -310,9 +339,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* f = todo.back();
+                File* todo_file = todo.back();
                 todo.pop_back();
-                for (auto& d : f->dependencies) {
+                for (auto& d : todo_file->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }
@@ -345,7 +374,7 @@ private:
         std::cout << "Version " CURRENT_VERSION "\n";
         std::cout << "\n";
         std::cout << "  Usage:\n";
-        std::cout << "    " << programName << " [--dir <source - directory>] <command>\n";
+        std::cout << "    " << programName << " [--dir <source - directory>] <commands>\n";
         std::cout << "    Source directory is assumed to be the current one if unspecified\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
@@ -399,6 +428,7 @@ private:
       FullLoad,
     } loadStatus;
     bool inferredComponents;
+    bool lastCommandDidNothing;
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> allArgs;
