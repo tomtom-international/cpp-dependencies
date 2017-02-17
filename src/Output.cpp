@@ -21,10 +21,17 @@
 #include <iostream>
 #include <stack>
 
+#ifndef _WIN32
 #define CURSES_CYCLIC_DEPENDENCY "[33m"
 #define CURSES_PUBLIC_DEPENDENCY "[34m"
 #define CURSES_PRIVATE_DEPENDENCY "[36m"
 #define CURSES_RESET_COLOR "[39;49m"
+#else
+#define CURSES_CYCLIC_DEPENDENCY ""
+#define CURSES_PUBLIC_DEPENDENCY ""
+#define CURSES_PRIVATE_DEPENDENCY ""
+#define CURSES_RESET_COLOR ""
+#endif
 
 static const std::string& getLinkColor(Component *a, Component *b) {
     // One of the links in this chain must be broken because it ties together a bundle of apparently unrelated components
@@ -52,8 +59,22 @@ static const char* getShapeForSize(Component* c) {
     }
 }
 
+struct OstreamHolder {
+  OstreamHolder(const filesystem::path& outFile) {
+    if (outFile == "-") {
+      isStdout = true;
+    } else {
+      out.open(outFile);
+    }
+  }
+  ::std::ostream& get() { return isStdout ? std::cout : out; }
+  bool isStdout = false;
+  streams::ofstream out;
+};
+
 void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const filesystem::path &outfile) {
-    streams::ofstream out(outfile);
+    OstreamHolder outHolder(outfile);
+    std::ostream& out = outHolder.get();
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->root.string().size() > 2 &&
@@ -86,7 +107,8 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
 
 void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
                                 const filesystem::path &outfile) {
-    streams::ofstream out(outfile);
+    OstreamHolder outHolder(outfile);
+    std::ostream& out = outHolder.get();
     out << "digraph dependencies {" << '\n';
     for (const auto &c : components) {
         if (c.second->circulars.empty()) {
@@ -108,7 +130,8 @@ void PrintGraphOnTarget(const filesystem::path &outfile, Component *c) {
         std::cout << "Component does not exist (double-check spelling)\n";
         return;
     }
-    streams::ofstream out(outfile);
+    OstreamHolder outHolder(outfile);
+    std::ostream& out = outHolder.get();
 
     std::stack<Component *> todo;
     std::set<Component *> comps;

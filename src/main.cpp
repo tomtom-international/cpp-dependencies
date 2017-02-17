@@ -245,12 +245,18 @@ private:
         filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
-                RegenerateCmakeFilesForComponent(c.second, dryRun);
+                RegenerateCmakeFilesForComponent(c.second, dryRun, false);
             }
         } else {
+            bool writeToStdoutInstead = false;
+            if (args[0] == "-") {
+                dryRun = true; // Can't rewrite actual CMakeFiles if you asked them to be sent to stdout.
+                writeToStdoutInstead = true;
+                args.erase(args.begin());
+            }
             for (auto& s : args) {
                 if (components.find(targetFrom(s)) != components.end()) {
-                    RegenerateCmakeFilesForComponent(components[targetFrom(s)], dryRun);
+                    RegenerateCmakeFilesForComponent(components[targetFrom(s)], dryRun, writeToStdoutInstead);
                 } else {
                     std::cout << "Target '" << targetFrom(s) << "' not found\n";
                 }
