@@ -64,6 +64,14 @@ public:
             RunCommand(it, localEnd);
             it = localEnd;
         }
+        if (lastCommandDidNothing) {
+            std::cout << "\nThe last command you entered did not result in output, so in effect it did nothing.\n";
+            std::cout << "Remember that commands are executed in the order in which they appear on the command-line, so\n";
+            std::cout << "if you want an analysis-changing command (such as --infer) to change the analysis, it has to\n";
+            std::cout << "come before the analysis you want it to affect.\n\n";
+            std::cout << "You can also use this to run an analysis multiple times with a single change between them, or\n";
+            std::cout << "to get various outputs from a single analysis run.\n";
+        }
     }
 private:
     typedef void (Operations::*Command)(std::vector<std::string>);
@@ -125,6 +133,7 @@ private:
         includeLookup.clear();
         ambiguous.clear();
         loadStatus = Unloaded;
+        lastCommandDidNothing = true;
     }
     void Dir(std::vector<std::string> args) {
         if (args.empty()) {
@@ -352,7 +361,7 @@ private:
         std::cout << "Version " CURRENT_VERSION "\n";
         std::cout << "\n";
         std::cout << "  Usage:\n";
-        std::cout << "    " << programName << " [--dir <source - directory>] <command>\n";
+        std::cout << "    " << programName << " [--dir <source - directory>] <commands>\n";
         std::cout << "    Source directory is assumed to be the current one if unspecified\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
@@ -406,6 +415,7 @@ private:
       FullLoad,
     } loadStatus;
     bool inferredComponents;
+    bool lastCommandDidNothing = false;
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> allArgs;
