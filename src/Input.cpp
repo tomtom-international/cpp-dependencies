@@ -44,7 +44,7 @@ bool IsCompileableFile(const std::string& ext) {
 }
 
 static bool IsCode(const std::string &ext) {
-    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm", ".h", ".H", ".hpp" };
+    static const std::unordered_set<std::string> exts = { ".c", ".C", ".cc", ".cpp", ".m", ".mm", ".h", ".H", ".hpp", ".hh" };
     return exts.count(ext) > 0;
 }
 
