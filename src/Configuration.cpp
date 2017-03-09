@@ -25,7 +25,7 @@ static inline std::string Trim(const std::string &s) {
     return s.substr(first, last - first + 1);
 }
 
-void ReadSet(std::unordered_set<std::string>& set,
+static void ReadSet(std::unordered_set<std::string>& set,
              std::istream& in)
 {
   std::string line;
@@ -39,7 +39,7 @@ void ReadSet(std::unordered_set<std::string>& set,
   }
 }
 
-std::string ReadMultilineString(std::istream& in)
+static std::string ReadMultilineString(std::istream& in)
 {
   std::string multiline;
   std::string line;

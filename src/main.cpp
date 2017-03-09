@@ -30,7 +30,7 @@ static bool CheckVersionFile(const Configuration& config) {
     return currentVersion == config.versionUsed;
 }
 
-std::string targetFrom(const std::string &arg) {
+static std::string targetFrom(const std::string &arg) {
     if (arg == "ROOT") {
       return ".";
     }

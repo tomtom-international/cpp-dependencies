@@ -28,7 +28,7 @@
 #endif
 
 #ifdef NO_MEMRCHR
-const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) {
+static const void* memrchr(const void* buffer, unsigned char value, size_t buffersize) {
   const unsigned char* buf = (const unsigned char*)buffer;
   do {
     buffersize--;
