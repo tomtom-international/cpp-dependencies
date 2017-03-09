@@ -80,6 +80,7 @@ void Configuration::read(std::istream& in)
   while (in.good()) {
     std::getline(in, line);
     while (in.good() && line.back() == '\\') {
+      line.resize(line.size() - 1);
       std::string nextLine;
       std::getline(in, nextLine);
       line += nextLine;

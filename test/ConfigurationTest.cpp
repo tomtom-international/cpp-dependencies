@@ -35,10 +35,17 @@ TEST(ReadConfigurationFile)
      << "cycleColor: brown\n"
      << "publicDepColor: black\n"
      << "privateDepColor: grey\n"
-     << "componentLinkLimit: 2\n"
+     << "componentLink\\\n"              // Line continuation support
+     << "Limit: 2\n"
      << "componentLocLowerLimit: 1\n"
      << "componentLocUpperLimit: 123\n"
-     << "fileLocUpperLimit: 567\n";
+     << "fileLocUpperLimit: 567          # could have a comment here\n"
+     << "reuseCustomSections: true\n"
+     << "blacklist: [\n"
+     << "  a.h\n"
+     << "  b.h\n"
+     << "]\n"
+     << "wrongTag: 567\n\n\n";
 
   Configuration config;
   config.read(ss);
@@ -56,6 +63,11 @@ TEST(ReadConfigurationFile)
   ASSERT(config.addLibraryAliases.count("add_library") == 1);
   ASSERT(config.addExecutableAliases.size() == 1);
   ASSERT(config.addExecutableAliases.count("add_executable") == 1);
+  ASSERT(config.blacklist.size() == 2);
+  ASSERT(config.blacklist.count("a.h") == 1);
+  ASSERT(config.blacklist.count("b.h") == 1);
+  ASSERT(config.blacklist.count("stdint.h") == 0);
+  ASSERT(config.reuseCustomSections);
 }
 
 TEST(ReadConfigurationFile_Aliases)
