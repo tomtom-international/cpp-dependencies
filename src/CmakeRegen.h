@@ -27,7 +27,8 @@ struct Configuration;
 
 void RegenerateCmakeFilesForComponent(const Configuration& config,
                                       Component *comp,
-                                      bool dryRun);
+                                      bool dryRun, 
+                                      bool writeToStdout);
 
 void MakeCmakeComment(std::string& cmakeComment,
                       const std::string& contents);

@@ -56,8 +56,8 @@ void MakeCmakeComment(std::string& cmakeComment, const std::string& contents)
     }
 }
 
-void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun) {
-    if (comp->recreate) {
+void RegenerateCmakeFilesForComponent(const Configuration& config, Component *comp, bool dryRun, bool writeToStdout) {
+    if (comp->recreate || writeToStdout) {
         std::string compname = comp->CmakeName();
         bool isHeaderOnly = true;
         std::set<std::string> publicDeps, privateDeps, publicIncl, privateIncl;
@@ -92,7 +92,13 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
         }
 
         {
-            streams::ofstream o(comp->root / "CMakeLists.txt.generated");
+            streams::ofstream out;
+            if (writeToStdout) {
+                std::cout << "######## Start of " << comp->root.generic_string() << "/CMakeLists.txt\n";
+            } else {
+                out.open(comp->root / "CMakeLists.txt.generated");
+            }
+            std::ostream& o = writeToStdout ? std::cout : out;
 
             RegenerateCmakeHeader(o, config);
 
@@ -135,7 +141,10 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
                 o << "add_subdirectory(" << i << ")" << "\n";
             }
         }
-        if (dryRun) {
+        if (writeToStdout) {
+            std::cout << "######## End of " << comp->root.generic_string() << "/CMakeLists.txt\n";
+            // No actual file written.
+        } else if (dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
             } else {

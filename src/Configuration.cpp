@@ -79,6 +79,12 @@ void Configuration::read(std::istream& in)
   std::string line;
   while (in.good()) {
     std::getline(in, line);
+    while (in.good() && line.back() == '\\') {
+      std::string nextLine;
+      std::getline(in, nextLine);
+      line += nextLine;
+    }
+
     size_t pos = line.find_first_of("#");
     if (pos != std::string::npos)
       line.resize(line.find_first_of("#"));
@@ -105,6 +111,7 @@ void Configuration::read(std::istream& in)
     else if (name == "addIgnores") { ReadSet(addIgnores, in); }
     else if (name == "licenseString") { licenseString = ReadMultilineString(in); }
     else if (name == "reuseCustomSections") { reuseCustomSections = (value == "true"); }
+    else if (name == "blacklist") { ReadSet(blacklist, in); }
     else {
       std::cout << "Ignoring unknown tag in configuration file: " << name << "\n";
     }

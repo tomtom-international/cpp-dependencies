@@ -31,9 +31,12 @@ static bool CheckVersionFile(const Configuration& config) {
 }
 
 std::string targetFrom(const std::string &arg) {
+    if (arg == "ROOT") {
+      return ".";
+    }
     std::string target = arg;
     if (!target.empty() && target.back() == '/') {
-        target.pop_back();
+        target.erase(target.end() - 1);
     }
     std::replace(target.begin(), target.end(), '.', '/');
     return "./" + target;
@@ -54,19 +57,6 @@ public:
         }
         RegisterCommands();
         projectRoot = outputRoot = filesystem::current_path();
-        ignorefiles = std::unordered_set<std::string>{
-                "unistd.h",
-                "console.h",
-                "stdint.h",
-                "windows.h",
-                "library.h",
-                "endian.h",
-                "rle.h",
-        };
-        for(auto& it: config.addIgnores)
-        {
-            ignorefiles.insert(it);
-        }
     }
     void RunCommands() {
         if (allArgs.empty()) {
@@ -79,6 +69,14 @@ public:
             while (localEnd != end && ((*localEnd)[0] != '-' || (*localEnd)[1] != '-')) localEnd++;
             RunCommand(it, localEnd);
             it = localEnd;
+        }
+        if (lastCommandDidNothing) {
+            std::cout << "\nThe last command you entered did not result in output, so in effect it did nothing.\n";
+            std::cout << "Remember that commands are executed in the order in which they appear on the command-line, so\n";
+            std::cout << "if you want an analysis-changing command (such as --infer) to change the analysis, it has to\n";
+            std::cout << "come before the analysis you want it to affect.\n\n";
+            std::cout << "You can also use this to run an analysis multiple times with a single change between them, or\n";
+            std::cout << "to get various outputs from a single analysis run.\n";
         }
     }
 private:
@@ -118,9 +116,22 @@ private:
     void LoadProject(bool withLoc = false) {
         if (!withLoc && loadStatus >= FastLoad) return;
         if (withLoc && loadStatus >= FullLoad) return;
-        LoadFileList(config, components, files, ignorefiles, projectRoot, inferredComponents, withLoc);
+        LoadFileList(config, components, files, projectRoot, inferredComponents, withLoc);
         CreateIncludeLookupTable(files, includeLookup, collisions);
         MapFilesToComponents(components, files);
+        ForgetEmptyComponents(components);
+        if (components.size() < 3) {
+            std::cout << "Warning: Analyzing your project resulted in a very low amount of components. This either points to a small project, or\n";
+            std::cout << "to cpp-dependencies not recognizing the components.\n\n";
+
+            std::cout << "It tries to recognize components by the existence of project build files - CMakeLists.txt, Makefiles, MyProject.vcxproj\n";
+            std::cout << "or similar files. If it does not recognize any such files, it will assume everything belongs to the project it is\n";
+            std::cout << "contained in. You can invert this behaviour to assume that any code file will belong to a component local to it - in\n";
+            std::cout << "effect, making every folder of code a single component - by using the --infer option.\n\n";
+
+            std::cout << "Another reason for this warning may be running the tool in a folder that doesn't have any code. You can either change\n";
+            std::cout << "to the desired directory, or use the --dir <myProject> option to make it analyze another directory.\n\n";
+        }
         MapIncludesToDependencies(includeLookup, ambiguous, components, files);
         for (auto &i : ambiguous) {
             for (auto &c : collisions[i.first]) {
@@ -134,6 +145,7 @@ private:
             KillComponent(components, c);
         }
         loadStatus = (withLoc ? FullLoad : FastLoad);
+        lastCommandDidNothing = false;
     }
     void UnloadProject() {
         components.clear();
@@ -142,6 +154,7 @@ private:
         includeLookup.clear();
         ambiguous.clear();
         loadStatus = Unloaded;
+        lastCommandDidNothing = true;
     }
     void Dir(std::vector<std::string> args) {
         if (args.empty()) {
@@ -154,7 +167,7 @@ private:
     void Ignore(std::vector<std::string> args) {
         if (args.empty())
             std::cout << "No files specified to ignore?\n";
-        for (auto& s : args) ignorefiles.insert(s);
+        for (auto& s : args) config.blacklist.insert(s);
         UnloadProject();
     }
     void Infer(std::vector<std::string> ) {
@@ -262,20 +275,26 @@ private:
         filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
-                RegenerateCmakeFilesForComponent(config, c.second, dryRun);
+                RegenerateCmakeFilesForComponent(config, c.second, dryRun, false);
             }
         } else {
+            bool writeToStdoutInstead = false;
+            if (args[0] == "-") {
+                dryRun = true; // Can't rewrite actual CMakeFiles if you asked them to be sent to stdout.
+                writeToStdoutInstead = true;
+                args.erase(args.begin());
+            }
             for (auto& s : args) {
                 const std::string target = targetFrom(s);
                 if (recursive) {
                     for (auto& c : components) {
                         if (strstr(c.first.c_str(), target.c_str())) {
-                            RegenerateCmakeFilesForComponent(config, c.second, dryRun);
+                            RegenerateCmakeFilesForComponent(config, c.second, dryRun, writeToStdoutInstead);
                         }
                     }
                 } else {
                     if (components.find(target) != components.end()) {
-                        RegenerateCmakeFilesForComponent(config, components[target], dryRun);
+                        RegenerateCmakeFilesForComponent(config, components[target], dryRun, writeToStdoutInstead);
                     } else {
                         std::cout << "Target '" << target << "' not found\n";
                     }
@@ -335,9 +354,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* tf = todo.back();
+                File* file_todo = todo.back();
                 todo.pop_back();
-                for (auto& d : tf->dependencies) {
+                for (auto& d : file_todo->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }
@@ -354,9 +373,9 @@ private:
             std::vector<File*> todo;
             todo.push_back(&f.second);
             while (!todo.empty()) {
-                File* tf = todo.back();
+                File* todo_file = todo.back();
                 todo.pop_back();
-                for (auto& d : tf->dependencies) {
+                for (auto& d : todo_file->dependencies) {
                     if (filesIncluded.insert(d).second) todo.push_back(d);
                 }
             }
@@ -393,7 +412,8 @@ private:
         std::cout << "Version " CURRENT_VERSION "\n";
         std::cout << "\n";
         std::cout << "  Usage:\n";
-        std::cout << "    " << programName << " [options] <command>\n";
+        std::cout << "    " << programName << " [--dir <source - directory>] <commands>\n";
+        std::cout << "    Source directory is assumed to be the current one if unspecified\n";
         std::cout << "\n";
         std::cout << "  Commands:\n";
         std::cout << "    --help                           : Produce this help text\n";
@@ -418,29 +438,34 @@ private:
         std::cout << "                                            - files that are not compiled and never included\n";
         std::cout << "    --includesize                    : Calculate the total number of lines added to each file through #include\n";
         std::cout << "\n";
-        std::cout << "    Target information:\n";
+        std::cout << "  Target information:\n";
         std::cout << "    --info                           : Show all information on a given specific target\n";
         std::cout << "    --usedby                         : Find all references to a specific header file\n";
         std::cout << "    --inout                          : Find all incoming and outgoing links for a target\n";
         std::cout << "    --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
-        std::cout << "    Automatic CMakeLists.txt generation:\n";
-        std::cout << "       Note: These commands only have any effect on CMakeLists.txt marked with \"" << config.regenTag << "\"\n";
-        std::cout << "    --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
-        std::cout << "    --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
-        std::cout << "\n";
-        std::cout << "    Refactoring:\n";
+        std::cout << "  Refactoring:\n";
         std::cout << "    --fixincludes <targetname> <desired path> [<relative root>]\n";
         std::cout << "                                     : Unify include paths for headers in <targetname> in  all source files.\n";
         std::cout << "                                       <relative root> can be:\n";
         std::cout << "                                            - \"project\" for absolute paths (default);\n";
         std::cout << "                                            - \"component\" for component-relative paths.\n";
         std::cout << "\n";
-        std::cout << "  Options:\n";
+        std::cout << "  Automatic CMakeLists.txt generation:\n";
+        std::cout << "     Note: These commands only have any effect on CMakeLists.txt marked with \"" << config.regenTag << "\"\n";
+        std::cout << "    --regen                          : Re-generate all marked CMakeLists.txt with the component information derived.\n";
+        std::cout << "    --dryregen                       : Verify which CMakeLists would be regenerated if you were to run --regen now.\n";
+        std::cout << "\n";
+        std::cout << "  What-if analysis:\n";
+        std::cout << "     Note: These commands modify the analysis results and are intended for interactive analysis.\n";
+        std::cout << "           They only affect the commands after their own position in the argument list. You can use them to\n";
+        std::cout << "           analyze twice with a given what-if in between. For example: --stats --ignore myFile.h --stats\n";
+        std::cout << "    --ignore                         : Ignore the following path(s) or file names in the analysis.\n";
+        std::cout << "    --drop                           : Completely remove knowledge of a given component and re-analyze dependencies. Differs\n";
+        std::cout << "                                       from ignoring the component as it will not disambiguate headers that are ambiguous\n";
+        std::cout << "                                       because of this component\n";
+        std::cout << "    --infer                          : Pretend that every folder that holds a source file is also a component.\n";
         std::cout << "    --dir <sourcedirectory>          : Source directory to run in. Assumed current one if unspecified.\n";
-        std::cout << "    --drop <targetname>              : Targets to ignore.\n";
-        std::cout << "    --ignore <filename>              : Files to ignore.\n";
-        std::cout << "    --infer                          : Assume each directory is a component, even if no CMakeLists.txt is present.\n";
         std::cout << "    --recursive                      : If for the following command a single target/directory is specified\n";
         std::cout << "                                       recursively process the underlying targets/directories too.\n";
     }
@@ -451,10 +476,10 @@ private:
       FullLoad,
     } loadStatus;
     bool inferredComponents;
+    bool lastCommandDidNothing;
     std::string programName;
     std::map<std::string, Command> commands;
     std::vector<std::string> allArgs;
-    std::unordered_set<std::string> ignorefiles;
     std::unordered_map<std::string, Component *> components;
     std::unordered_map<std::string, File> files;
     std::map<std::string, std::set<std::string>> collisions;

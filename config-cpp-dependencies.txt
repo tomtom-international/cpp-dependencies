@@ -80,3 +80,19 @@ reuseCustomSections: false
 # Example/test.txt
 # ]
 
+# List of folder paths (from the root) that should be completely ignored. May contain multiple
+# space-separated values, including values with spaces escaped with quotation marks.
+blacklist: [
+  build 
+  Build 
+  Visual Studio Projects
+  unistd.h 
+  console.h 
+  stdint.h 
+  windows.h 
+  library.h 
+  endian.h 
+  rle.h
+]
+
+
