@@ -22,13 +22,14 @@
 
 struct Configuration {
   Configuration();
-  static const Configuration& Get();
+  static Configuration& Get();
   std::string companyName;
   std::string regenTag;
   std::string versionUsed;
   std::string cycleColor;
   std::string publicDepColor;
   std::string privateDepColor;
+  std::vector<std::string> blacklist;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;

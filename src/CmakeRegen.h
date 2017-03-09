@@ -19,6 +19,6 @@
 
 struct Component;
 
-void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun);
+void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun, bool writeToStdout);
 
 #endif
