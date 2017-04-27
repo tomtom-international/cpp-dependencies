@@ -5,7 +5,7 @@
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 [![Release](https://img.shields.io/github/release/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://github.com/tomtom-international/cpp-dependencies/releases)
 
-Copyright (C) 2012-2016, TomTom International BV. All rights reserved.
+Copyright (C) 2012-2017, TomTom International BV. All rights reserved.
 ----
 
 The tool `cpp-dependencies` creates `#include` dependency information for C++ source
@@ -50,11 +50,11 @@ If you want to use Boost::Filesystem instead of std::filesystem, if your platfor
 not have a std::filesystem implementation yet or if you prefer it, add `-DWITH_BOOST` 
 to the invocation of _CMake_. 
 
-for GNU make or open the Visual Studio solution file generated in the build directory.
-
 To build the tool, either execute
 
     make
+
+for GNU make or open the Visual Studio solution file generated in the build directory.
 
 This creates the executable file `cpp-dependencies`.
 
