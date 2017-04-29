@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.1)
 
 project(cpp_dependencies LANGUAGES CXX)
 
-# Enables running the unit tests
-option(WITH_TESTS "Also build unit tests" ON)
+include(CTest)
+
+# Coverage build doesn't work with MSVC
+option(BUILD_COVERAGE "Build cpp_dependencies for coverage" OFF)
 
 if (WIN32)
   set(DEFAULT_BOOST OFF)
@@ -81,8 +83,7 @@ endif()
 
 add_subdirectory(src)
 
-if(WITH_TESTS)
-  enable_testing()
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
