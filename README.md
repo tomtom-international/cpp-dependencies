@@ -1,5 +1,6 @@
 # Read Me for Dependency Checker
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/69bd30706d964c308f78466aa138f64e)](https://www.codacy.com/app/rijnb/cpp-dependencies?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tomtom-international/cpp-dependencies&amp;utm_campaign=Badge_Grade)
 [![Mac/Linux Build Status](https://img.shields.io/travis/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://travis-ci.org/tomtom-international/cpp-dependencies)
 [![Windows Build Status](https://img.shields.io/appveyor/ci/rijnb/cpp-dependencies.svg)](https://ci.appveyor.com/project/rijnb/cpp-dependencies)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
