@@ -65,6 +65,7 @@ TEST(FindCircularDependenciesSeesLargeCycle) {
 
   FindCircularDependencies(components);
 
+  ASSERT(NodesWithCycles(components) == 5);
   ASSERT(a->circulars.size() == 1);
   ASSERT(*a->circulars.begin() == b);
   ASSERT(b->circulars.size() == 1);
@@ -77,4 +78,21 @@ TEST(FindCircularDependenciesSeesLargeCycle) {
   ASSERT(*e->circulars.begin() == a);
 }
 
+TEST(FindCircularDependenciesSeesNoCycleAfterDroppingOneComponent) {
+  std::unordered_map<std::string, Component *> components;
+  Component* a = components["a"] = new Component("a");
+  Component* b = components["b"] = new Component("b");
+  Component* c = components["c"] = new Component("c");
+  Component* d = components["d"] = new Component("d");
+  Component* e = components["e"] = new Component("e");
+  a->pubDeps.insert(b);
+  b->privDeps.insert(c);
+  c->pubDeps.insert(d);
+  d->privDeps.insert(e);
+  e->pubDeps.insert(a);
+
+  FindCircularDependencies(components);
+  KillComponent(components, "a");
+  ASSERT(NodesWithCycles(components) == 0);
+}
 

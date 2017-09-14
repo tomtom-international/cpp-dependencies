@@ -53,9 +53,8 @@ TEST(Input_Aliases)
 
   std::unordered_map<std::string, Component*> components;
   std::unordered_map<std::string, File> files;
-  std::unordered_set<std::string> ignorefiles;
 
-  LoadFileList(config, components, files, ignorefiles, workDir(), true, false);
+  LoadFileList(config, components, files, workDir(), true, false);
 
   ASSERT(components.size() == 5);
 

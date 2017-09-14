@@ -4,6 +4,7 @@ script:
   - cmake ${CMAKEFLAGS} -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC} ..
   - make
   - make test
+  - make package
 
 sudo: required
 dist: trusty
@@ -22,6 +23,20 @@ matrix:
         - brew update
         - brew outdated cmake || brew upgrade cmake
       env: CMAKEFLAGS="-DWITH_BOOST=ON -DHAS_MEMRCHR=OFF" CXX=clang++
+    - compiler: gcc
+      os: linux
+      dist: precise
+      sudo: false
+      addons:
+        apt:
+          sources:
+            - george-edison55-precise-backports
+          packages:
+            - cmake
+            - cmake-data
+            - libboost-system-dev
+            - libboost-filesystem-dev
+      env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=g++-4.6
     - compiler: gcc
       os: linux
       addons:
@@ -43,7 +58,7 @@ matrix:
           packages:
             - g++-5
             - cmake
-      env: CMAKEFLAGS="-DWITH_BOOST=OFF" CXX=g++-5 
+      env: CMAKEFLAGS="-DWITH_BOOST=OFF" CXX=g++-5
     - compiler: clang
       os: linux
       addons:
