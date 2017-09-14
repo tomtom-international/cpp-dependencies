@@ -1,4 +1,6 @@
 #include "test.h"
+#include "TestUtils.h"
+
 #include "Component.h"
 #include "Configuration.h"
 #include "Constants.h"
@@ -6,33 +8,6 @@
 #include "FilesystemInclude.h"
 #include "FstreamInclude.h"
 #include <sstream>
-
-class TemporaryWorkingDirectory
-{
-public:
-  TemporaryWorkingDirectory(const char* name)
-  {
-    originalDir = filesystem::current_path();
-    workDir = filesystem::temp_directory_path() / name;
-    ASSERT(filesystem::create_directories(workDir));
-    filesystem::current_path(workDir);
-  }
-
-  ~TemporaryWorkingDirectory()
-  {
-    filesystem::current_path(originalDir);
-    filesystem::remove_all(workDir);
-  }
-
-  const filesystem::path& operator()() const
-  {
-    return workDir;
-  }
-
-private:
-  filesystem::path originalDir;
-  filesystem::path workDir;
-};
 
 void CreateCMakeProject(const std::string projectName,
                         const std::string alias,

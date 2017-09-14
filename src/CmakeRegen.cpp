@@ -114,14 +114,6 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
                 RegenerateCmakeTargetIncludeDirectories(o, publicIncl, privateIncl, isHeaderOnly);
                 RegenerateCmakeAddDependencies(o, *comp);
             }
-            // Add existing subdirectories that contain a CMakeLists file
-            filesystem::directory_iterator it(comp->root), end;
-            std::set<std::string> items;
-            for (; it != end; ++it) {
-                if (filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
-                    items.insert(it->path().filename().generic_string());
-                }
-            }
 
             if (comp->hasAddonCmake) {
                 o << "include(CMakeAddon.txt)" << "\n";
@@ -131,9 +123,7 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
                 o << comp->additionalCmakeDeclarations;
             }
 
-            for (auto &i : items) {
-                o << "add_subdirectory(" << i << ")" << "\n";
-            }
+            RegenerateCmakeAddSubdirectory(o, *comp);
         }
         if (dryRun) {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
@@ -171,6 +161,19 @@ void RegenerateCmakeAddDependencies(std::ostream& o, const Component& comp) {
             o << "  " << s << "\n";
         }
         o << ")\n\n";
+    }
+}
+
+void RegenerateCmakeAddSubdirectory(std::ostream& o,
+                                    const Component& comp)
+{
+    filesystem::directory_iterator it(comp.root), end;
+    for (; it != end; ++it) {
+        if (filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
+            o << "add_subdirectory("
+              << it->path().filename().generic_string()
+              << ")\n";
+        }
     }
 }
 

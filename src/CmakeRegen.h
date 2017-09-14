@@ -34,6 +34,8 @@ void MakeCmakeComment(std::string& cmakeComment,
 
 void RegenerateCmakeAddDependencies(std::ostream& o,
                                     const Component& comp);
+void RegenerateCmakeAddSubdirectory(std::ostream& o,
+                                    const Component& comp);
 void RegenerateCmakeAddTarget(std::ostream& o,
                               const Configuration& config,
                               const Component& comp,

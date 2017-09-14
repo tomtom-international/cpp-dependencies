@@ -1,5 +1,7 @@
 #include "test.h"
+#include "TestUtils.h"
 
+#include <fstream>
 #include <sstream>
 
 #include "CmakeRegen.h"
@@ -412,3 +414,37 @@ TEST(RegenerateCmakeAddTarget_Executable) {
   ASSERT(oss.str() == expectedOutput);
 }
 
+TEST(RegenerateCmakeAddSubdirectory_NoSubDirs) {
+  TemporaryWorkingDirectory workdir(name);
+  filesystem::create_directories(workdir() / "MyComponent");
+
+  Component comp("./MyComponent/");
+
+  const std::string expectedOutput("");
+
+  std::ostringstream oss;
+  RegenerateCmakeAddSubdirectory(oss, comp);
+
+  ASSERT(oss.str() == expectedOutput);
+}
+
+TEST(RegenerateCmakeAddSubdirectory_SubDirsWithAndWithoutCmakeLists) {
+  TemporaryWorkingDirectory workdir(name);
+  filesystem::create_directories(workdir() / "MyComponent");
+  filesystem::create_directories(workdir() / "MyComponent" / "SubComponentA");
+  std::ofstream((workdir() / "MyComponent" / "SubComponentA" / "CMakeLists.txt").c_str()).close();
+  filesystem::create_directories(workdir() / "MyComponent" / "SubComponentB");
+  std::ofstream((workdir() / "MyComponent" / "SubComponentB" / "CMakeLists.txt").c_str()).close();
+  filesystem::create_directories(workdir() / "MyComponent" / "Data");
+
+  Component comp("./MyComponent/");
+
+  const std::string expectedOutput(
+    "add_subdirectory(SubComponentA)\n"
+    "add_subdirectory(SubComponentB)\n");
+
+  std::ostringstream oss;
+  RegenerateCmakeAddSubdirectory(oss, comp);
+
+  ASSERT(oss.str() == expectedOutput);
+}
