@@ -446,5 +446,6 @@ TEST(RegenerateCmakeAddSubdirectory_SubDirsWithAndWithoutCmakeLists) {
   std::ostringstream oss;
   RegenerateCmakeAddSubdirectory(oss, comp);
 
+  std::cout << std::endl << oss.str() << std::endl;
   ASSERT(oss.str() == expectedOutput);
 }
