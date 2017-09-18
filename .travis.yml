@@ -3,7 +3,7 @@ script:
   - cd build
   - cmake ${CMAKEFLAGS} -DCMAKE_CXX_COMPILER=${CXX} -DCMAKE_C_COMPILER=${CC} ..
   - make
-  - make test
+  - make CTEST_OUTPUT_ON_FAILURE=1 test
   - make package
 
 sudo: required
