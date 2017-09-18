@@ -429,20 +429,19 @@ TEST(RegenerateCmakeAddSubdirectory_NoSubDirs) {
 }
 
 TEST(RegenerateCmakeAddSubdirectory_SubDirsWithAndWithoutCmakeLists) {
-  // TODO: Subdirectories are not sorted before adding to CMake. Needs fixing.
   TemporaryWorkingDirectory workdir(name);
   filesystem::create_directories(workdir() / "MyComponent");
   filesystem::create_directories(workdir() / "MyComponent" / "SubComponentA");
   std::ofstream((workdir() / "MyComponent" / "SubComponentA" / "CMakeLists.txt").c_str()).close();
   filesystem::create_directories(workdir() / "MyComponent" / "SubComponentB");
-  //std::ofstream((workdir() / "MyComponent" / "SubComponentB" / "CMakeLists.txt").c_str()).close();
+  std::ofstream((workdir() / "MyComponent" / "SubComponentB" / "CMakeLists.txt").c_str()).close();
   filesystem::create_directories(workdir() / "MyComponent" / "Data");
 
   Component comp("./MyComponent/");
 
   const std::string expectedOutput(
-    "add_subdirectory(SubComponentA)\n");
-//    "add_subdirectory(SubComponentB)\n");
+    "add_subdirectory(SubComponentA)\n"
+    "add_subdirectory(SubComponentB)\n");
 
   std::ostringstream oss;
   RegenerateCmakeAddSubdirectory(oss, comp);
