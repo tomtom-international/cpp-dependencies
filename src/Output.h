@@ -20,25 +20,26 @@
 #include "FilesystemInclude.h"
 #include <unordered_set>
 #include <vector>
+#include <functional>
 
 struct Component;
 
-void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components,
+void OutputFlatDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components,
                             const filesystem::path &outfile);
-void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
+void OutputCircularDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components,
                                 const filesystem::path &outfile);
-void PrintGraphOnTarget(const filesystem::path &outfile, Component *c);
+void PrintGraphOnTarget(const Configuration& config, const filesystem::path &outfile, Component *c);
 void PrintAllComponents(std::unordered_map<std::string, Component *> &components,
                         const char* description,
-                        bool (*)(const Component&));
-void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&));
+                        std::function<bool (const Component&)>);
+void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, std::function<bool(const File&)>);
 void FindAndPrintCycleFrom(Component *origin, Component *c, std::unordered_set<Component *> alreadyHad,
                            std::vector<Component *> order);
 void PrintCyclesForTarget(Component *c);
 void PrintLinksForTarget(Component *c);
 void PrintInfoOnTarget(Component *c);
-void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to);
-void UpdateIncludes(std::unordered_map<std::string, File>& files, Component* component, const std::string& desiredPath, bool isAbsolute);
+void FindSpecificLink(const Configuration& config, std::unordered_map<std::string, File>& files, Component *from, Component *to);
+void UpdateIncludes(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, Component* component, const std::string& desiredPath, bool isAbsolute);
 
 #endif
 

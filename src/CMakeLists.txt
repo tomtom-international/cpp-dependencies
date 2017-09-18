@@ -1,4 +1,4 @@
-add_library(cpp_dependencies_lib STATIC
+set(LIB_HEADERS
   Analysis.h
   CmakeRegen.h
   Component.h
@@ -6,7 +6,9 @@ add_library(cpp_dependencies_lib STATIC
   Constants.h
   Input.h
   Output.h
+)
 
+set(LIB_SOURCES
   Analysis.cpp
   CmakeRegen.cpp
   Component.cpp
@@ -14,6 +16,11 @@ add_library(cpp_dependencies_lib STATIC
   generated.cpp
   Input.cpp
   Output.cpp
+)
+
+add_library(cpp_dependencies_lib STATIC
+  ${LIB_HEADERS}
+  ${LIB_SOURCES}
 )
 target_compile_options(cpp_dependencies_lib
   PUBLIC 
@@ -31,26 +38,14 @@ target_include_directories(cpp_dependencies_lib
 )
 
 add_library(cpp_dependencies_coverage STATIC
-  Analysis.h
-  CmakeRegen.h
-  Component.h
-  Configuration.h
-  Constants.h
-  Input.h
-  Output.h
-
-  Analysis.cpp
-  CmakeRegen.cpp
-  Component.cpp
-  Configuration.cpp
-  generated.cpp
-  Input.cpp
-  Output.cpp
+  ${LIB_HEADERS}
+  ${LIB_SOURCES}
 )
 target_compile_options(cpp_dependencies_coverage
   PUBLIC 
     ${COMPILE_FLAGS}
     --coverage
+    -g
 )
 target_link_libraries(cpp_dependencies_coverage
   PRIVATE 

@@ -18,22 +18,28 @@
 #define __DEP_CHECKER__CONFIGURATION_H
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 struct Configuration {
   Configuration();
-  static Configuration& Get();
+  void read(std::istream& inputFile);
   std::string companyName;
+  std::string licenseString;
   std::string regenTag;
+  std::string cmakeVersion;
   std::string versionUsed;
   std::string cycleColor;
   std::string publicDepColor;
   std::string privateDepColor;
-  std::vector<std::string> blacklist;
+  std::unordered_set<std::string> addLibraryAliases;
+  std::unordered_set<std::string> addExecutableAliases;
+  std::unordered_set<std::string> addIgnores;
+  std::unordered_set<std::string> blacklist;
   size_t componentLinkLimit;
   size_t componentLocLowerLimit;
   size_t componentLocUpperLimit;
   size_t fileLocUpperLimit;
+  bool reuseCustomSections;
 };
 
 #endif
