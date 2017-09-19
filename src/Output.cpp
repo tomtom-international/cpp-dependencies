@@ -33,15 +33,15 @@
 #define CURSES_RESET_COLOR ""
 #endif
 
-static const std::string& getLinkColor(Component *a, Component *b) {
+static const std::string& getLinkColor(const Configuration& config, Component *a, Component *b) {
     // One of the links in this chain must be broken because it ties together a bundle of apparently unrelated components
     if (a->circulars.find(b) != a->circulars.end()) {
-        return Configuration::Get().cycleColor;
+        return config.cycleColor;
     }
     if (a->pubDeps.find(b) != a->pubDeps.end()) {
-        return Configuration::Get().publicDepColor;
+        return config.publicDepColor;
     }
-    return Configuration::Get().privateDepColor;
+    return config.privateDepColor;
 }
 
 static const char* getShapeForSize(Component* c) {
@@ -73,7 +73,7 @@ struct OstreamHolder {
   streams::ofstream out;
 };
 
-void OutputFlatDependencies(std::unordered_map<std::string, Component *> &components, const filesystem::path &outfile) {
+void OutputFlatDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components, const filesystem::path &outfile) {
     OstreamHolder outHolder(outfile);
     std::ostream& out = outHolder.get();
     out << "digraph dependencies {" << '\n';
@@ -89,7 +89,7 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c.second->QuotedName() << " -> " << d->QuotedName() << " [color="
-                        << getLinkColor(c.second, d) << "];" << '\n';
+                        << getLinkColor(config, c.second, d) << "];" << '\n';
                 }
             }
         }
@@ -98,7 +98,7 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
                     out << "  " << c.second->QuotedName() << " -> " << d->QuotedName() << " [color="
-                        << getLinkColor(c.second, d) << "];" << '\n';
+                        << getLinkColor(config, c.second, d) << "];" << '\n';
                 }
             }
         }
@@ -106,7 +106,7 @@ void OutputFlatDependencies(std::unordered_map<std::string, Component *> &compon
     out << "}" << '\n';
 }
 
-void OutputCircularDependencies(std::unordered_map<std::string, Component *> &components,
+void OutputCircularDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components,
                                 const filesystem::path &outfile) {
     OstreamHolder outHolder(outfile);
     std::ostream& out = outHolder.get();
@@ -120,13 +120,13 @@ void OutputCircularDependencies(std::unordered_map<std::string, Component *> &co
 
         for (const auto &t : c.second->circulars) {
             out << "  " << c.second->QuotedName() << " -> " << t->QuotedName() << " [color="
-                << getLinkColor(c.second, t) << "];" << '\n';
+                << getLinkColor(config, c.second, t) << "];" << '\n';
         }
     }
     out << "}" << '\n';
 }
 
-void PrintGraphOnTarget(const filesystem::path &outfile, Component *c) {
+void PrintGraphOnTarget(const Configuration& config, const filesystem::path &outfile, Component *c) {
     if (!c) {
         std::cout << "Component does not exist (double-check spelling)\n";
         return;
@@ -150,7 +150,7 @@ void PrintGraphOnTarget(const filesystem::path &outfile, Component *c) {
             if (d->root.string().size() > 2 &&
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
-                    out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(c2, d)
+                    out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(config, c2, d)
                         << "];" << '\n';
                 }
                 if (comps.insert(d).second) {
@@ -162,7 +162,7 @@ void PrintGraphOnTarget(const filesystem::path &outfile, Component *c) {
             if (d->root.string().size() > 2 &&
                 d->files.size()) {
                 if (depcomps.insert(d).second) {
-                    out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(c2, d)
+                    out << "  " << c2->QuotedName() << " -> " << d->QuotedName() << " [color=" << getLinkColor(config, c2, d)
                         << "];" << '\n';
                 }
                 if (comps.insert(d).second) {
@@ -248,7 +248,7 @@ void PrintInfoOnTarget(Component *c) {
     std::cout << '\n';
 }
 
-void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, bool (*predicate)(const Component&)) {
+void PrintAllComponents(std::unordered_map<std::string, Component *> &components, const char* description, std::function<bool(const Component&)> predicate) {
   std::vector<std::string> selected;
   for (auto& c : components) {
     if (predicate(*c.second)) {
@@ -265,7 +265,7 @@ void PrintAllComponents(std::unordered_map<std::string, Component *> &components
   std::cout << '\n';
 }
 
-void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, bool (*predicate)(const File&)) {
+void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* description, std::function<bool(const File&)> predicate) {
   std::vector<std::string> selected;
   for (auto& f : files) {
     if (predicate(f.second)) {
@@ -282,7 +282,7 @@ void PrintAllFiles(std::unordered_map<std::string, File>& files, const char* des
   std::cout << '\n';
 }
 
-void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *from, Component *to) {
+void FindSpecificLink(const Configuration& config, std::unordered_map<std::string, File>& files, Component *from, Component *to) {
     std::unordered_map<Component *, Component *> parents;
     std::unordered_set<Component *> alreadyHad;
     std::deque<Component *> tocheck;
@@ -302,10 +302,10 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
                 while (!links.empty()) {
                     Component *c2 = links.back();
                     links.pop_back();
-                    std::string color = getLinkColor(p, c2);
-                    if (color == Configuration::Get().cycleColor) {
+                    std::string color = getLinkColor(config, p, c2);
+                    if (color == config.cycleColor) {
                         std::cout << CURSES_CYCLIC_DEPENDENCY;
-                    } else if (color == Configuration::Get().publicDepColor) {
+                    } else if (color == config.publicDepColor) {
                         std::cout << CURSES_PUBLIC_DEPENDENCY;
                     } else {
                         std::cout << CURSES_PRIVATE_DEPENDENCY;
@@ -344,4 +344,68 @@ void FindSpecificLink(std::unordered_map<std::string, File>& files, Component *f
 
     std::cout << "No path could be found from " << from->NiceName('.') << " to " << to->NiceName('.') << '\n';
 }
+
+static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, File* from, Component* comp, const std::string& desiredPath, bool isAbsolute) {
+    filesystem::path newName = from->path.generic_string() + ".new";
+    {
+        streams::ifstream in(from->path);
+        streams::ofstream out(newName.generic_string().c_str());
+        while (in.good()) {
+            bool isReplacement = false;
+            std::string line;
+            std::getline(in, line);
+            const char* l = strstr(line.c_str(), "#");
+            if (l && (l = strstr(l, "include"))) {
+                const char* start = strstr(l, "<");
+                const char* end;
+                if (start) {
+                    end = strstr(start + 1, ">");
+                } else {
+                    start = strstr(l, "\"");
+                    end = start ? strstr(start+1, "\"") : nullptr;
+                }
+                if (start && end) {
+                    std::string includePath(start+1, end);
+                    std::string lowerPath;
+                    std::transform(includePath.begin(), includePath.end(), std::back_inserter(lowerPath), ::tolower);
+                    std::string postLookup = includeLookup[lowerPath];
+                    if (!postLookup.empty() && postLookup != "INVALID" && files.find(postLookup) != files.end()) {
+                        File* f = &files.find(postLookup)->second;
+                        std::string path = f->path.generic_string();
+                        std::string pathToStrip = (isAbsolute ? "." : comp->root.generic_string()) + "/";
+                        if (desiredPath != ".") pathToStrip += desiredPath + "/";
+                        std::string newInclude = path.substr(pathToStrip.size());
+                        std::string componentPath = comp->root.generic_string();
+                        // Don't make an include ambiguous by doing this change
+                        if (includeLookup[newInclude] != "INVALID" && path.compare(0, componentPath.size(), componentPath) == 0 && path.compare(0, pathToStrip.size(), pathToStrip) == 0) {
+                            isReplacement = true;
+                            if (from->component == f->component) {
+                                out << "#include \"" + newInclude + "\"\n";
+                            } else {
+                                out << "#include <" + newInclude + ">\n";
+                            }
+                        }
+                    }
+                }
+            }
+            if (!isReplacement) {
+                out << line << '\n';
+            }
+        }
+    }
+    filesystem::rename(newName, from->path);
+}
+
+void UpdateIncludes(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, Component* component, const std::string& desiredPath, bool isAbsolute) {
+    for (auto& p : files) {
+        for (auto& d : p.second.dependencies) {
+            if (component->files.find(d) != component->files.end()) {
+                UpdateIncludeFor(files, includeLookup, &p.second, component, desiredPath, isAbsolute);
+                std::cout << p.second.path.generic_string() << "\n";
+                break;
+            }
+        }
+    }
+}
+
 

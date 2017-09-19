@@ -42,6 +42,9 @@
 obj
 cpp-dependencies
 cpp-dependencies-unittests
+build
+test/unittests
+Testing
 
 MSVC/x64/Debug/
 MSVC/*.opendb

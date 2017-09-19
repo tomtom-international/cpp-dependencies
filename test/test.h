@@ -12,8 +12,9 @@ protected:
   { 
     firstTest = this; 
   }
-private:
+protected:
   const char* name;
+private:
   Test* nextTest;
   static Test* firstTest;
 };

@@ -17,8 +17,39 @@
 #ifndef __DEP_CHECKER__CMAKEREGEN_H
 #define __DEP_CHECKER__CMAKEREGEN_H
 
-struct Component;
+#include <list>
+#include <ostream>
+#include <set>
+#include <string>
 
-void RegenerateCmakeFilesForComponent(Component *comp, bool dryRun, bool writeToStdout);
+struct Component;
+struct Configuration;
+
+void RegenerateCmakeFilesForComponent(const Configuration& config,
+                                      Component *comp,
+                                      bool dryRun, 
+                                      bool writeToStdout);
+
+void MakeCmakeComment(std::string& cmakeComment,
+                      const std::string& contents);
+
+void RegenerateCmakeAddDependencies(std::ostream& o,
+                                    const Component& comp);
+void RegenerateCmakeAddSubdirectory(std::ostream& o,
+                                    const Component& comp);
+void RegenerateCmakeAddTarget(std::ostream& o,
+                              const Configuration& config,
+                              const Component& comp,
+                              const std::list<std::string>& files,
+                              bool isHeaderOnly);
+void RegenerateCmakeHeader(std::ostream& o, const Configuration& config);
+void RegenerateCmakeTargetIncludeDirectories(std::ostream& o,
+                                             const std::set<std::string>& publicIncl,
+                                             const std::set<std::string>& privateIncl,
+                                             bool isHeaderOnly);
+void RegenerateCmakeTargetLinkLibraries(std::ostream& o,
+                                        const std::set<std::string>& publicDeps,
+                                        const std::set<std::string>& privateDeps,
+                                        bool isHeaderOnly);
 
 #endif
