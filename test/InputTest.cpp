@@ -9,8 +9,8 @@
 #include "FstreamInclude.h"
 #include <sstream>
 
-void CreateCMakeProject(const std::string projectName,
-                        const std::string alias,
+void CreateCMakeProject(const std::string& projectName,
+                        const std::string& alias,
                         const filesystem::path& workDir)
 {
   filesystem::create_directories(workDir / projectName);
