@@ -87,7 +87,7 @@ struct Component {
     bool hasAddonCmake;
     std::string type;
     size_t index, lowlink;
-    std::string additionalTargetParameters;
+    std::set<std::string> additionalTargetParameters;
     std::string additionalCmakeDeclarations;
     bool onStack;
 };
@@ -106,5 +106,3 @@ void CreateIncludeLookupTable(std::unordered_map<std::string, File>& files,
                               std::map<std::string, std::set<std::string>> &collisions);
 
 #endif
-
-

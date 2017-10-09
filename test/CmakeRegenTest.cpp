@@ -299,7 +299,7 @@ TEST(RegenerateCmakeTargetLinkLibraries_Interface) {
 TEST(RegenerateCmakeAddTarget_Interface) {
   Component comp("./MyComponent/");
   comp.type = "add_library";
-  comp.additionalTargetParameters = "  EXCLUDE_FROM_ALL\n";
+  comp.additionalTargetParameters = { "EXCLUDE_FROM_ALL" };
 
   Configuration config;
 
@@ -312,8 +312,7 @@ TEST(RegenerateCmakeAddTarget_Interface) {
   };
 
   const std::string expectedOutput(
-      "add_library(${PROJECT_NAME} INTERFACE\n"
-      "  EXCLUDE_FROM_ALL\n"
+      "add_library(${PROJECT_NAME} EXCLUDE_FROM_ALL INTERFACE\n"
       ")\n"
       "\n");
 
@@ -326,7 +325,7 @@ TEST(RegenerateCmakeAddTarget_Interface) {
 TEST(RegenerateCmakeAddTarget_Library) {
   Component comp("./MyComponent/");
   comp.type = "add_library";
-  comp.additionalTargetParameters = "  EXCLUDE_FROM_ALL\n";
+  comp.additionalTargetParameters = { "EXCLUDE_FROM_ALL" };
 
   Configuration config;
 
@@ -339,11 +338,10 @@ TEST(RegenerateCmakeAddTarget_Library) {
   };
 
   const std::string expectedOutput(
-      "add_library(${PROJECT_NAME} STATIC\n"
+      "add_library(${PROJECT_NAME} EXCLUDE_FROM_ALL\n"
       "  Analysis.cpp\n"
       "  Analysis.h\n"
       "  main.cpp\n"
-      "  EXCLUDE_FROM_ALL\n"
       ")\n"
       "\n");
 
@@ -356,7 +354,7 @@ TEST(RegenerateCmakeAddTarget_Library) {
 TEST(RegenerateCmakeAddTarget_LibraryAlias) {
   Component comp("./MyComponent/");
   comp.type = "add_library_alias";
-  comp.additionalTargetParameters = "  EXCLUDE_FROM_ALL\n";
+  comp.additionalTargetParameters = { "EXCLUDE_FROM_ALL" };
 
   Configuration config;
   config.addLibraryAliases.insert("add_library_alias");
@@ -370,11 +368,10 @@ TEST(RegenerateCmakeAddTarget_LibraryAlias) {
   };
 
   const std::string expectedOutput(
-      "add_library_alias(${PROJECT_NAME} STATIC\n"
+      "add_library_alias(${PROJECT_NAME} EXCLUDE_FROM_ALL\n"
       "  Analysis.cpp\n"
       "  Analysis.h\n"
       "  main.cpp\n"
-      "  EXCLUDE_FROM_ALL\n"
       ")\n"
       "\n");
 
@@ -387,7 +384,7 @@ TEST(RegenerateCmakeAddTarget_LibraryAlias) {
 TEST(RegenerateCmakeAddTarget_Executable) {
   Component comp("./MyComponent/");
   comp.type = "add_executable";
-  comp.additionalTargetParameters = "  EXCLUDE_FROM_ALL\n";
+  comp.additionalTargetParameters = { "EXCLUDE_FROM_ALL" };
 
   Configuration config;
 
@@ -400,11 +397,10 @@ TEST(RegenerateCmakeAddTarget_Executable) {
   };
 
   const std::string expectedOutput(
-      "add_executable(${PROJECT_NAME}\n"
+      "add_executable(${PROJECT_NAME} EXCLUDE_FROM_ALL\n"
       "  Analysis.cpp\n"
       "  Analysis.h\n"
       "  main.cpp\n"
-      "  EXCLUDE_FROM_ALL\n"
       ")\n"
       "\n");
 

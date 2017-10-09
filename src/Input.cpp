@@ -208,7 +208,7 @@ static bool IsItemBlacklisted(const Configuration& config, const filesystem::pat
         if (pathS.compare(2, s.size(), s) == 0) {
             return true;
         }
-        if (s == fileName) 
+        if (s == fileName)
             return true;
     }
     return false;
@@ -250,42 +250,27 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
     Component &comp = AddComponentDefinition(components, path.parent_path());
     bool inTargetDefinition = false;
     bool inAutoSection = false;
-    int parenLevel = 0;
+    int parentLevel = 0;
     do {
         getline(in, line);
         if (strstr(line.c_str(), config.regenTag.c_str())) {
             comp.recreate = true;
             continue;
         }
-        if (line.size() > 0 && line[0] == '#') {
+        if ((line.size() > 0 && line[0] == '#') || line.empty()) {
             continue;
         }
-        int newParenLevel = parenLevel + std::count(line.begin(), line.end(), '(')
+        int newParentLevel = parentLevel + std::count(line.begin(), line.end(), '(')
                                 - std::count(line.begin(), line.end(), ')');
         if (strstr(line.c_str(), "project(") == line.c_str()) {
             size_t end = line.find(')');
             if (end != line.npos) {
                 comp.name = line.substr(8, end - 8);
             }
-        }
-        else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
+        } else if (TryGetComponentType(comp, config.addLibraryAliases, line)) {
             inTargetDefinition = true;
         } else if (TryGetComponentType(comp, config.addExecutableAliases, line)) {
             inTargetDefinition = true;
-        } else if (inTargetDefinition) {
-            const size_t endOfLine = (newParenLevel == 0) ? line.find_last_of(')')
-                                                          : line.length();
-            if (endOfLine > 0) {
-                const std::string targetLine(line.substr(0, endOfLine));
-                if (!strstr(targetLine.c_str(), "${IMPLEMENTATION_SOURCES}") &&
-                    !strstr(targetLine.c_str(), "${IMPLEMENTATION_HEADERS}") &&
-                    !IsCode(filesystem::path(targetLine).extension().generic_string())) {
-                    comp.additionalTargetParameters.append(targetLine + '\n');
-                }
-            }
-            if (newParenLevel == 0) {
-                inTargetDefinition = false;
-            }
         } else if (config.reuseCustomSections) {
             if (IsAutomaticlyGeneratedSection(line))
             {
@@ -295,13 +280,30 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
                     comp.additionalCmakeDeclarations.append(line + '\n');
                 }
             }
-            if (inAutoSection && newParenLevel == 0) {
+            if (inAutoSection && newParentLevel == 0) {
                 inAutoSection = false;
             }
         }
-        parenLevel = newParenLevel;
+        if (inTargetDefinition) {
+            const size_t endOfLine = (newParentLevel == 0) ? line.find_last_of(')')
+                                                           : line.length();
+            if (endOfLine > 0) {
+                const std::string targetLine(line.substr(0, endOfLine));
+                static const std::unordered_set<std::string> cmakeTargetParameters = { "ALIAS", "EXCLUDE_FROM_ALL", "GLOBAL", "IMPORTED", "INTERFACE", "MACOSX_BUNDLE", "MODULE", "OBJECT", "STATIC", "SHARED", "UNKNOWN", "WIN32" };
+                for (auto& cmakeTargetParameter : cmakeTargetParameters) {
+                  int pos = targetLine.find(cmakeTargetParameter.c_str());
+                  if (pos != std::string::npos) {
+                    comp.additionalTargetParameters.insert(cmakeTargetParameter);
+                  }
+                }
+            }
+            if (newParentLevel == 0) {
+                inTargetDefinition = false;
+            }
+        }
+        parentLevel = newParentLevel;
     } while (in.good());
-    assert(parenLevel == 0 || (printf("final level of parentheses=%d\n", parenLevel), 0));
+    assert(parentLevel == 0 || (printf("final level of parentheses=%d\n", parentLevel), 0));
 }
 
 void LoadFileList(const Configuration& config,
@@ -327,7 +329,7 @@ void LoadFileList(const Configuration& config,
             it.disable_recursion_pending();
 #endif
             continue;
-        }       
+        }
 
         if (inferredComponents) AddComponentDefinition(components, parent);
 
@@ -352,5 +354,3 @@ void ForgetEmptyComponents(std::unordered_map<std::string, Component *> &compone
       ++it;
   }
 }
-
-

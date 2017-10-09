@@ -103,7 +103,7 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
             RegenerateCmakeHeader(o, config);
 
             if (comp->root == ".") {
-                // Do this for the user, so that you don't get a warning on either 
+                // Do this for the user, so that you don't get a warning on either
                 // not doing this, or doing this in the addon file.
                 o << "cmake_minimum_required(VERSION " << config.cmakeVersion << ")\n";
             }
@@ -186,30 +186,31 @@ void RegenerateCmakeAddSubdirectory(std::ostream& o,
     for (auto subdir : subdirs) {
         o << "add_subdirectory(" << subdir << ")\n";
     }
-        
+
 }
 
 void RegenerateCmakeAddTarget(std::ostream& o,
                               const Configuration& config,
-                              const Component& comp,
+                              Component& comp,
                               const std::list<std::string>& files,
                               bool isHeaderOnly) {
     o << comp.type << "(${PROJECT_NAME}";
 
     if (isHeaderOnly) {
-        o << " INTERFACE\n";
-    } else {
-        if (config.addLibraryAliases.count(comp.type) == 1) {
-            o << " STATIC\n";
-        } else {
-            o << "\n";
-        }
+        comp.additionalTargetParameters.insert("INTERFACE");
+    }
+    if (!comp.additionalTargetParameters.empty()) {
+      for (auto &s : comp.additionalTargetParameters) {
+          o << " " << s;
+      }
+    }
+    o << "\n";
 
+    if (!isHeaderOnly) {
         for (auto &f : files) {
             o << "  " << f << "\n";
         }
     }
-    o << comp.additionalTargetParameters;
     o << ")\n\n";
 }
 
