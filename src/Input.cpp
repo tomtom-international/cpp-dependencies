@@ -276,7 +276,7 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
             {
                 inAutoSection = true;
             } else {
-                if (!inAutoSection && !line.empty()) {
+                if (!inAutoSection && !line.empty() && !inTargetDefinition) {
                     comp.additionalCmakeDeclarations.append(line + '\n');
                 }
             }
@@ -291,10 +291,10 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
                 const std::string targetLine(line.substr(0, endOfLine));
                 static const std::unordered_set<std::string> cmakeTargetParameters = { "ALIAS", "EXCLUDE_FROM_ALL", "GLOBAL", "IMPORTED", "INTERFACE", "MACOSX_BUNDLE", "MODULE", "OBJECT", "STATIC", "SHARED", "UNKNOWN", "WIN32" };
                 for (auto& cmakeTargetParameter : cmakeTargetParameters) {
-                  int pos = targetLine.find(cmakeTargetParameter.c_str());
-                  if (pos != std::string::npos) {
-                    comp.additionalTargetParameters.insert(cmakeTargetParameter);
-                  }
+                    int pos = targetLine.find(cmakeTargetParameter.c_str());
+                    if (pos != std::string::npos) {
+                        comp.additionalTargetParameters.insert(cmakeTargetParameter);
+                    }
                 }
             }
             if (newParentLevel == 0) {
