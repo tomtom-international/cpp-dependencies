@@ -262,10 +262,12 @@ void LoadFileList(std::unordered_map<std::string, Component *> &components,
 
         if (inferredComponents) AddComponentDefinition(components, parent);
 
-        if (it->path().filename() == "CMakeLists.txt") {
-            ReadCmakelist(components, it->path());
-        } else if (filesystem::is_regular_file(it->status())) {
-            if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
+        if (fileName == "src" || fileName == "include") AddComponentDefinition(components, parent);
+
+        if (filesystem::is_regular_file(it->status())) {
+            if (it->path().filename() == "CMakeLists.txt") {
+                ReadCmakelist(components, it->path());
+            } else if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string().c_str())) {
                 ReadCode(files, it->path(), withLoc);
