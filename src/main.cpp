@@ -408,6 +408,22 @@ private:
                 i->includeCount++;
             }
         }
+        struct entry {
+            std::string path;
+            size_t includecount, loc;
+            size_t impact;
+            entry(const std::string& path, size_t includecount, size_t loc)
+            : path(path)
+            , includecount(includecount)
+            , loc(loc) 
+            {
+                impact = includecount * loc;
+            }
+            bool operator<(const entry& other) {
+                return impact > other.impact;
+            }
+        };
+        std::vector<entry> entries;
         for (auto& f : files) {
             if (!f.second.hasInclude) continue;
             std::set<File*> filesIncluded;
@@ -423,9 +439,12 @@ private:
             size_t total = 0;
             for (auto& i : filesIncluded) total += i->loc;
             if (f.second.includeCount > 0 && total > 0) {
-                std::cout << total << " LOC used " << f.second.includeCount << " times from " << f.second.path.string() << "\n";
-                std::cout << "impact " << f.second.includeCount * total << " for " << f.second.path.string() << "\n";
+                entries.push_back(entry(f.second.path.string(), f.second.includeCount, total));
             }
+        }
+        std::sort(entries.begin(), entries.end());
+        for (auto& entry : entries) {
+            std::cout << "impact=" << entry.impact << " LOC=" << entry.loc << " count=" << entry.includecount << " name=" << entry.path << "\n";
         }
     }
     void Ambiguous(std::vector<std::string>) {
