@@ -419,7 +419,7 @@ private:
             {
                 impact = includecount * loc;
             }
-            bool operator<(const entry& other) {
+            bool operator<(const entry& other) const {
                 return impact > other.impact;
             }
         };
