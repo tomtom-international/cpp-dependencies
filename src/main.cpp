@@ -103,6 +103,7 @@ private:
         commands["--shortest"] = &Operations::Shortest;
         commands["--stats"] = &Operations::Stats;
         commands["--usedby"] = &Operations::UsedBy;
+        commands["--includeorigin"] = &Operations::IncludeOrigin;
     }
     void RunCommand(std::vector<std::string>::iterator &arg, std::vector<std::string>::iterator &end) {
         std::string lowerCommand;
@@ -270,6 +271,46 @@ private:
             }
         }
     }
+    void IncludeOrigin(std::vector<std::string> args) {
+        LoadProject();
+        if (args.size() != 2) {
+            std::cout << "IncludeOrigin requires origin file and include to find.\n";
+            return;
+        }
+        std::unordered_map<File*, File*> localReverseIncludeMapping;
+        std::vector<File*> todo;
+        if (files.find("./" + args[0]) == files.end()) {
+            std::cout << "Cannot find target file\n";
+            return;
+        }
+        if (files.find("./" + args[1]) == files.end()) {
+            std::cout << "Cannot find source file\n";
+            return;
+        }
+        todo.push_back(&files.find("./" + args[0])->second);
+
+        // Build mapping of all includes reached from this file, and the nearer file that includes it
+        while (!todo.empty()) {
+            File* current = todo.back();
+            todo.pop_back();
+            for (auto& dep : current->dependencies) {
+                if (localReverseIncludeMapping.find(dep) != localReverseIncludeMapping.end()) continue;
+                localReverseIncludeMapping[dep] = current;
+                todo.push_back(dep);
+            }
+        }
+
+        // Now the target file has to be in the mapping. Find the file, and then print the path until we get to the root file.
+        File* target = &files.find("./" + args[1])->second;
+        if (localReverseIncludeMapping.find(target) == localReverseIncludeMapping.end()) {
+            std::cout << args[0] << " does not include " << args[1] << "\n";
+        } else {
+            while (target) {
+                std::cout << target->path.string() << "\n";
+                target = localReverseIncludeMapping[target];
+            }
+        }
+    }
     void DoActualRegen(std::vector<std::string> args, bool dryRun) {
         LoadProject();
         filesystem::current_path(projectRoot);
@@ -367,6 +408,22 @@ private:
                 i->includeCount++;
             }
         }
+        struct entry {
+            std::string path;
+            size_t includecount, loc;
+            size_t impact;
+            entry(const std::string& path, size_t includecount, size_t loc)
+            : path(path)
+            , includecount(includecount)
+            , loc(loc) 
+            {
+                impact = includecount * loc;
+            }
+            bool operator<(const entry& other) const {
+                return impact > other.impact;
+            }
+        };
+        std::vector<entry> entries;
         for (auto& f : files) {
             if (!f.second.hasInclude) continue;
             std::set<File*> filesIncluded;
@@ -382,9 +439,12 @@ private:
             size_t total = 0;
             for (auto& i : filesIncluded) total += i->loc;
             if (f.second.includeCount > 0 && total > 0) {
-                std::cout << total << " LOC used " << f.second.includeCount << " times from " << f.second.path.string() << "\n";
-                std::cout << "impact " << f.second.includeCount * total << " for " << f.second.path.string() << "\n";
+                entries.push_back(entry(f.second.path.string(), f.second.includeCount, total));
             }
+        }
+        std::sort(entries.begin(), entries.end());
+        for (auto& entry : entries) {
+            std::cout << "impact=" << entry.impact << " LOC=" << entry.loc << " count=" << entry.includecount << " name=" << entry.path << "\n";
         }
     }
     void Ambiguous(std::vector<std::string>) {
@@ -441,6 +501,7 @@ private:
         std::cout << "  Target information:\n";
         std::cout << "    --info                           : Show all information on a given specific target\n";
         std::cout << "    --usedby                         : Find all references to a specific header file\n";
+        std::cout << "    --includeorigin                  : Find a path from a given source file to a given header file. Both should be full paths\n";
         std::cout << "    --inout                          : Find all incoming and outgoing links for a target\n";
         std::cout << "    --ambiguous                      : Find all include statements that could refer to more than one header\n";
         std::cout << "\n";
