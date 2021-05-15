@@ -6,6 +6,8 @@
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 [![Release](https://img.shields.io/github/release/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://github.com/tomtom-international/cpp-dependencies/releases)
 
+[![Snap store badge](https://camo.githubusercontent.com/353bcf397acd2a7663c45bc69cd2b202417a66c24d3b38f861f9cc0fe1a25324/68747470733a2f2f736e617063726166742e696f2f7374617469632f696d616765732f6261646765732f656e2f736e61702d73746f72652d77686974652e737667)](https://snapcraft.io/cpp-dependencies)
+
 Copyright (C) 2012-2017, TomTom International BV. All rights reserved.
 ----
 
