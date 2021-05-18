@@ -27,7 +27,7 @@ struct Configuration;
 
 void RegenerateCmakeFilesForComponent(const Configuration& config,
                                       Component *comp,
-                                      bool dryRun, 
+                                      bool dryRun,
                                       bool writeToStdout);
 
 void MakeCmakeComment(std::string& cmakeComment,
@@ -39,7 +39,7 @@ void RegenerateCmakeAddSubdirectory(std::ostream& o,
                                     const Component& comp);
 void RegenerateCmakeAddTarget(std::ostream& o,
                               const Configuration& config,
-                              const Component& comp,
+                              Component& comp,
                               const std::list<std::string>& files,
                               bool isHeaderOnly);
 void RegenerateCmakeHeader(std::ostream& o, const Configuration& config);

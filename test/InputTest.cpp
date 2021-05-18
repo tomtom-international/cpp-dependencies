@@ -74,3 +74,29 @@ TEST(Input_Aliases)
     }
   }
 }
+
+TEST(Input_AdditionalTargetParameters)
+{
+  TemporaryWorkingDirectory workDir(name);
+
+  {
+    streams::ofstream out(workDir() / "CMakeLists.txt");
+    out << "project(TestProject)\n"
+        << "add_library(${PROJECT_NAME} SHARED EXCLUDE_FROM_ALL somesourcefile.cpp)\n";
+  }
+
+  Configuration config;
+
+  std::unordered_map<std::string, Component*> components;
+  std::unordered_map<std::string, File> files;
+
+  LoadFileList(config, components, files, workDir(), true, false);
+
+  ASSERT(components.size() == 1);
+
+  for (auto& pair : components) {
+    const Component& comp = *pair.second;
+    ASSERT(comp.additionalTargetParameters.size() == 2);
+    ASSERT(*comp.additionalTargetParameters.begin() == "EXCLUDE_FROM_ALL");
+  }
+}
