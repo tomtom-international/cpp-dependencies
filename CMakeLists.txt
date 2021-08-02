@@ -9,6 +9,7 @@ option(BUILD_COVERAGE "Build cpp_dependencies for coverage" OFF)
 
 if (WIN32)
   set(DEFAULT_BOOST OFF)
+  add_compile_definitions(_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING)
 else()
   set(DEFAULT_BOOST ON)
 endif()
