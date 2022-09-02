@@ -260,6 +260,12 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
         if (line.size() > 0 && line[0] == '#') {
             continue;
         }
+        size_t start = line.find("\"");
+        while (start != std::string::npos) {
+            size_t end = line.find("\"", start+1);
+            line.replace(start+1, end - start - 1, "");
+            start = line.find("\"", start+2);
+        }
         int newParenLevel = parenLevel + std::count(line.begin(), line.end(), '(')
                                 - std::count(line.begin(), line.end(), ')');
         if (strstr(line.c_str(), "project(") == line.c_str()) {
@@ -318,7 +324,7 @@ void LoadFileList(const Configuration& config,
         const auto &parent = it->path().parent_path();
 
         // skip hidden files and dirs
-        const auto& fileName = it->path().filename().generic_string();
+        std::string fileName = it->path().filename().generic_string();
         if ((fileName.size() >= 2 && fileName[0] == '.') ||
             IsItemBlacklisted(config, it->path())) {
 #ifdef WITH_BOOST
