@@ -15,6 +15,7 @@
  */
 
 #include "Component.h"
+#include <cstring>
 
 void CreateIncludeLookupTable(std::unordered_map<std::string, File>& files,
                               std::unordered_map<std::string, std::string> &includeLookup,

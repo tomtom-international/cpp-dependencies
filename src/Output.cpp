@@ -18,6 +18,7 @@
 #include "Configuration.h"
 #include "FstreamInclude.h"
 #include "Output.h"
+#include <cstring>
 #include <iostream>
 #include <stack>
 
