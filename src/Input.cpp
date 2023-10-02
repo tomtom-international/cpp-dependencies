@@ -20,6 +20,7 @@
 #include "Input.h"
 #include <algorithm>
 #include <assert.h>
+#include <cstring>
 
 #ifdef WITH_MMAP
 #include <fcntl.h>

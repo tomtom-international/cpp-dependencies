@@ -23,6 +23,7 @@
 #include "FstreamInclude.h"
 #include "Input.h"
 #include "Output.h"
+#include <cstring>
 #include <iostream>
 
 static bool CheckVersionFile(const Configuration& config) {
