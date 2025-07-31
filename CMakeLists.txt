@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 4.0)
 
 project(cpp_dependencies LANGUAGES CXX)
 
@@ -45,7 +45,7 @@ elseif(WIN32)
 endif()
 set(CPACK_GENERATOR "${DEFAULT_CPACK_GENERATOR}" CACHE STRING "Package type to generate with CPack")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES GNU)
