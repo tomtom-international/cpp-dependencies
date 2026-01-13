@@ -39,20 +39,12 @@ limitations under the License.
 
 # Build and run
 
-The tool depends on Boost.Filesystem being available and usable. Installing this
-should be done with your platform's package management system, such as Apt, 
-Pacman or Brew.
-
 The build configuration is created with _CMake_.
 To create the build configuration for your build system (GNU make, MSBuild/Visual Studio)
 create a build directory outside this source directory and run
 
     cmake <PATH_TO_THIS_SOURCE_DIR>
     
-If you want to use Boost::Filesystem instead of std::filesystem, if your platform does 
-not have a std::filesystem implementation yet or if you prefer it, add `-DWITH_BOOST` 
-to the invocation of _CMake_. 
-
 To build the tool, either execute
 
     make

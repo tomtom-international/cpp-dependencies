@@ -34,8 +34,6 @@ matrix:
           packages:
             - cmake
             - cmake-data
-            - libboost-system-dev
-            - libboost-filesystem-dev
       env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=g++-4.6
     - compiler: gcc
       os: linux
@@ -46,8 +44,6 @@ matrix:
           packages:
             - g++-4.9
             - cmake
-            - libboost-system-dev
-            - libboost-filesystem-dev
       env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=g++-4.9
     - compiler: gcc
       os: linux
@@ -69,8 +65,6 @@ matrix:
           packages:
             - clang-3.6
             - cmake
-            - libboost-system-dev
-            - libboost-filesystem-dev
       env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=clang++-3.6
     - compiler: clang
       os: linux
@@ -82,6 +76,4 @@ matrix:
           packages:
             - clang-3.7
             - cmake
-            - libboost-system-dev
-            - libboost-filesystem-dev
       env: CMAKEFLAGS="-DWITH_BOOST=ON" CXX=clang++-3.7

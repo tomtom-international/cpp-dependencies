@@ -17,18 +17,17 @@
 #include "CmakeRegen.h"
 #include "Component.h"
 #include "Configuration.h"
-#include "FstreamInclude.h"
-#include "FilesystemInclude.h"
 #include "Input.h"
 #include <list>
 #include <set>
+#include <filesystem>
+#include <fstream>
 
-
-static bool FilesAreDifferent(const filesystem::path &a, const filesystem::path &b) {
-    if (filesystem::file_size(a) != filesystem::file_size(b)) {
+static bool FilesAreDifferent(const std::filesystem::path &a, const std::filesystem::path &b) {
+    if (std::filesystem::file_size(a) != std::filesystem::file_size(b)) {
         return true;
     }
-    streams::ifstream as(a), bs(b);
+    std::ifstream as(a), bs(b);
     std::string l1, l2;
     while (as.good() && bs.good()) {
         getline(as, l1);
@@ -64,7 +63,7 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
         std::list<std::string> files;
         for (auto &fp : comp->files) {
             files.push_back(fp->path.generic_string().c_str() + compname.size() + 3);
-            filesystem::path p = fp->path;
+            std::filesystem::path p = fp->path;
             if (fp->hasInclude) {
                 (fp->hasExternalInclude ? publicIncl : privateIncl).insert(fp->includePaths.begin(),
                                                                            fp->includePaths.end());
@@ -92,7 +91,7 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
         }
 
         {
-            streams::ofstream out;
+            std::ofstream out;
             if (writeToStdout) {
                 std::cout << "######## Start of " << comp->root.generic_string() << "/CMakeLists.txt\n";
             } else {
@@ -138,12 +137,12 @@ void RegenerateCmakeFilesForComponent(const Configuration& config, Component *co
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
                 std::cout << "Difference detected at " << comp->root << "\n";
             }
-            filesystem::remove(comp->root / "CMakeLists.txt.generated");
+            std::filesystem::remove(comp->root / "CMakeLists.txt.generated");
         } else {
             if (FilesAreDifferent(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt")) {
-                filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
+                std::filesystem::rename(comp->root / "CMakeLists.txt.generated", comp->root / "CMakeLists.txt");
             } else {
-                filesystem::remove(comp->root / "CMakeLists.txt.generated");
+                std::filesystem::remove(comp->root / "CMakeLists.txt.generated");
             }
         }
     }
@@ -177,9 +176,9 @@ void RegenerateCmakeAddSubdirectory(std::ostream& o,
 {
     // Temporary uses a set to sort subdirectories
     std::set<std::string> subdirs;
-    filesystem::directory_iterator it(comp.root), end;
+    std::filesystem::directory_iterator it(comp.root), end;
     for (; it != end; ++it) {
-        if (filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
+        if (std::filesystem::is_regular_file(it->path() / "CMakeLists.txt")) {
             subdirs.insert(it->path().filename().generic_string());
         }
     }

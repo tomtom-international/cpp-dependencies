@@ -16,7 +16,7 @@
 
 #include "Configuration.h"
 #include "Constants.h"
-#include "FstreamInclude.h"
+#include <fstream>
 #include <iostream>
 #include <stdlib.h>
 

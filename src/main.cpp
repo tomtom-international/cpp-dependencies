@@ -19,8 +19,8 @@
 #include "Component.h"
 #include "Configuration.h"
 #include "Constants.h"
-#include "FilesystemInclude.h"
-#include "FstreamInclude.h"
+#include <filesystem>
+#include <fstream>
 #include "Input.h"
 #include "Output.h"
 #include <cstring>
@@ -52,12 +52,12 @@ public:
     , allArgs(argv+1, argv+argc)
     , recursive(false)
     {
-        if (filesystem::is_regular_file(CONFIG_FILE)) {
-            streams::ifstream in(CONFIG_FILE);
+        if (std::filesystem::is_regular_file(CONFIG_FILE)) {
+            std::ifstream in(CONFIG_FILE);
             config.read(in);
         }
         RegisterCommands();
-        projectRoot = outputRoot = filesystem::current_path();
+        projectRoot = outputRoot = std::filesystem::current_path();
     }
     void RunCommands() {
         if (allArgs.empty()) {
@@ -314,7 +314,7 @@ private:
     }
     void DoActualRegen(std::vector<std::string> args, bool dryRun) {
         LoadProject();
-        filesystem::current_path(projectRoot);
+        std::filesystem::current_path(projectRoot);
         if (args.empty()) {
             for (auto &c : components) {
                 RegenerateCmakeFilesForComponent(config, c.second, dryRun, false);
@@ -548,7 +548,7 @@ private:
     std::unordered_map<std::string, std::string> includeLookup;
     std::map<std::string, std::vector<std::string>> ambiguous;
     std::set<std::string> deleteComponents;
-    filesystem::path outputRoot, projectRoot;
+    std::filesystem::path outputRoot, projectRoot;
     bool recursive;
 };
 

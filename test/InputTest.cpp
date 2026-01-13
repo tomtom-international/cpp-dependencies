@@ -5,16 +5,16 @@
 #include "Configuration.h"
 #include "Constants.h"
 #include "Input.h"
-#include "FilesystemInclude.h"
-#include "FstreamInclude.h"
+#include <filesystem>
+#include <fstream>
 #include <sstream>
 
 void CreateCMakeProject(const std::string& projectName,
                         const std::string& alias,
-                        const filesystem::path& workDir)
+                        const std::filesystem::path& workDir)
 {
-  filesystem::create_directories(workDir / projectName);
-  streams::ofstream out(workDir / projectName / "CMakeLists.txt");
+  std::filesystem::create_directories(workDir / projectName);
+  std::ofstream out(workDir / projectName / "CMakeLists.txt");
   out << "project(" << projectName << ")\n"
       << alias << "(${PROJECT_NAME}\n"
       << "  somesourcefile.cpp\n"
@@ -31,7 +31,7 @@ TEST(Input_Aliases)
   CreateCMakeProject("Service", "add_service", workDir());
 
   {
-    streams::ofstream out(workDir() / "CMakeLists.txt");
+    std::ofstream out(workDir() / "CMakeLists.txt");
     out << "add_subdirectory(Renderer)\n"
         << "add_subdirectory(UI)\n"
         << "add_subdirectory(DrawTest)\n"

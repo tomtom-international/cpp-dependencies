@@ -16,7 +16,7 @@
 
 #include "Component.h"
 #include "Configuration.h"
-#include "FstreamInclude.h"
+#include <fstream>
 #include "Output.h"
 #include <cstring>
 #include <iostream>
@@ -61,7 +61,7 @@ static const char* getShapeForSize(Component* c) {
 }
 
 struct OstreamHolder {
-  OstreamHolder(const filesystem::path& outFile) {
+  OstreamHolder(const std::filesystem::path& outFile) {
     if (outFile == "-") {
       isStdout = true;
     } else {
@@ -71,10 +71,10 @@ struct OstreamHolder {
   }
   ::std::ostream& get() { return isStdout ? std::cout : out; }
   bool isStdout;
-  streams::ofstream out;
+  std::ofstream out;
 };
 
-void OutputFlatDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components, const filesystem::path &outfile) {
+void OutputFlatDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components, const std::filesystem::path &outfile) {
     OstreamHolder outHolder(outfile);
     std::ostream& out = outHolder.get();
     out << "digraph dependencies {" << '\n';
@@ -108,7 +108,7 @@ void OutputFlatDependencies(const Configuration& config, std::unordered_map<std:
 }
 
 void OutputCircularDependencies(const Configuration& config, std::unordered_map<std::string, Component *> &components,
-                                const filesystem::path &outfile) {
+                                const std::filesystem::path &outfile) {
     OstreamHolder outHolder(outfile);
     std::ostream& out = outHolder.get();
     out << "digraph dependencies {" << '\n';
@@ -127,7 +127,7 @@ void OutputCircularDependencies(const Configuration& config, std::unordered_map<
     out << "}" << '\n';
 }
 
-void PrintGraphOnTarget(const Configuration& config, const filesystem::path &outfile, Component *c) {
+void PrintGraphOnTarget(const Configuration& config, const std::filesystem::path &outfile, Component *c) {
     if (!c) {
         std::cout << "Component does not exist (double-check spelling)\n";
         return;
@@ -347,10 +347,10 @@ void FindSpecificLink(const Configuration& config, std::unordered_map<std::strin
 }
 
 static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, File* from, Component* comp, const std::string& desiredPath, bool isAbsolute) {
-    filesystem::path newName = from->path.generic_string() + ".new";
+    std::filesystem::path newName = from->path.generic_string() + ".new";
     {
-        streams::ifstream in(from->path);
-        streams::ofstream out(newName.generic_string().c_str());
+        std::ifstream in(from->path);
+        std::ofstream out(newName.generic_string().c_str());
         while (in.good()) {
             bool isReplacement = false;
             std::string line;
@@ -394,7 +394,7 @@ static void UpdateIncludeFor(std::unordered_map<std::string, File>& files, std::
             }
         }
     }
-    filesystem::rename(newName, from->path);
+    std::filesystem::rename(newName, from->path);
 }
 
 void UpdateIncludes(std::unordered_map<std::string, File>& files, std::unordered_map<std::string, std::string> &includeLookup, Component* component, const std::string& desiredPath, bool isAbsolute) {

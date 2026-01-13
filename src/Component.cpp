@@ -15,6 +15,7 @@
  */
 
 #include "Component.h"
+#include <filesystem>
 
 std::string Component::NiceName(char sub) const {
     if (root.string() == ".") {
@@ -34,7 +35,7 @@ std::string Component::CmakeName() const {
     return (recreate || name.empty()) ? NiceName('.') : name;
 }
 
-Component::Component(const filesystem::path &path)
+Component::Component(const std::filesystem::path &path)
         : root(path), name(""), recreate(false), hasAddonCmake(false), type("add_library"), index(0), lowlink(0), onStack(false) {
 }
 
@@ -50,7 +51,7 @@ std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &
 }
 
 Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components,
-                                  const filesystem::path &path) {
+                                  const std::filesystem::path &path) {
     Component *&comp = components[path.generic_string()];
     if (!comp) {
         comp = new Component(path);

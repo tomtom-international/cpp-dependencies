@@ -1,29 +1,31 @@
-#include "FilesystemInclude.h"
+#pragma once
+
+#include <filesystem>
 
 class TemporaryWorkingDirectory
 {
 public:
   TemporaryWorkingDirectory(const char* name)
   {
-    originalDir = filesystem::current_path();
-    workDir = filesystem::temp_directory_path() / name;
-    ASSERT(filesystem::create_directories(workDir));
-    filesystem::current_path(workDir);
+    originalDir = std::filesystem::current_path();
+    workDir = std::filesystem::temp_directory_path() / name;
+    ASSERT(std::filesystem::create_directories(workDir));
+    std::filesystem::current_path(workDir);
   }
 
   ~TemporaryWorkingDirectory()
   {
-    filesystem::current_path(originalDir);
-    filesystem::remove_all(workDir);
+    std::filesystem::current_path(originalDir);
+    std::filesystem::remove_all(workDir);
   }
 
-  const filesystem::path& operator()() const
+  const std::filesystem::path& operator()() const
   {
     return workDir;
   }
 
 private:
-  filesystem::path originalDir;
-  filesystem::path workDir;
+  std::filesystem::path originalDir;
+  std::filesystem::path workDir;
 };
 

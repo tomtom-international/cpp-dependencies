@@ -18,8 +18,8 @@
 #define __DEP_CHECKER__COMPONENT_H
 
 
-#include "FilesystemInclude.h"
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <regex>
@@ -34,7 +34,7 @@
 struct Component;
 
 struct File {
-    File(const filesystem::path& path)
+    File(const std::filesystem::path& path)
     : path(path)
     , component(NULL)
     , loc(0)
@@ -47,7 +47,7 @@ struct File {
     void AddIncludeStmt(bool withPointyBrackets, const std::string& filename) {
         rawIncludes.insert(std::make_pair(filename, withPointyBrackets));
     }
-    filesystem::path path;
+    std::filesystem::path path;
     std::map<std::string, bool> rawIncludes;
     std::unordered_set<File *> dependencies;
     std::unordered_set<std::string> includePaths;
@@ -65,9 +65,9 @@ struct Component {
 
     std::string CmakeName() const;
 
-    explicit Component(const filesystem::path &path);
+    explicit Component(const std::filesystem::path &path);
 
-    filesystem::path root;
+    std::filesystem::path root;
     std::string name;
     // deps are the dependencies of your component
     std::unordered_set<Component *> pubDeps;
@@ -95,7 +95,7 @@ struct Component {
 std::vector<std::string> SortedNiceNames(const std::unordered_set<Component *> &comps);
 
 Component &AddComponentDefinition(std::unordered_map<std::string, Component *> &components,
-                                  const filesystem::path &path );
+                                  const std::filesystem::path &path );
 
 size_t NodesWithCycles(std::unordered_map<std::string, Component *> &components);
 
