@@ -92,11 +92,11 @@ set(CPACK_PACKAGE_VENDOR "TomTom International BV")
 set(CPACK_PACKAGE_CONTACT "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tool to check C++ #include dependencies
- The tool cpp-dependencies creates #include dependency information for C++
- source code files, which it derives from scanning a full source tree.
- .
- The dependency information is output as .dot files, which can be visualized
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tool to check C++ #include dependencies \
+ The tool cpp-dependencies creates #include dependency information for C++ \
+ source code files, which it derives from scanning a full source tree. \
+ . \
+ The dependency information is output as .dot files, which can be visualized \
  in, for example, GraphViz.")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE https://github.com/tomtom-international/cpp-dependencies)
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS graphviz)
