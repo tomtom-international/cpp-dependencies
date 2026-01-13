@@ -8,12 +8,6 @@ include(CTest)
 option(BUILD_COVERAGE "Build cpp_dependencies for coverage" OFF)
 
 if (WIN32)
-  set(DEFAULT_BOOST OFF)
-else()
-  set(DEFAULT_BOOST ON)
-endif()
-
-if (WIN32)
   set(DEFAULT_MMAP OFF)
 else()
   set(DEFAULT_MMAP ON)
