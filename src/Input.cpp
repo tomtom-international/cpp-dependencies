@@ -16,7 +16,8 @@
 
 #include "Component.h"
 #include "Configuration.h"
-#include "FstreamInclude.h"
+#include <filesystem>
+#include <fstream>
 #include "Input.h"
 #include <algorithm>
 #include <assert.h>
@@ -181,28 +182,28 @@ static void ReadCodeFrom(File& f, const char* buffer, size_t buffersize, bool wi
 }
 
 #ifdef WITH_MMAP
-static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path, bool withLoc) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const std::filesystem::path &path, bool withLoc) {
     File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     int fd = open(path.c_str(), O_RDONLY);
-    size_t fileSize = filesystem::file_size(path);
+    size_t fileSize = std::filesystem::file_size(path);
     void* p = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
     ReadCodeFrom(f, static_cast<const char*>(p), fileSize, withLoc);
     munmap(p, fileSize);
     close(fd);
 }
 #else
-static void ReadCode(std::unordered_map<std::string, File>& files, const filesystem::path &path, bool withLoc) {
+static void ReadCode(std::unordered_map<std::string, File>& files, const std::filesystem::path &path, bool withLoc) {
     File& f = files.insert(std::make_pair(path.generic_string(), File(path))).first->second;
     std::string buffer;
-    buffer.resize(filesystem::file_size(path));
+    buffer.resize(std::filesystem::file_size(path));
     {
-        streams::ifstream(path).read(&buffer[0], buffer.size());
+        std::ifstream(path).read(&buffer[0], buffer.size());
     }
     ReadCodeFrom(f, buffer.data(), buffer.size(), withLoc);
 }
 #endif
 
-static bool IsItemBlacklisted(const Configuration& config, const filesystem::path &path) {
+static bool IsItemBlacklisted(const Configuration& config, const std::filesystem::path &path) {
     std::string pathS = path.generic_string();
     std::string fileName = path.filename().generic_string();
     for (auto& s : config.blacklist) {
@@ -245,8 +246,8 @@ static bool IsAutomaticlyGeneratedSection(std::string line) {
 }
 
 static void ReadCmakelist(const Configuration& config, std::unordered_map<std::string, Component *> &components,
-                          const filesystem::path &path) {
-    streams::ifstream in(path);
+                          const std::filesystem::path &path) {
+    std::ifstream in(path);
     std::string line;
     Component &comp = AddComponentDefinition(components, path.parent_path());
     bool inTargetDefinition = false;
@@ -286,7 +287,7 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
                 const std::string targetLine(line.substr(0, endOfLine));
                 if (!strstr(targetLine.c_str(), "${IMPLEMENTATION_SOURCES}") &&
                     !strstr(targetLine.c_str(), "${IMPLEMENTATION_HEADERS}") &&
-                    !IsCode(filesystem::path(targetLine).extension().generic_string())) {
+                    !IsCode(std::filesystem::path(targetLine).extension().generic_string())) {
                     comp.additionalTargetParameters.append(targetLine + '\n');
                 }
             }
@@ -314,13 +315,13 @@ static void ReadCmakelist(const Configuration& config, std::unordered_map<std::s
 void LoadFileList(const Configuration& config,
                   std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
-                  const filesystem::path& sourceDir,
+                  const std::filesystem::path& sourceDir,
                   bool inferredComponents,
                   bool withLoc) {
-    filesystem::path outputpath = filesystem::current_path();
-    filesystem::current_path(sourceDir.c_str());
+    std::filesystem::path outputpath = std::filesystem::current_path();
+    std::filesystem::current_path(sourceDir.c_str());
     AddComponentDefinition(components, ".");
-    for (filesystem::recursive_directory_iterator it("."), end;
+    for (std::filesystem::recursive_directory_iterator it("."), end;
          it != end; ++it) {
         const auto &parent = it->path().parent_path();
 
@@ -340,7 +341,7 @@ void LoadFileList(const Configuration& config,
 
         if (it->path().filename() == "CMakeLists.txt") {
             ReadCmakelist(config, components, it->path());
-        } else if (filesystem::is_regular_file(it->status())) {
+        } else if (std::filesystem::is_regular_file(it->status())) {
             if (it->path().generic_string().find("CMakeAddon.txt") != std::string::npos) {
                 AddComponentDefinition(components, parent).hasAddonCmake = true;
             } else if (IsCode(it->path().extension().generic_string())) {
@@ -348,7 +349,7 @@ void LoadFileList(const Configuration& config,
             }
         }
     }
-    filesystem::current_path(outputpath);
+    std::filesystem::current_path(outputpath);
 }
 
 void ForgetEmptyComponents(std::unordered_map<std::string, Component *> &components) {

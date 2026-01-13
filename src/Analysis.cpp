@@ -15,6 +15,7 @@
  */
 
 #include "Analysis.h"
+#include <filesystem>
 
 static void StrongConnect(std::vector<Component*> &stack, size_t& index, Component* c) {
   c->index = c->lowlink = index++;
@@ -105,7 +106,7 @@ void MapIncludesToDependencies(std::unordered_map<std::string, std::string> &inc
         for (auto &p : fp.second.rawIncludes) {
             // If this is a non-pointy bracket include, see if there's a local match first. 
             // If so, it always takes precedence, never needs an include path added, and never is ambiguous (at least, for the compiler).
-            std::string fullFilePath = (filesystem::path(fp.first).parent_path() / p.first).generic_string();
+            std::string fullFilePath = (std::filesystem::path(fp.first).parent_path() / p.first).generic_string();
             if (!p.second && files.count(fullFilePath)) {
                 // This file exists as a local include.
                 File* dep = &files.find(fullFilePath)->second;

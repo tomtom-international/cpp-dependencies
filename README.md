@@ -1,14 +1,11 @@
 # Read Me for Dependency Checker
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/69bd30706d964c308f78466aa138f64e)](https://www.codacy.com/app/rijnb/cpp-dependencies?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tomtom-international/cpp-dependencies&amp;utm_campaign=Badge_Grade)
-[![Mac/Linux Build Status](https://img.shields.io/travis/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://travis-ci.org/tomtom-international/cpp-dependencies)
-[![Windows Build Status](https://img.shields.io/appveyor/ci/rijnb/cpp-dependencies.svg)](https://ci.appveyor.com/project/rijnb/cpp-dependencies)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 [![Release](https://img.shields.io/github/release/tomtom-international/cpp-dependencies.svg?maxAge=3600)](https://github.com/tomtom-international/cpp-dependencies/releases)
 
 [![Snap store badge](https://camo.githubusercontent.com/353bcf397acd2a7663c45bc69cd2b202417a66c24d3b38f861f9cc0fe1a25324/68747470733a2f2f736e617063726166742e696f2f7374617469632f696d616765732f6261646765732f656e2f736e61702d73746f72652d77686974652e737667)](https://snapcraft.io/cpp-dependencies)
 
-Copyright (C) 2012-2017, TomTom International BV. All rights reserved.
+Copyright (C) 2012-2026, TomTom International BV. All rights reserved.
 ----
 
 The tool `cpp-dependencies` creates `#include` dependency information for C++ source
@@ -39,20 +36,12 @@ limitations under the License.
 
 # Build and run
 
-The tool depends on Boost.Filesystem being available and usable. Installing this
-should be done with your platform's package management system, such as Apt, 
-Pacman or Brew.
-
 The build configuration is created with _CMake_.
 To create the build configuration for your build system (GNU make, MSBuild/Visual Studio)
 create a build directory outside this source directory and run
 
     cmake <PATH_TO_THIS_SOURCE_DIR>
     
-If you want to use Boost::Filesystem instead of std::filesystem, if your platform does 
-not have a std::filesystem implementation yet or if you prefer it, add `-DWITH_BOOST` 
-to the invocation of _CMake_. 
-
 To build the tool, either execute
 
     make

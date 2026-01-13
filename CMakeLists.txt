@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.20)
 
 project(cpp_dependencies LANGUAGES CXX)
 
@@ -6,16 +6,6 @@ include(CTest)
 
 # Coverage build doesn't work with MSVC
 option(BUILD_COVERAGE "Build cpp_dependencies for coverage" OFF)
-
-if (WIN32)
-  set(DEFAULT_BOOST OFF)
-else()
-  set(DEFAULT_BOOST ON)
-endif()
-
-# Running with Boost filesystem is typically faster, until platform specific std::filesystem comes out that is faster yet. 
-# Note that Boost::filesystem needs to be installed for this to be used.
-option(WITH_BOOST "Use Boost filesystem" ${DEFAULT_BOOST})
 
 if (WIN32)
   set(DEFAULT_MMAP OFF)
@@ -45,7 +35,7 @@ elseif(WIN32)
 endif()
 set(CPACK_GENERATOR "${DEFAULT_CPACK_GENERATOR}" CACHE STRING "Package type to generate with CPack")
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES GNU)
@@ -71,16 +61,6 @@ if(NOT HAS_MEMRCHR)
   list(APPEND COMPILE_FLAGS -DNO_MEMRCHR)
 endif()
 
-if(WITH_BOOST)
-  list(APPEND COMPILE_FLAGS -DWITH_BOOST)
-  find_package(Boost COMPONENTS filesystem system REQUIRED)
-  set(FILESYSTEM_LIBS ${Boost_LIBRARIES})
-else()
-  if(NOT WIN32)
-    set(FILESYSTEM_LIBS stdc++fs)
-  endif()
-endif()
-
 add_subdirectory(src)
 
 if(BUILD_TESTING)
@@ -92,11 +72,11 @@ set(CPACK_PACKAGE_VENDOR "TomTom International BV")
 set(CPACK_PACKAGE_CONTACT "${CPACK_PACKAGE_VENDOR}")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tool to check C++ #include dependencies
- The tool cpp-dependencies creates #include dependency information for C++
- source code files, which it derives from scanning a full source tree.
- .
- The dependency information is output as .dot files, which can be visualized
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tool to check C++ #include dependencies \
+ The tool cpp-dependencies creates #include dependency information for C++ \
+ source code files, which it derives from scanning a full source tree. \
+ . \
+ The dependency information is output as .dot files, which can be visualized \
  in, for example, GraphViz.")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE https://github.com/tomtom-international/cpp-dependencies)
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS graphviz)
@@ -105,7 +85,7 @@ set(CPACK_DEBIAN_PACKAGE_SECTION devel)
 # Version: update this before or while tagging a new release, for out of repo builds
 set(CPACK_PACKAGE_VERSION_MAJOR 1)
 set(CPACK_PACKAGE_VERSION_MINOR 1)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_PATCH 1)
 
 # Automatically detect package version to use from git
 find_package(Git)

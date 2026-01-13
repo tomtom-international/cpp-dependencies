@@ -17,7 +17,7 @@
 #ifndef __DEP_CHECKER__INPUT_H
 #define __DEP_CHECKER__INPUT_H
 
-#include "FilesystemInclude.h"
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -32,7 +32,7 @@ void ForgetEmptyComponents(std::unordered_map<std::string, Component *> &compone
 void LoadFileList(const Configuration& config,
                   std::unordered_map<std::string, Component *> &components,
                   std::unordered_map<std::string, File>& files,
-                  const filesystem::path& sourceDir,
+                  const std::filesystem::path& sourceDir,
                   bool inferredComponents,
                   bool withLoc);
 

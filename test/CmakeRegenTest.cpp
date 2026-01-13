@@ -1,13 +1,13 @@
 #include "test.h"
 #include "TestUtils.h"
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
 #include "CmakeRegen.h"
 #include "Component.h"
 #include "Configuration.h"
-#include "FstreamInclude.h"
 
 TEST(MakeCmakeComment_Oneline) {
   const std::string contents("A oneline comment");
@@ -416,7 +416,7 @@ TEST(RegenerateCmakeAddTarget_Executable) {
 
 TEST(RegenerateCmakeAddSubdirectory_NoSubDirs) {
   TemporaryWorkingDirectory workdir(name);
-  filesystem::create_directories(workdir() / "MyComponent");
+  std::filesystem::create_directories(workdir() / "MyComponent");
 
   Component comp("./MyComponent/");
 
@@ -430,12 +430,12 @@ TEST(RegenerateCmakeAddSubdirectory_NoSubDirs) {
 
 TEST(RegenerateCmakeAddSubdirectory_SubDirsWithAndWithoutCmakeLists) {
   TemporaryWorkingDirectory workdir(name);
-  filesystem::create_directories(workdir() / "MyComponent");
-  filesystem::create_directories(workdir() / "MyComponent" / "SubComponentA");
+  std::filesystem::create_directories(workdir() / "MyComponent");
+  std::filesystem::create_directories(workdir() / "MyComponent" / "SubComponentA");
   std::ofstream((workdir() / "MyComponent" / "SubComponentA" / "CMakeLists.txt").c_str()).close();
-  filesystem::create_directories(workdir() / "MyComponent" / "SubComponentB");
+  std::filesystem::create_directories(workdir() / "MyComponent" / "SubComponentB");
   std::ofstream((workdir() / "MyComponent" / "SubComponentB" / "CMakeLists.txt").c_str()).close();
-  filesystem::create_directories(workdir() / "MyComponent" / "Data");
+  std::filesystem::create_directories(workdir() / "MyComponent" / "Data");
 
   Component comp("./MyComponent/");
 

@@ -35,7 +35,6 @@ target_link_libraries(cpp_dependencies_lib
 target_include_directories(cpp_dependencies_lib
   PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}
-    ${Boost_INCLUDE_DIRS}
 )
 
 add_executable(cpp-dependencies
